@@ -24,11 +24,7 @@ const nextConfig = {
   // Set output to export static files if needed
   // output: 'export',
   
-  // Add Sentry browser monitoring in production for error tracking
-  sentry: {
-    hideSourceMaps: true,
-  },
-  
+
   // Optional: Add i18n and content security policies as needed
   // i18n: {
   //   locales: ['en'],
