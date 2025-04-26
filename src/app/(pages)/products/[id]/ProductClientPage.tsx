@@ -116,17 +116,14 @@ export default function ProductClientPage({ params }: { params: { id: string } }
               <div className="mb-8">
                 <p className="text-gray-800 mb-8">{product.description}</p>
                 
-                <button 
-                  className="w-full sm:w-auto bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors mb-4"
-                >
-                  Add to Cart
-                </button>
-                
-                <button 
-                  className="w-full sm:w-auto ml-0 sm:ml-4 border border-black px-8 py-3 rounded-md hover:bg-gray-100 transition-colors"
+                <a 
+                  href={`https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}%20(Price%3A%20${encodeURIComponent(product.price)})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(window.location.href)}.%20Could%20you%20provide%20more%20information%3F`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors inline-block"
                 >
                   Contact About This Item
-                </button>
+                </a>
               </div>
               
               {/* Product Details */}
