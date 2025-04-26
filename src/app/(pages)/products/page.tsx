@@ -2,7 +2,8 @@ import { Metadata } from "next";
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 import ClientProductsPage from "../../../components/pages/products/ClientProductsPage";
-import { getAllProducts, getProductFilters, Product, FilterData } from "@/lib/api";
+import { getAllProducts, getProductFilters, FilterData } from "@/lib/api";
+import { Product } from "@/lib/types";
 
 // Generate metadata for SEO
 export const metadata: Metadata = {

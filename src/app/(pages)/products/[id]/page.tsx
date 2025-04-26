@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { getProduct } from "../../../../lib/api";
 import { generateSEOMetadata } from "../../../../components/utils/SEOMetaTags";
 import ProductClientPage from "./ProductClientPage";
 
@@ -7,13 +6,10 @@ import ProductClientPage from "./ProductClientPage";
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params;
   try {
-    const { product } = await getProduct(params.id);
-    
+    // Use a simple metadata approach that doesn't rely on getProduct
     return generateSEOMetadata({
-      title: `${product.name} | Ok Neppo`,
-      description: product.description,
-      ogImage: product.images[0],
-      ogType: 'website',
+      title: `Product Details | Ok Neppo`,
+      description: "View detailed information about this product from Ok Neppo.",
     });
   } catch (error) {
     console.error('Error generating metadata for product ID:', params.id, error);

@@ -25,7 +25,9 @@
     "id": 2,
     "name": "Embroidered Cotton Dupatta",
     "price": "₹8,999",
-    "images": ["/images/model/DSC04246.jpeg"],
+    "images": [
+      "/images/model/DSC04246.jpeg"
+    ],
     "category": "Dupattas",
     "description": "Beautiful hand-embroidered cotton dupatta with traditional motifs.",
     "details": [
@@ -41,7 +43,9 @@
     "id": 3,
     "name": "Zari Work Silk Stole",
     "price": "₹14,999",
-    "images": ["/images/model/DSC04341.jpeg"],
+    "images": [
+      "/images/model/DSC04341.jpeg"
+    ],
     "category": "Stoles",
     "description": "Elegant silk stole featuring intricate zari work and delicate embroidery.",
     "details": [
@@ -56,7 +60,9 @@
     "id": 4,
     "name": "Block Print Linen Scarf",
     "price": "₹7,999",
-    "images": ["/images/model/IMG_8033.JPG"],
+    "images": [
+      "/images/model/IMG_8033.JPG"
+    ],
     "category": "Scarves",
     "description": "Hand block-printed linen scarf with contemporary geometric patterns.",
     "details": [
@@ -67,5 +73,22 @@
     ],
     "careInstructions": "Gentle hand wash. Dry in shade. Iron on medium heat.",
     "deliveryTime": "3-5 business days"
+  },
+  {
+    "id": 5,
+    "name": "Adil Hussain",
+    "price": "100",
+    "images": [
+      "/images/products/1fe4b7ca8ee84acc7697f876176683fb.jpg",
+      "/images/products/2136e9a494bb856eaf93530d6e79eee4.jpg"
+    ],
+    "category": "Test michel",
+    "description": "sdsf",
+    "details": [
+      "test 5",
+      "test 6"
+    ],
+    "careInstructions": "ddf",
+    "deliveryTime": "5 weeks"
   }
-] 
+]

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { Product } from '@/lib/api';
+import { Product } from '@/lib/types';
 
 interface ClientProductDetailProps {
   product: Product;

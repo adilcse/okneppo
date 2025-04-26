@@ -2,11 +2,12 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Metadata } from "next";
 import ClientHomeContent from "@/components/pages/home/ClientHomeContent";
-import { getModelData, getDesignerData } from "@/lib/api";
+import { getDesignerData } from "@/lib/api";
+import { FeaturedProduct } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
-  description: 'Explore exquisite handcrafted fashion pieces by designer Nishad Fatma. Premium quality clothing with meticulous attention to detail and sustainable practices.',
+  description: 'Exquisite handcrafted fashion pieces by designer Nishad Fatma. Premium quality clothing with meticulous attention to detail and sustainable practices.',
   openGraph: {
     title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
     description: 'Explore exquisite handcrafted fashion pieces by designer Nishad Fatma.',
@@ -25,21 +26,36 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function Home() {
-  let modelData;
+  // Default showcase images - these could be stored in the database later
+  const showcaseImages = [
+    "/images/model/IMG_4693.jpg",
+    "/images/model/DSC04122 Copy-EDIT.jpg",
+    "/images/model/DSC04246.jpeg",
+    "/images/model/DSC04341.jpeg",
+    "/images/model/IMG_8033.JPG"
+  ];
+  
+  let featuredDesigns: FeaturedProduct[] = [];
   let designerData;
   
   try {
-    modelData = await getModelData();
+    // Fetch featured products from the API
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const featuredResponse = await fetch(`${baseUrl}/api/featured-products`, {
+      next: { revalidate }
+    });
+    
+    if (featuredResponse.ok) {
+      featuredDesigns = await featuredResponse.json();
+    } else {
+      console.error('Failed to fetch featured products:', featuredResponse.status);
+    }
   } catch (error) {
-    console.error('Error loading model data:', error);
-    // Provide fallback data
-    modelData = {
-      showcase: ["/images/model/IMG_4693.jpg"],
-      featured: []
-    };
+    console.error('Error loading featured products:', error);
   }
 
   try {
+    // Fetch designer data
     designerData = await getDesignerData();
   } catch (error) {
     console.error('Error loading designer data:', error);
@@ -56,7 +72,7 @@ export default async function Home() {
       images: {
         portrait: "/images/designer/Nishad.jpg",
         at_work: "/images/designer/Nishad.jpg",
-        fashion_show: "/images/designer/Nishad.jpg",
+        fashion_show: "/images/designer/Nishad.jpg", 
         studio: "/images/designer/Nishad.jpg",
         homepage: "/images/designer/Nishad.jpg"
       }
@@ -68,8 +84,8 @@ export default async function Home() {
       <Header />
       <ClientHomeContent 
         modelData={{
-          showcaseImages: modelData.showcase,
-          featuredDesigns: modelData.featured
+          showcaseImages,
+          featuredDesigns
         }}
         designer={designerData}
       />

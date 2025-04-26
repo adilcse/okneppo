@@ -6,7 +6,7 @@ import Link from "next/link";
 import Header from "../../../../components/layout/Header";
 import Footer from "../../../../components/layout/Footer";
 import ClientProductImageGallery from "./ClientProductImageGallery";
-import { Product } from "../../../../lib/types";
+import { Product, mapProductFields, formatPrice } from "../../../../lib/types";
 
 // Mock product data function for client-side
 async function getProductClientSide(id: string): Promise<{ 
@@ -18,10 +18,31 @@ async function getProductClientSide(id: string): Promise<{
     const response = await fetch(`/api/products/${id}`);
     
     if (!response.ok) {
-      throw new Error('Failed to fetch product');
+      throw new Error(`Failed to fetch product (status: ${response.status})`);
     }
     
-    return await response.json();
+    const productData = await response.json();
+    
+    // Use the utility function to ensure all fields are properly mapped
+    const product = mapProductFields(productData);
+    
+    // Fetch related products (products in the same category)
+    const relatedResponse = await fetch(`/api/products?category=${encodeURIComponent(product.category)}`);
+    let relatedProducts: Product[] = [];
+    
+    if (relatedResponse.ok) {
+      const allCategoryProducts = await relatedResponse.json();
+      // Filter out the current product and limit to 3 items
+      relatedProducts = allCategoryProducts
+        .filter((p: Partial<Product>) => p.id !== parseInt(id))
+        .slice(0, 3)
+        .map(mapProductFields);
+    }
+    
+    return { 
+      product, 
+      relatedProducts 
+    };
   } catch (error) {
     console.error('Error fetching product:', error);
     throw error;
@@ -40,15 +61,15 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         setLoading(true);
         console.log('Loading product with ID:', params.id);
         
-        const data = await getProductClientSide(params.id);
+        const { product, relatedProducts } = await getProductClientSide(params.id);
         
-        if (!data || !data.product) {
+        if (!product) {
           throw new Error('Product data is incomplete or missing');
         }
         
-        console.log('Product data loaded:', data.product.name);
-        setProduct(data.product);
-        setRelatedProducts(data.relatedProducts || []);
+        console.log('Product data loaded:', product.name);
+        setProduct(product);
+        setRelatedProducts(relatedProducts || []);
         setError(null);
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -111,13 +132,13 @@ export default function ProductClientPage({ params }: { params: { id: string } }
             {/* Product Information */}
             <div className="w-full lg:w-1/2">
               <h1 className="text-2xl sm:text-3xl font-semibold mb-3">{product.name}</h1>
-              <p className="text-xl sm:text-2xl font-medium mb-6">{product.price}</p>
+              <p className="text-xl sm:text-2xl font-medium mb-6">{formatPrice(product.price)}</p>
               
               <div className="mb-8">
                 <p className="text-gray-800 mb-8">{product.description}</p>
                 
                 <a 
-                  href={`https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}%20(Price%3A%20${encodeURIComponent(product.price)})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(window.location.href)}.%20Could%20you%20provide%20more%20information%3F`}
+                  href={`https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}%20(Price%3A%20${encodeURIComponent(formatPrice(product.price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(window.location.href)}.%20Could%20you%20provide%20more%20information%3F`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors inline-block"
@@ -171,7 +192,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                       />
                     </div>
                     <h3 className="text-lg sm:text-xl font-medium">{relatedProduct.name}</h3>
-                    <p className="text-gray-800 font-medium">{relatedProduct.price}</p>
+                    <p className="text-gray-800 font-medium">{formatPrice(relatedProduct.price)}</p>
                   </div>
                 </Link>
               ))}

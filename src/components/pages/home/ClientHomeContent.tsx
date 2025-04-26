@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import ModelShowcase from '@/components/ui/ModelShowcase';
-import { Designer, FeaturedProduct } from '@/lib/api';
+import { Designer } from '@/lib/api';
+import { FeaturedProduct, formatPrice } from '@/lib/types';
 
 interface ClientHomeContentProps {
   modelData: {
@@ -16,6 +17,7 @@ interface ClientHomeContentProps {
 }
 
 export default function ClientHomeContent({ modelData, designer }: ClientHomeContentProps) {
+  console.log(modelData);
   return (
     <>
       {/* Fashion Model Showcase - Client Component for interactivity */}
@@ -75,7 +77,7 @@ export default function ClientHomeContent({ modelData, designer }: ClientHomeCon
               <Card key={design.id} className="overflow-hidden">
                 <div className="h-56 sm:h-64 relative mb-4 overflow-hidden group">
                   <Image 
-                    src={design.image} 
+                    src={design.images[0]} 
                     alt={design.name} 
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -85,7 +87,7 @@ export default function ClientHomeContent({ modelData, designer }: ClientHomeCon
                 <h3 className="text-lg sm:text-xl font-semibold mb-2">{design.name}</h3>
                 <p className="text-gray-600 mb-3 text-sm sm:text-base">{design.description}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg sm:text-xl font-bold">{design.price}</span>
+                  <span className="text-lg sm:text-xl font-bold">{formatPrice(design.price)}</span>
                   <Link href={`/products/${design.id}`}>
                     <Button variant="outline" className="text-sm">View Details</Button>
                   </Link>

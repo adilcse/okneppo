@@ -1,20 +1,8 @@
 // Use explicit server-only import pattern to prevent client-side usage
 import 'server-only';
-import fs from 'fs';
-import path from 'path';
+import { db } from './db';
+import { Product } from './types';
 
-// Types
-export interface Product {
-  id: number;
-  name: string;
-  price: string;
-  images: string[];
-  category: string;
-  description: string;
-  details: string[];
-  careInstructions: string;
-  deliveryTime: string;
-}
 
 export interface FeaturedProduct {
   id: number;
@@ -69,74 +57,51 @@ export interface FilterData {
   priceRanges: { min: number; max: number; label: string }[];
 }
 
-// Helper function to read data from JSON files
-const readJsonFile = <T>(filePath: string): T => {
-  try {
-    const fullPath = path.join(process.cwd(), 'src/data', filePath);
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
-    return JSON.parse(fileContents) as T;
-  } catch (error) {
-    console.error(`Error reading JSON file ${filePath}:`, error);
-    throw new Error(`Failed to read data from ${filePath}`);
-  }
-};
-
 // Get all products
 export const getAllProducts = async (): Promise<Product[]> => {
-  return readJsonFile<Product[]>('products.json');
+  const result = await db.find('products');
+  return result as unknown as Product[];
 };
 
 // Get a single product by ID
-export const getProduct = async (id: number | string): Promise<{ 
+export const getProduct = async (id: number | string): Promise<{
   product: Product; 
   relatedProducts: Product[] 
 }> => {
-  // Get all products from JSON
-  const allProducts = await getAllProducts();
-  
-  // Ensure ID is handled properly
-  const productId = String(id).replace(/[^0-9]/g, ''); // Remove any non-numeric characters
-  
-  console.log(`Looking for product with clean ID: ${productId}`);
-  
-  // First try to find the product with exact ID match
-  let product = allProducts.find(p => String(p.id) === productId);
-  
-  // If not found, try finding by numeric ID
-  if (!product) {
-    const numericId = parseInt(productId, 10);
-    product = allProducts.find(p => p.id === numericId);
-    console.log(`Trying numeric ID: ${numericId}, found: ${!!product}`);
-  }
-  
-  // If still not found, return the first product (fallback)
-  if (!product && allProducts.length > 0) {
-    console.log('Using fallback product (first in list)');
-    product = allProducts[0];
-  }
+  // Get product by ID
+const product = await db.findById('products', id) as unknown as Product;
   
   if (!product) {
-    throw new Error(`Product with ID ${id} not found and no fallback available`);
+      throw new Error(`Product with ID ${id} not found and no fallback available`);
   }
-  
-  console.log('Found product:', product.name);
-  
-  // Get related products (same category, excluding the current product)
-  const relatedProducts = allProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 3); // Limit to 3 related products
-  
+  // Get related products (same category, excluding current product)
+  const relatedProducts = await db.find('products', {
+    category: product.category,
+    id: { $ne: product.id }
+  }, { limit: 3 }) as unknown as Product[];
+
   return { product, relatedProducts };
 };
-
 // Get model data
 export const getModelData = async (): Promise<ModelData> => {
-  return readJsonFile<ModelData>('models.json');
+  try {
+    const modelData = await import('../data/models.json');
+    return modelData.default;
+  } catch (error) {
+    console.error('Error loading model data:', error);
+    throw new Error('Model data not found');
+  }
 };
 
 // Get designer data
 export const getDesignerData = async (): Promise<Designer> => {
-  return readJsonFile<Designer>('designer.json');
+  try {
+    const designerData = await import('../data/designer.json');
+    return designerData.default;
+  } catch (error) {
+    console.error('Error loading designer data:', error);
+    throw new Error('Designer data not found');
+  }
 };
 
 // Get all available filters for products
@@ -145,41 +110,23 @@ export const getProductFilters = async (): Promise<{
   priceRanges: { min: number; max: number; label: string }[];
 }> => {
   try {
-    // Get all products
-    const products = await getAllProducts();
-    
-    // Extract unique categories
-    const categories = Array.from(new Set(products.map(product => product.category)));
-    
-    // Sort categories alphabetically
-    categories.sort();
-    
-    // Create price ranges based on the product data
-    const prices = products.map(product => {
-      // Remove currency symbol and commas from price
-      const priceStr = product.price.replace(/[^\d.]/g, '');
-      return parseFloat(priceStr);
-    }).filter(price => !isNaN(price));
-    
-    // Get min and max prices
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    
-    // Create price range brackets
+    // Get unique categories directly from database
+    const categoriesResult = await db.query(
+      'SELECT DISTINCT category FROM products ORDER BY category ASC'
+    );
+    const categories: string[] = categoriesResult.map(row => row.category) as string[];
+
     const priceRanges = [
       { min: 0, max: 5000, label: 'Under ₹5,000' },
       { min: 5000, max: 10000, label: '₹5,000 - ₹10,000' },
       { min: 10000, max: 15000, label: '₹10,000 - ₹15,000' },
       { min: 15000, max: 20000, label: '₹15,000 - ₹20,000' },
       { min: 20000, max: Infinity, label: 'Over ₹20,000' }
-    ].filter(range => {
-      // Keep only price ranges that have products in them
-      return (range.min <= maxPrice) && (range.max >= minPrice);
-    });
-    
+    ];
+
     return { categories, priceRanges };
   } catch (error) {
     console.error('Error getting product filters:', error);
     return { categories: [], priceRanges: [] };
   }
-}; 
+};
