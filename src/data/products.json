@@ -1,0 +1,71 @@
+[
+  {
+    "id": 1,
+    "name": "Hand-Embroidered Silk Scarf",
+    "price": "₹12,999",
+    "images": [
+      "/images/model/DSC04122 Copy-EDIT.jpg",
+      "/images/model/DSC04246.jpeg",
+      "/images/model/DSC04341.jpeg",
+      "/images/model/IMG_8033.JPG"
+    ],
+    "category": "Scarves",
+    "description": "This exquisite hand-embroidered silk scarf is a testament to the rich heritage of Indian craftsmanship. Each piece is meticulously crafted by skilled artisans using traditional techniques passed down through generations.",
+    "details": [
+      "100% pure silk",
+      "Dimensions: 200cm x 75cm",
+      "Hand-rolled edges",
+      "Handcrafted in India",
+      "Unique piece with slight variations making each one special"
+    ],
+    "careInstructions": "Dry clean only. Store folded in a cool, dry place. Avoid direct sunlight to prevent fading. Iron on low heat if necessary.",
+    "deliveryTime": "3-5 business days"
+  },
+  {
+    "id": 2,
+    "name": "Embroidered Cotton Dupatta",
+    "price": "₹8,999",
+    "images": ["/images/model/DSC04246.jpeg"],
+    "category": "Dupattas",
+    "description": "Beautiful hand-embroidered cotton dupatta with traditional motifs.",
+    "details": [
+      "100% organic cotton",
+      "Dimensions: 225cm x 90cm",
+      "Hand-embroidered edges",
+      "Handcrafted in India"
+    ],
+    "careInstructions": "Machine wash cold with similar colors. Dry in shade. Iron on medium heat if necessary.",
+    "deliveryTime": "3-5 business days"
+  },
+  {
+    "id": 3,
+    "name": "Zari Work Silk Stole",
+    "price": "₹14,999",
+    "images": ["/images/model/DSC04341.jpeg"],
+    "category": "Stoles",
+    "description": "Elegant silk stole featuring intricate zari work and delicate embroidery.",
+    "details": [
+      "Pure silk with zari work",
+      "Dimensions: 180cm x 70cm",
+      "Handcrafted in India"
+    ],
+    "careInstructions": "Dry clean only. Handle with care.",
+    "deliveryTime": "4-6 business days"
+  },
+  {
+    "id": 4,
+    "name": "Block Print Linen Scarf",
+    "price": "₹7,999",
+    "images": ["/images/model/IMG_8033.JPG"],
+    "category": "Scarves",
+    "description": "Hand block-printed linen scarf with contemporary geometric patterns.",
+    "details": [
+      "100% linen",
+      "Dimensions: 190cm x 80cm",
+      "Hand block-printed",
+      "Natural dyes"
+    ],
+    "careInstructions": "Gentle hand wash. Dry in shade. Iron on medium heat.",
+    "deliveryTime": "3-5 business days"
+  }
+] 

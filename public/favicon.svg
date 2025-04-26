@@ -1,0 +1,23 @@
+<svg 
+  viewBox="0 0 200 200" 
+  fill="none" 
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Background -->
+  <rect width="200" height="200" fill="black" />
+  
+  <!-- Outer neon ring -->
+  <circle cx="100" cy="85" r="50" stroke="#E94FFF" strokeWidth="3" strokeOpacity="0.9" />
+  <circle cx="100" cy="85" r="50" stroke="#E94FFF" strokeWidth="1" strokeOpacity="0.7" filter="blur(4px)" />
+  
+  <!-- Stylized woman silhouette simplified -->
+  <path d="M85 65 C88 50 112 50 115 65 C118 80 115 95 100 100 C85 95 82 80 85 65Z" fill="#FFC966" />
+  
+  <!-- Logo text -->
+  <text x="100" y="150" textAnchor="middle" fill="#FFF0B0" fontSize="24" fontWeight="bold" filter="drop-shadow(0 0 2px #FFF0B0)">
+    OK
+  </text>
+  
+  <!-- Decorative wave -->
+  <path d="M120 160 C135 155 150 165 165 160" stroke="#E94FFF" strokeWidth="2" fill="none" />
+</svg> 

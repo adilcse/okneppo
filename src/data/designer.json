@@ -1,0 +1,31 @@
+{
+  "name": "Nishad Fatma",
+  "title": "Designer & Founder",
+  "short_bio": "Nishad Fatma is a renowned designer known for her unique blend of traditional craftsmanship and contemporary aesthetics.",
+  "achievements": "With over a decade of experience in the fashion industry, Nishad has received numerous accolades for her innovative designs and commitment to sustainable practices.",
+  "story": {
+    "intro": "Nishad Fatma's journey in fashion began with a deep appreciation for India's rich textile heritage and traditional craftsmanship.",
+    "approach": "Her approach blends ancestral techniques with modern design sensibilities, creating pieces that are both timeless and contemporary.",
+    "vision": "Nishad envisions a world where traditional craftsmanship is preserved and celebrated through contemporary fashion."
+  },
+  "philosophy": {
+    "main": "At the heart of Nishad's design philosophy is the belief that fashion should be both beautiful and meaningful.",
+    "practices": "Sustainable practices and ethical production are non-negotiable aspects of her brand.",
+    "process": "Each design goes through a meticulous process of ideation, sampling, and crafting to ensure exceptional quality."
+  },
+  "recognition": {
+    "industry": "Nishad's work has been featured in leading fashion publications and exhibitions around the world.",
+    "influence": "Her designs have influenced a new wave of designers focused on cultural preservation through fashion.",
+    "legacy": "Through Ok Neppo, Nishad is creating a legacy of responsible luxury that honors artisanal skills."
+  },
+  "studio": {
+    "description": "Located in a serene corner of Delhi, Nishad's studio is a creative haven where traditional craftsmanship meets contemporary design."
+  },
+  "images": {
+    "portrait": "/images/designer/IMG_7569-POP_OUT.jpg",
+    "at_work": "/images/designer/IMG_5920.jpg",
+    "fashion_show": "/images/designer/IMG_4693.jpg",
+    "studio": "/images/designer/IMG_4484.jpg",
+    "homepage": "/images/designer/Nishad.jpg"
+  }
+} 
