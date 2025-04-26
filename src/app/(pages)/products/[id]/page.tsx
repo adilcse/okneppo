@@ -4,7 +4,8 @@ import { generateSEOMetadata } from "../../../../components/utils/SEOMetaTags";
 import ProductClientPage from "./ProductClientPage";
 
 // Generate metadata for the product detail page dynamically
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const params = await props.params;
   try {
     const { product } = await getProduct(params.id);
     
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 // Revalidate the product page every hour
 export const revalidate = 3600;
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   return <ProductClientPage params={params} />;
 } 
