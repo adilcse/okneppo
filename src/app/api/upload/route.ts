@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
       success: true, 
       filePath: relativePath
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error uploading file:', error);
     return NextResponse.json(
-      { error: 'File upload failed' },
+      { error: 'File upload failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
