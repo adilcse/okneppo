@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
       } else {
         throw new Error('Invalid Google Cloud Storage URL format');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Error extracting file path from URL:', error);
       return NextResponse.json(
         { error: 'Invalid image URL format' },
         { status: 400 }

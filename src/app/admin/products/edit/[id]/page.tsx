@@ -202,7 +202,6 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
 
   const removeImage = async (index: number) => {
     if (formData.images.length <= 0) return;
-    
     try {
       // Get the image URL that's being removed
       const imageUrl = formData.images[index];
