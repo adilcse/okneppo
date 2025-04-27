@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Secret key for JWT signing and verification
 const getSecretKey = () => {
@@ -64,11 +64,11 @@ export function getTokenFromRequest(request: NextRequest) {
 /**
  * Set admin token cookie
  */
-export async function setAdminTokenCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set('admin-token', token, {
+export async function setAdminTokenCookie(response: NextResponse, token: string) {
+  // Set cookie directly on the response object
+  response.cookies.set('admin-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', 
     maxAge: 60 * 60 * 24, // 1 day
     path: '/',
     sameSite: 'strict',

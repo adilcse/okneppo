@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateAdminToken } from '@/lib/auth';
+import { generateAdminToken, setAdminTokenCookie } from '@/lib/auth';
 
 // In a real app, this would be in a secure database
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -29,12 +29,16 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = await generateAdminToken({ username });
     
-    // Return token
-    return NextResponse.json({
+    // Create response with token in both body and cookie
+    const response = NextResponse.json({
       success: true,
       token,
       message: 'Login successful'
     });
+
+    await setAdminTokenCookie(response, token);
+
+    return response;
     
   } catch (error) {
     console.error('Login error:', error);
