@@ -38,9 +38,8 @@ export default async function Home() {
   let designerData;
   
   try {
-    // Fetch featured products from the API
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const featuredResponse = await fetch(`${baseUrl}/api/featured-products`, {
+
+    const featuredResponse = await fetch(`/api/featured-products`, {
       next: { revalidate }
     });
     
