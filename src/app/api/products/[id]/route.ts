@@ -17,7 +17,24 @@ export async function GET(
       );
     }
 
-    const product = await db.findById('products', id);
+    let product = await db.findById('products', id);
+
+    // Convert snake_case to camelCase for response
+    if (product) {
+      const camelCasedProduct = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        images: product.images,
+        category: product.category,
+        description: product.description,
+        details: product.details,
+        careInstructions: product.care_instructions,
+        deliveryTime: product.delivery_time,
+        featured: product.featured
+      };
+      product = camelCasedProduct;
+    }
     
     if (!product) {
       return NextResponse.json(
@@ -77,17 +94,18 @@ export async function PUT(
     // Otherwise fall back to existing values
     const careInstructions = 'careInstructions' in updateData 
       ? updateData.careInstructions 
-      : existingProduct.careInstructions || '';
+      : existingProduct.careInstructions || existingProduct.care_instructions || '';
       
     const deliveryTime = 'deliveryTime' in updateData
       ? updateData.deliveryTime
-      : existingProduct.deliveryTime || '';
+      : existingProduct.deliveryTime || existingProduct.delivery_time || '';
     
     // Ensure optional fields are properly handled
     const finalUpdateData = {
       ...updateData,
-      careInstructions,
-      deliveryTime,
+      // Use snake_case keys instead
+      careInstructions: careInstructions,
+      deliveryTime: deliveryTime,
       details: Array.isArray(updateData.details) ? updateData.details : existingProduct.details || [],
       featured: updateData.featured !== undefined ? Boolean(updateData.featured) : Boolean(existingProduct.featured)
     };

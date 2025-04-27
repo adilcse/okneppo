@@ -272,8 +272,7 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
     const cleanedData = {
       ...formData,
       details: formData.details.filter(d => d.trim() !== ''),
-      // Explicitly include these fields to ensure they're sent
-      // Important: Convert undefined to empty string for consistent handling
+      // Keep using camelCase in frontend but server will convert to snake_case
       careInstructions: formData.careInstructions || '',
       deliveryTime: formData.deliveryTime || ''
     };

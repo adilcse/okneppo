@@ -166,6 +166,30 @@ export const db = {
   
   // Insert a new record
   async create(tableName: string, data: Record): Promise<Record> {
+    // Special handling for careInstructions and deliveryTime fields
+    // Ensure we're using snake_case column names in database operations
+    if (tableName === 'products') {
+      // Convert camelCase to snake_case if present
+      if ('careInstructions' in data) {
+        data.care_instructions = data.careInstructions;
+        delete data.careInstructions;
+      }
+      
+      if ('deliveryTime' in data) {
+        data.delivery_time = data.deliveryTime;
+        delete data.deliveryTime;
+      }
+      
+      // Ensure values are not null or undefined
+      if ('care_instructions' in data) {
+        data.care_instructions = data.care_instructions ?? '';
+      }
+      
+      if ('delivery_time' in data) {
+        data.delivery_time = data.delivery_time ?? '';
+      }
+    }
+    
     const keys = Object.keys(data);
     const values = keys.map(key => data[key]);
     
@@ -178,6 +202,9 @@ export const db = {
       RETURNING *
     `;
     
+    console.log('Create query:', query);
+    console.log('Create values:', values);
+    
     const result = await pool.query(query, values);
     return result.rows[0];
   },
@@ -188,33 +215,45 @@ export const db = {
     criteria: FilterCriteria, 
     data: Record
   ): Promise<[number, Record[]]> {
-    const dataKeys = Object.keys(data);
     const criteriaKeys = Object.keys(criteria);
     
     console.log(`Updating "${tableName}" where:`, criteria);
     console.log(`Update data:`, data);
     
     // Special handling for careInstructions and deliveryTime fields
-    // This ensures they're properly included even if they were empty strings
+    // Ensure we're using snake_case column names in database operations
     if (tableName === 'products') {
+      // Convert camelCase to snake_case if present
       if ('careInstructions' in data) {
-        // Convert undefined/null to empty string
-        data.careInstructions = data.careInstructions ?? '';
+        data.care_instructions = data.careInstructions;
+        delete data.careInstructions;
       }
       
       if ('deliveryTime' in data) {
-        // Convert undefined/null to empty string
-        data.deliveryTime = data.deliveryTime ?? '';
+        data.delivery_time = data.deliveryTime;
+        delete data.deliveryTime;
+      }
+      
+      // Ensure values are not null or undefined
+      if ('care_instructions' in data) {
+        data.care_instructions = data.care_instructions ?? '';
+      }
+      
+      if ('delivery_time' in data) {
+        data.delivery_time = data.delivery_time ?? '';
       }
     }
     
-    if (dataKeys.length === 0) {
+    // Recalculate keys after potential field conversions
+    const updatedDataKeys = Object.keys(data);
+    
+    if (updatedDataKeys.length === 0) {
       console.log('No data keys found, skipping update');
       return [0, []];
     }
     
-    const setClauses = dataKeys.map((key, i) => `${key} = $${i + 1}`).join(', ');
-    const whereConditions = criteriaKeys.map((key, i) => `${key} = $${i + dataKeys.length + 1}`).join(' AND ');
+    const setClauses = updatedDataKeys.map((key, i) => `${key} = $${i + 1}`).join(', ');
+    const whereConditions = criteriaKeys.map((key, i) => `${key} = $${i + updatedDataKeys.length + 1}`).join(' AND ');
     
     const query = `
       UPDATE "${tableName}"
@@ -225,7 +264,7 @@ export const db = {
     
     console.log('SQL Query:', query);
     
-    const values = [...dataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
+    const values = [...updatedDataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
     console.log('SQL Values:', values);
     
     try {
@@ -270,56 +309,57 @@ export const db = {
   // Migrate database fields
   async migrateFields(): Promise<void> {
     try {
-      // Check if the care_instructions field exists in the products table
+      // Check if the careInstructions field exists in the products table
+      console.log('Checking if careinstructions field exists in products table...');
       const checkQuery = `
         SELECT column_name 
         FROM information_schema.columns 
-        WHERE table_name = 'products' AND column_name = 'care_instructions'
+        WHERE table_name = 'products' AND column_name = 'careinstructions'
       `;
       
       const result = await pool.query(checkQuery);
-      
+
       if (result.rows.length > 0) {
-        console.log('Migrating product table fields from snake_case to camelCase...');
+        console.log('Migrating product table fields from camelCase to snake_case...');
         
-        // Add new camelCase columns if they don't exist
+        // Add new snake_case columns if they don't exist
         await pool.query(`
           ALTER TABLE products 
-          ADD COLUMN IF NOT EXISTS "careInstructions" TEXT
+          ADD COLUMN IF NOT EXISTS "care_instructions" TEXT
         `);
         
         await pool.query(`
           ALTER TABLE products 
-          ADD COLUMN IF NOT EXISTS "deliveryTime" VARCHAR(100)
+          ADD COLUMN IF NOT EXISTS "delivery_time" VARCHAR(100)
         `);
         
-        // Copy data from snake_case columns to camelCase columns
+        // Copy data from camelCase columns to snake_case columns
         await pool.query(`
           UPDATE products 
-          SET "careInstructions" = care_instructions 
-          WHERE care_instructions IS NOT NULL
+          SET "care_instructions" = "careinstructions" 
+          WHERE "careinstructions" IS NOT NULL
         `);
         
         await pool.query(`
           UPDATE products 
-          SET "deliveryTime" = delivery_time 
-          WHERE delivery_time IS NOT NULL
+          SET "delivery_time" = "deliverytime" 
+          WHERE "deliverytime" IS NOT NULL
         `);
         
-        // Drop old snake_case columns
+        // Drop old camelCase columns
         await pool.query(`
           ALTER TABLE products 
-          DROP COLUMN IF EXISTS care_instructions
+          DROP COLUMN IF EXISTS "careinstructions"
         `);
         
         await pool.query(`
           ALTER TABLE products 
-          DROP COLUMN IF EXISTS delivery_time
+          DROP COLUMN IF EXISTS "deliverytime"
         `);
         
         console.log('Migration completed successfully');
       } else {
-        console.log('No migration needed, fields are already in camelCase');
+        console.log('No migration needed, fields are already in snake_case');
       }
     } catch (error) {
       console.error('Error during field migration:', error);
@@ -443,8 +483,8 @@ export const db = {
           category VARCHAR(100) NOT NULL,
           description TEXT,
           details TEXT[] DEFAULT '{}',
-          careInstructions TEXT,
-          deliveryTime VARCHAR(100),
+          care_instructions TEXT,
+          delivery_time VARCHAR(100),
           featured BOOLEAN NOT NULL DEFAULT false,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
