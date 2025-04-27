@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check if admin token exists in cookie
     const token = Cookies.get('admin-token');
-    
+
     if (!token) {
       router.push('/admin/login');
       return;

@@ -67,7 +67,7 @@ export function getTokenFromRequest(request: NextRequest) {
 export async function setAdminTokenCookie(response: NextResponse, token: string) {
   // Set cookie directly on the response object
   response.cookies.set('admin-token', token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production', 
     maxAge: 60 * 60 * 24, // 1 day
     path: '/',
