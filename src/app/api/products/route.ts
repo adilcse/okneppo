@@ -88,8 +88,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Ensure optional fields are present (even if empty)
+    const finalProductData = {
+      ...productData,
+      careInstructions: productData.careInstructions || '',
+      deliveryTime: productData.deliveryTime || '',
+      details: Array.isArray(productData.details) ? productData.details : [],
+      featured: Boolean(productData.featured)
+    };
+    
     // Create new product
-    const newProduct = await db.create('products', productData);
+    const newProduct = await db.create('products', finalProductData);
     
     // Map to ensure consistent field structure
     const mappedProduct = mapProductFields(newProduct);

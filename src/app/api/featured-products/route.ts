@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 export async function GET() {
   try {
     // Query products collection for featured items
+    console.log('Querying featured products');
     const featuredProducts = await db.find(
       'products', 
       { featured: true },

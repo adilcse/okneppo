@@ -268,11 +268,18 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
       return;
     }
     
-    // Clean up empty fields
+    // Clean up empty fields and ensure optional fields are present
     const cleanedData = {
       ...formData,
-      details: formData.details.filter(d => d.trim() !== '')
+      details: formData.details.filter(d => d.trim() !== ''),
+      // Explicitly include these fields to ensure they're sent
+      // Important: Convert undefined to empty string for consistent handling
+      careInstructions: formData.careInstructions || '',
+      deliveryTime: formData.deliveryTime || ''
     };
+    
+    // Debug log to see what's being sent
+    console.log('Submitting product data:', JSON.stringify(cleanedData));
     
     try {
       // Use PUT request to update the product
@@ -285,10 +292,20 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
         body: JSON.stringify(cleanedData)
       });
       
+      // No need to clone response since we're handling the response properly
+      
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to update product');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update product');
       }
+      
+      // Get the response data
+      const responseData = await response.json().catch(error => {
+        console.error('Error parsing JSON response:', error);
+        return { success: true };
+      });
+      
+      console.log('Update successful:', responseData);
       
       setSuccess(true);
       // Redirect after 2 seconds
@@ -299,7 +316,7 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error updating product. Please try again.';
       setError(errorMessage);
-      console.error(err);
+      console.error('Update error:', err);
     } finally {
       setIsSubmitting(false);
     }

@@ -63,8 +63,39 @@ export async function PUT(
     // Parse request body
     const updateData = await request.json();
     
+    // Debug logging to see incoming data
+    console.log('Received update data:', JSON.stringify(updateData));
+    console.log('Existing product:', JSON.stringify(existingProduct));
+    
+    // Ensure price is a number
+    if (typeof updateData.price === 'string') {
+      updateData.price = parseFloat(updateData.price.replace(/[^0-9.]/g, '')) || 0;
+    }
+    
+    // Explicitly handle the careInstructions and deliveryTime fields
+    // If they exist in the update data, use those values (even if empty strings)
+    // Otherwise fall back to existing values
+    const careInstructions = 'careInstructions' in updateData 
+      ? updateData.careInstructions 
+      : existingProduct.careInstructions || '';
+      
+    const deliveryTime = 'deliveryTime' in updateData
+      ? updateData.deliveryTime
+      : existingProduct.deliveryTime || '';
+    
+    // Ensure optional fields are properly handled
+    const finalUpdateData = {
+      ...updateData,
+      careInstructions,
+      deliveryTime,
+      details: Array.isArray(updateData.details) ? updateData.details : existingProduct.details || [],
+      featured: updateData.featured !== undefined ? Boolean(updateData.featured) : Boolean(existingProduct.featured)
+    };
+    
+    console.log('Final update data being sent to database:', JSON.stringify(finalUpdateData));
+    
     // Update product using the criteria object { id }
-    const [rowsUpdated, updatedProducts] = await db.update('products', { id }, updateData);
+    const [rowsUpdated, updatedProducts] = await db.update('products', { id }, finalUpdateData);
     
     if (rowsUpdated === 0 || !updatedProducts || updatedProducts.length === 0) {
       return NextResponse.json(
@@ -72,6 +103,8 @@ export async function PUT(
         { status: 500 }
       );
     }
+    
+    console.log('Product updated successfully:', JSON.stringify(updatedProducts[0]));
     
     return NextResponse.json({
       success: true,

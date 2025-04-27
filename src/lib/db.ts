@@ -191,7 +191,25 @@ export const db = {
     const dataKeys = Object.keys(data);
     const criteriaKeys = Object.keys(criteria);
     
+    console.log(`Updating "${tableName}" where:`, criteria);
+    console.log(`Update data:`, data);
+    
+    // Special handling for careInstructions and deliveryTime fields
+    // This ensures they're properly included even if they were empty strings
+    if (tableName === 'products') {
+      if ('careInstructions' in data) {
+        // Convert undefined/null to empty string
+        data.careInstructions = data.careInstructions ?? '';
+      }
+      
+      if ('deliveryTime' in data) {
+        // Convert undefined/null to empty string
+        data.deliveryTime = data.deliveryTime ?? '';
+      }
+    }
+    
     if (dataKeys.length === 0) {
+      console.log('No data keys found, skipping update');
       return [0, []];
     }
     
@@ -205,10 +223,25 @@ export const db = {
       RETURNING *
     `;
     
-    const values = [...dataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
+    console.log('SQL Query:', query);
     
-    const result = await pool.query(query, values);
-    return [result.rowCount || 0, result.rows];
+    const values = [...dataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
+    console.log('SQL Values:', values);
+    
+    try {
+      const result = await pool.query(query, values);
+      console.log(`Update result: ${result.rowCount} rows affected`);
+      
+      // Debug the returned data
+      if (result.rows && result.rows.length > 0) {
+        console.log('First updated row:', result.rows[0]);
+      }
+      
+      return [result.rowCount || 0, result.rows];
+    } catch (error) {
+      console.error('Error during update operation:', error);
+      throw error;
+    }
   },
   
   // Delete records

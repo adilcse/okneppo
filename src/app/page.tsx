@@ -39,9 +39,11 @@ export default async function Home() {
   
   try {
 
-    const featuredResponse = await fetch(`/api/featured-products`, {
+    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/featured-products`, {
       next: { revalidate }
     });
+
+    console.log('featuredResponse', featuredResponse);
     
     if (featuredResponse.ok) {
       featuredDesigns = await featuredResponse.json();
