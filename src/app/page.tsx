@@ -28,7 +28,6 @@ export const revalidate = 3600;
 export default async function Home() {
   // Default showcase images - these could be stored in the database later
   const showcaseImages = [
-    "/images/model/IMG_4693.jpg",
     "/images/model/DSC04122 Copy-EDIT.jpg",
     "/images/model/DSC04246.jpeg",
     "/images/model/DSC04341.jpeg",
