@@ -200,8 +200,36 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
     e.target.value = '';
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
     if (formData.images.length <= 0) return;
+    
+    try {
+      // Get the image URL that's being removed
+      const imageUrl = formData.images[index];
+      
+      // Only attempt to delete from storage if it's a GCS URL
+      if (imageUrl.includes('storage.googleapis.com')) {
+        // Call the API to delete the image from GCS
+        const response = await fetch('/api/delete-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Cookies.get('admin-token')}`
+          },
+          body: JSON.stringify({ imageUrl })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to delete image from storage:', await response.text());
+          // Continue with UI removal even if storage deletion fails
+        }
+      }
+    } catch (error) {
+      console.error('Error while deleting image from storage:', error);
+      // Continue with UI removal even if there's an error
+    }
+    
+    // Remove the image from the form data regardless of whether storage deletion succeeded
     const newImages = formData.images.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, images: newImages }));
   };

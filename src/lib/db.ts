@@ -1,8 +1,6 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 import { Pool } from '@neondatabase/serverless';
 
-// Configure Neon
-neonConfig.fetchConnectionCache = true;
 
 // Use environment variables for database connection
 const connectionString = process.env.DATABASE_URL;

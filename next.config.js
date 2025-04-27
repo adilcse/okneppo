@@ -3,7 +3,13 @@ const nextConfig = {
   // Enable static image optimization - this helps with rendering performance
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/okneppo/**',
+      },
+    ],
     minimumCacheTTL: 60, // 1 minute minimum cache
   },
   

@@ -11,6 +11,7 @@
     "import-products:force": "ts-node --esm src/scripts/import-products.ts --force"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.16.0",
     "@neondatabase/serverless": "^1.0.0",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
