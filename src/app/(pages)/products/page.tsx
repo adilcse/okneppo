@@ -24,14 +24,14 @@ export const metadata: Metadata = {
 // Set the revalidation timer - refresh the page every hour
 export const revalidate = 3600;
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+export default async function ProductsPage(Props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await Props.searchParams;
+
   // Get page and limit from searchParams
   const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page) : 1;
-  const limit = typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit) : 1;
+  const limit = typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit) : 9;
   
   let productsData: { products: Product[], pagination: PaginationInfo } = {
     products: [],

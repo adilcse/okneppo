@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ui/ProductCard';
 import { Product, FilterData, mapProductFields } from '@/lib/types';
 import { PaginationInfo } from '@/lib/api';
+import { Suspense } from 'react';
 
 interface ClientProductsPageProps {
   initialProducts: Product[];
@@ -13,6 +14,32 @@ interface ClientProductsPageProps {
 }
 
 export default function ClientProductsPage({ 
+  initialProducts, 
+  initialFilterData,
+  initialPagination
+}: ClientProductsPageProps) {
+  return (
+    <Suspense fallback={<ProductsPageLoading />}>
+      <ClientProductsPageContent {...{ initialProducts, initialFilterData, initialPagination }} />
+    </Suspense>
+  );
+}
+
+function ProductsPageLoading() {
+  return (
+    <div className="w-full py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 dark:border-gray-700 border-r-transparent" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClientProductsPageContent({ 
   initialProducts, 
   initialFilterData,
   initialPagination
@@ -141,6 +168,7 @@ export default function ClientProductsPage({
   // Fetch products whenever filters change
   useEffect(() => {
     fetchProducts(1); // Reset to page 1 when filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedPriceRange, sortOption]);
   
   // Fetch products when page changes in URL
@@ -277,7 +305,7 @@ export default function ClientProductsPage({
       <div className="container mx-auto px-4">
         <div className="mb-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm dark:shadow-gray-700">
           <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Filters</h2>
-          
+          <div className="flex row">
           <div className="flex flex-wrap gap-6 mb-6">
             {/* Categories filter */}
             <div className="w-full sm:w-auto">
@@ -326,6 +354,8 @@ export default function ClientProductsPage({
                 </div>
               </div>
             )}
+
+          </div>
 
             {/* Sort options */}
             <div className="ml-auto w-full sm:w-48">

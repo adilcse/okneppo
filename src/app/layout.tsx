@@ -3,10 +3,12 @@ import { Montserrat } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
+import PageTransition from '@/components/ui/PageTransition';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://okneppo.in'),
   title: 'OKNEPPO | Innovative Fashion Designer',
   description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO.',
   keywords: ['fashion', 'design', 'clothing', 'sustainable', 'ethical', 'innovative'],
@@ -44,6 +46,7 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <OrganizationJsonLd />
+          <PageTransition />
         </ThemeProvider>
       </body>
     </html>

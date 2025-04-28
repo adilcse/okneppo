@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://okneppo.in';
   
   // Generate product URLs
-  const productUrls = products.map((product) => ({
+  const productUrls = products?.products.map((product) => ({
     url: `${baseUrl}/products/${product.id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
