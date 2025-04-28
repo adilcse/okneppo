@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { Designer } from '@/lib/api';
+import { Designer } from '@/lib/types';
 
 interface ClientAboutSectionProps {
   designer: Designer;

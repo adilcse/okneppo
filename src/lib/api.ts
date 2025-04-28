@@ -1,53 +1,10 @@
 // Use explicit server-only import pattern to prevent client-side usage
 import 'server-only';
 import { db } from './db';
-import { Product } from './types';
+import { Designer, FeaturedProduct, mapProductFields, ModelData, Product } from './types';
 
 
-export interface FeaturedProduct {
-  id: number;
-  name: string;
-  price: string;
-  image: string;
-  description: string;
-}
 
-export interface ModelData {
-  showcase: string[];
-  featured: FeaturedProduct[];
-}
-
-export interface Designer {
-  name: string;
-  title: string;
-  short_bio: string;
-  achievements: string;
-  story: {
-    intro: string;
-    approach: string;
-    vision: string;
-  };
-  philosophy: {
-    main: string;
-    practices: string;
-    process: string;
-  };
-  recognition: {
-    industry: string;
-    influence: string;
-    legacy: string;
-  };
-  studio: {
-    description: string;
-  };
-  images: {
-    portrait: string;
-    at_work: string;
-    fashion_show: string;
-    studio: string;
-    homepage: string;
-  };
-}
 
 /**
  * Filter data interface for product filtering
@@ -86,7 +43,7 @@ const product = await db.findById('products', id) as unknown as Product;
 export const getModelData = async (): Promise<ModelData> => {
   try {
     const modelData = await import('../data/models.json');
-    return modelData.default;
+    return modelData.default as ModelData;
   } catch (error) {
     console.error('Error loading model data:', error);
     throw new Error('Model data not found');
@@ -130,3 +87,38 @@ export const getProductFilters = async (): Promise<{
     return { categories: [], priceRanges: [] };
   }
 };
+
+export const  getFeaturedProducts = async (): Promise<FeaturedProduct[]> => {
+    try {
+      // Query products collection for featured items
+      console.log('Querying featured products directly from database');
+      const featuredProducts = await db.find(
+        'products', 
+        { featured: true },
+        { orderBy: 'id', order: 'DESC', limit: 4 }
+      );
+  
+      // Map and format products
+      const mappedProducts = featuredProducts.map(product => {
+        const mappedProduct = mapProductFields(product);
+        
+        // Truncate description if too long
+        if (mappedProduct.description && mappedProduct.description.length > 120) {
+          mappedProduct.description = mappedProduct.description.substring(0, 120) + '...';
+        }
+        
+        return {
+          id: mappedProduct.id,
+          name: mappedProduct.name,
+          price: mappedProduct.price,
+          images: mappedProduct.images,
+          description: mappedProduct.description
+        };
+      });
+  
+      return mappedProducts;
+    } catch (error) {
+      console.error('Error fetching featured products from database:', error);
+      return [];
+    }
+  }

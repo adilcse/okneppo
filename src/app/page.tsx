@@ -2,8 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Metadata } from "next";
 import ClientHomeContent from "@/components/pages/home/ClientHomeContent";
-import { getDesignerData } from "@/lib/api";
-import { FeaturedProduct } from "@/lib/types";
+import { getDesignerData, getFeaturedProducts, getModelData } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
@@ -26,34 +25,15 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function Home() {
-  // Default showcase images - these could be stored in the database later
-  const showcaseImages = [
-    "/images/model/DSC04122 Copy-EDIT.jpg",
-    "/images/model/DSC04246.jpeg",
-    "/images/model/DSC04341.jpeg",
-    "/images/model/IMG_8033.JPG"
-  ];
+
   
-  let featuredDesigns: FeaturedProduct[] = [];
+  // Get featured products directly from the database
+  const featuredDesigns = await getFeaturedProducts();
+  const modelData = await getModelData();
+  console.log(`Found ${featuredDesigns.length} featured products`);
+  
   let designerData;
   
-  try {
-
-    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/featured-products`, {
-      next: { revalidate }
-    });
-
-    console.log('featuredResponse', featuredResponse);
-    
-    if (featuredResponse.ok) {
-      featuredDesigns = await featuredResponse.json();
-    } else {
-      console.error('Failed to fetch featured products:', featuredResponse.status);
-    }
-  } catch (error) {
-    console.error('Error loading featured products:', error);
-  }
-
   try {
     // Fetch designer data
     designerData = await getDesignerData();
@@ -84,7 +64,7 @@ export default async function Home() {
       <Header />
       <ClientHomeContent 
         modelData={{
-          showcaseImages,
+          showcaseImages: modelData.showcase,
           featuredDesigns
         }}
         designer={designerData}

@@ -9,21 +9,21 @@
     {
       "id": 1,
       "name": "Hand-Embroidered Silk Scarf",
-      "price": "₹12,999",
+      "price": 12999,
       "image": "/images/model/DSC04122 Copy-EDIT.jpg",
       "description": "Exquisite hand-embroidered silk scarf with traditional motifs."
     },
     {
       "id": 2,
       "name": "Embroidered Cotton Dupatta",
-      "price": "₹8,999",
+      "price": 8999,
       "image": "/images/model/DSC04246.jpeg",
       "description": "Beautiful hand-embroidered cotton dupatta with traditional motifs."
     },
     {
       "id": 3,
       "name": "Zari Work Silk Stole",
-      "price": "₹14,999",
+      "price": 14999,
       "image": "/images/model/DSC04341.jpeg",
       "description": "Elegant silk stole featuring intricate zari work and delicate embroidery."
     }
