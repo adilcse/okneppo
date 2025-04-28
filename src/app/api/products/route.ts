@@ -90,14 +90,14 @@ export async function POST(request: NextRequest) {
     
     // Ensure optional fields are present (even if empty)
     const finalProductData = {
-      ...productData,
-      // Remove camelCase fields if they exist
-      careInstructions: undefined,
-      deliveryTime: undefined,
-      // Use snake_case fields instead
+      name: productData.name,
+      price: productData.price,
+      category: productData.category,
+      description: productData.description,
+      images: productData.images,
+      details: Array.isArray(productData.details) ? productData.details : [],
       care_instructions: productData.careInstructions || '',
       delivery_time: productData.deliveryTime || '',
-      details: Array.isArray(productData.details) ? productData.details : [],
       featured: Boolean(productData.featured)
     };
     

@@ -166,29 +166,6 @@ export const db = {
   
   // Insert a new record
   async create(tableName: string, data: Record): Promise<Record> {
-    // Special handling for careInstructions and deliveryTime fields
-    // Ensure we're using snake_case column names in database operations
-    if (tableName === 'products') {
-      // Convert camelCase to snake_case if present
-      if ('careInstructions' in data) {
-        data.care_instructions = data.careInstructions;
-        delete data.careInstructions;
-      }
-      
-      if ('deliveryTime' in data) {
-        data.delivery_time = data.deliveryTime;
-        delete data.deliveryTime;
-      }
-      
-      // Ensure values are not null or undefined
-      if ('care_instructions' in data) {
-        data.care_instructions = data.care_instructions ?? '';
-      }
-      
-      if ('delivery_time' in data) {
-        data.delivery_time = data.delivery_time ?? '';
-      }
-    }
     
     const keys = Object.keys(data);
     const values = keys.map(key => data[key]);
