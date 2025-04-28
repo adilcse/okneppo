@@ -13,7 +13,7 @@ export default function ClientProductImageGallery({ images, productName }: Clien
 
   return (
     <div className="w-full lg:w-1/2">
-      <div className="relative h-72 sm:h-96 mb-4 bg-gray-100 rounded-lg overflow-hidden group">
+      <div className="relative h-72 sm:h-96 mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden group">
         <Image 
           src={images[activeImage]} 
           alt={productName} 
@@ -31,7 +31,7 @@ export default function ClientProductImageGallery({ images, productName }: Clien
             <button 
               key={index}
               onClick={() => setActiveImage(index)}
-              className={`relative h-20 sm:h-24 rounded-md overflow-hidden group cursor-pointer border-2 ${activeImage === index ? 'border-black' : 'border-transparent'}`}
+              className={`relative h-20 sm:h-24 rounded-md overflow-hidden group cursor-pointer border-2 ${activeImage === index ? 'border-black dark:border-primary' : 'border-transparent'}`}
               aria-label={`View image ${index + 1} of ${productName}`}
               aria-pressed={activeImage === index}
             >

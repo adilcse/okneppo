@@ -1,21 +1,24 @@
-import React from 'react';
+"use client";
+
 import Image from 'next/image';
 
-interface LogoProps {
+type LogoProps = {
   width?: number;
   height?: number;
   className?: string;
-}
+};
 
-export default function Logo({ width = 80, height = 80, className = '' }: LogoProps) {
+export default function Logo({ width = 60, height = 60, className = '' }: LogoProps) {
+  
   return (
-    <div className={`relative ${className}`} style={{ width, height }}>
+    <div className={`relative ${className}`}>
       <Image
         src="/images/OkneppoLogo.jpeg"
-        alt="Ok Neppo Logo"
+        alt="OKNEPPO Logo"
         width={width}
         height={height}
-        className="object-contain"
+        priority
+        className="transition-opacity duration-300"
       />
     </div>
   );

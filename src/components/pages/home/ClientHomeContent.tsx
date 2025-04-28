@@ -29,7 +29,7 @@ export default function ClientHomeContent({ modelData, designer }: ClientHomeCon
       />
       
       {/* About Designer */}
-      <section className="py-12 sm:py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="w-full md:w-1/2 mb-8 md:mb-0 md:pr-8">
@@ -45,12 +45,12 @@ export default function ClientHomeContent({ modelData, designer }: ClientHomeCon
               </div>
             </div>
             <div className="w-full md:w-1/2">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-center md:text-left">About the Designer</h2>
-              <h3 className="text-lg sm:text-xl text-gray-700 mb-4 text-center md:text-left">{designer.name}</h3>
-              <p className="text-gray-600 mb-6 text-center md:text-left">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-center md:text-left text-gray-900 dark:text-white">About the Designer</h2>
+              <h3 className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 mb-4 text-center md:text-left">{designer.name}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-center md:text-left">
                 {designer.short_bio}
               </p>
-              <p className="text-gray-600 mb-6 text-center md:text-left">
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-center md:text-left">
                 {designer.achievements}
               </p>
               <div className="text-center md:text-left">

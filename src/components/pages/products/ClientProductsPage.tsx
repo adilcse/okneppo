@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Product, FilterData, mapProductFields, formatPrice } from '@/lib/types';
+import ProductCard from '@/components/ui/ProductCard';
+import { Product, FilterData, mapProductFields } from '@/lib/types';
 
 interface ClientProductsPageProps {
   initialProducts: Product[];
@@ -99,15 +98,15 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
   };
 
   return (
-    <main className="flex-grow py-6 sm:py-8">
+    <main className="flex-grow py-6 sm:py-8 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4">
-        <div className="mb-8 bg-white p-4 rounded-lg shadow-sm">
-          <h2 className="text-lg font-medium mb-4">Filters</h2>
+        <div className="mb-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm dark:shadow-gray-700">
+          <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Filters</h2>
           
           <div className="flex flex-wrap gap-6 mb-6">
             {/* Categories filter */}
             <div className="w-full sm:w-auto">
-              <h3 className="text-sm font-medium mb-2">Categories</h3>
+              <h3 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Categories</h3>
               <div className="flex flex-wrap gap-2">
                 {filterData.categories.map((category) => (
                   <button
@@ -115,8 +114,8 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
                     onClick={() => setSelectedCategory(category)}
                     className={`px-3 py-1 text-sm rounded-full border transition-colors
                       ${selectedCategory === category
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        ? 'bg-black dark:bg-primary text-white border-black dark:border-primary'
+                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                       }`}
                     disabled={isLoading}
                     aria-pressed={selectedCategory === category}
@@ -131,7 +130,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
             {/* Price range filter */}
             {filterData.priceRanges.length > 0 && (
               <div className="w-full sm:w-auto">
-                <h3 className="text-sm font-medium mb-2">Price Range</h3>
+                <h3 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Price Range</h3>
                 <div className="flex flex-wrap gap-2">
                   {filterData.priceRanges.map((range) => (
                     <button
@@ -139,8 +138,8 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
                       onClick={() => handlePriceRangeChange(range.label)}
                       className={`px-3 py-1 text-sm rounded-full border transition-colors
                         ${selectedPriceRange === range.label
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ? 'bg-black dark:bg-primary text-white border-black dark:border-primary'
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       disabled={isLoading}
                       aria-pressed={selectedPriceRange === range.label}
@@ -155,11 +154,11 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
 
             {/* Sort options */}
             <div className="ml-auto w-full sm:w-48">
-              <h3 className="text-sm font-medium mb-2">Sort By</h3>
+              <h3 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Sort By</h3>
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="w-full border border-gray-300 rounded py-2 px-3 text-sm"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-primary"
                 disabled={isLoading}
                 aria-label="Sort products by"
               >
@@ -174,14 +173,14 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
           
           {/* Applied filters */}
           {(selectedCategory !== "All" || selectedPriceRange !== null || sortOption !== "default") && (
-            <div className="flex justify-between items-center border-t pt-4">
+            <div className="flex justify-between items-center border-t dark:border-gray-700 pt-4">
               <div className="text-sm flex flex-wrap gap-2">
-                <span className="text-gray-500">Applied Filters: </span>
+                <span className="text-gray-500 dark:text-gray-400">Applied Filters: </span>
                 
                 {selectedCategory !== "All" && (
                   <button 
                     onClick={() => !isLoading && setSelectedCategory("All")}
-                    className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 disabled:opacity-50"
+                    className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
                     disabled={isLoading}
                   >
                     Category: {selectedCategory}
@@ -192,7 +191,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
                 {selectedPriceRange && (
                   <button 
                     onClick={() => !isLoading && setSelectedPriceRange(null)}
-                    className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 disabled:opacity-50"
+                    className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
                     disabled={isLoading}
                   >
                     Price: {selectedPriceRange}
@@ -203,7 +202,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
                 {sortOption !== "default" && (
                   <button 
                     onClick={() => !isLoading && setSortOption("default")}
-                    className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 disabled:opacity-50"
+                    className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs inline-flex items-center hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
                     disabled={isLoading}
                   >
                     Sort: {sortOption.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -214,7 +213,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
               
               <button 
                 onClick={resetFilters}
-                className="text-sm text-gray-600 hover:text-black disabled:opacity-50"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white disabled:opacity-50"
                 disabled={isLoading}
               >
                 Reset All
@@ -226,7 +225,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
         {/* Loading indicator */}
         {isLoading && (
           <div className="text-center py-8">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 border-r-transparent" role="status">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-gray-300 dark:border-gray-700 border-r-transparent" role="status">
               <span className="sr-only">Loading...</span>
             </div>
           </div>
@@ -234,7 +233,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
         
         {/* Error message */}
         {error && !isLoading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6" role="alert">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6" role="alert">
             <span className="block sm:inline">{error}</span>
             <button 
               onClick={fetchProducts} 
@@ -249,34 +248,22 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
         {!isLoading && !error && products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product) => (
-              <Link href={`/products/${product.id}`} key={product.id} className="group">
-                <div className="bg-gray-100 rounded-lg overflow-hidden h-52 sm:h-64 mb-3 relative">
-                  {product.images && product.images.length > 0 ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-lg sm:text-xl font-medium mb-1">{product.name}</h3>
-                <p className="text-gray-600 text-sm sm:text-base mb-2">{product.category}</p>
-                <p className="font-bold text-lg sm:text-xl">{formatPrice(product.price)}</p>
-              </Link>
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={product.price}
+                image={product.images?.[0] || ''}
+                category={product.category}
+              />
             ))}
           </div>
         ) : !isLoading && !error ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-600 mb-4">No products found matching your criteria.</p>
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">No products found matching your criteria.</p>
             <button 
               onClick={resetFilters}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 bg-black dark:bg-primary text-white rounded hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors"
               aria-label="Reset filters"
             >
               Clear Filters

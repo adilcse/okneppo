@@ -1,59 +1,51 @@
+import type { Metadata, Viewport } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
-import type { Metadata } from 'next';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 
-const montserrat = Montserrat({ subsets: ['latin'], display: 'swap', variable: '--font-montserrat' });
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
 export const metadata: Metadata = {
-  title: {
-    template: '%s | Ok Neppo - Luxury Fashion by Nishad Fatma',
-    default: 'Ok Neppo - Luxury Fashion by Nishad Fatma',
-  },
-  description: 'Discover handcrafted luxury fashion by designer Nishad Fatma. Elegant, timeless pieces for the modern woman, featuring sustainable materials and exceptional craftsmanship.',
-  keywords: ['fashion', 'luxury clothing', 'Nishad Fatma', 'designer wear', 'sustainable fashion', 'handcrafted', 'Indian designer'],
-  creator: 'Nishad Fatma',
+  title: 'OKNEPPO | Innovative Fashion Designer',
+  description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO.',
+  keywords: ['fashion', 'design', 'clothing', 'sustainable', 'ethical', 'innovative'],
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: 'https://okneppo.in',
-    title: 'Ok Neppo - Luxury Fashion by Nishad Fatma',
-    description: 'Discover handcrafted luxury fashion by designer Nishad Fatma. Elegant, timeless pieces for the modern woman.',
-    siteName: 'Ok Neppo',
+    siteName: 'OKNEPPO',
+    title: 'OKNEPPO | Innovative Fashion Designer',
+    description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO.',
     images: [
       {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Ok Neppo Fashion Collection',
-      }
+        alt: 'OKNEPPO Fashion',
+      },
     ],
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Ok Neppo - Luxury Fashion by Nishad Fatma',
-    description: 'Discover handcrafted luxury fashion by designer Nishad Fatma.',
-    images: ['/images/og-image.jpg'],
-  },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={montserrat.variable}>
-      <head>
-        <OrganizationJsonLd />
-      </head>
-      <body className="antialiased bg-white">
-        {children}
+    <html lang="en" className={montserrat.variable} suppressHydrationWarning>
+      <head />
+      <body className="antialiased">
+        <ThemeProvider>
+          {children}
+          <OrganizationJsonLd />
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

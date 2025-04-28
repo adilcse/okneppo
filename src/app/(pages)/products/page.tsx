@@ -50,10 +50,10 @@ export default async function ProductsPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gray-50 py-8 sm:py-12">
+      <section className="bg-gray-50 dark:bg-gray-900 py-8 sm:py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Our Collections</h1>
-          <p className="text-gray-600 max-w-2xl text-sm sm:text-base">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">Our Collections</h1>
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl text-sm sm:text-base">
             Each piece in our collection is meticulously crafted by designer Nishad Fatma, 
             combining traditional techniques with contemporary designs. Explore our 
             curated selection of premium garments and accessories.

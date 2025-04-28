@@ -45,14 +45,14 @@ ${formData.message}
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
       <Header />
       
       {/* Contact Header */}
-      <section className="bg-gray-100 py-12">
+      <section className="bg-gray-100 dark:bg-gray-800 py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">Contact Us</h1>
-          <p className="text-gray-600 text-center max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">Contact Us</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-2xl mx-auto">
             We&apos;d love to hear from you. Get in touch for consultations, custom designs, or any inquiries.
           </p>
         </div>
@@ -64,14 +64,14 @@ ${formData.message}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Form */}
             <div>
-              <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Send Us a Message</h2>
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
-                  <label htmlFor="name" className="block text-gray-700 mb-2">Your Name*</label>
+                  <label htmlFor="name" className="block text-gray-700 dark:text-gray-300 mb-2">Your Name*</label>
                   <input 
                     type="text" 
                     id="name" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF]"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter your name"
                     value={formData.name}
                     onChange={handleChange}
@@ -79,11 +79,11 @@ ${formData.message}
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-gray-700 mb-2">Phone Number*</label>
+                  <label htmlFor="phone" className="block text-gray-700 dark:text-gray-300 mb-2">Phone Number*</label>
                   <input 
                     type="tel" 
                     id="phone" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF]"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter your phone number"
                     value={formData.phone}
                     onChange={handleChange}
@@ -91,11 +91,11 @@ ${formData.message}
                   />
                 </div>
                 <div>
-                  <label htmlFor="subject" className="block text-gray-700 mb-2">Subject*</label>
+                  <label htmlFor="subject" className="block text-gray-700 dark:text-gray-300 mb-2">Subject*</label>
                   <input 
                     type="text" 
                     id="subject" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF]"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter subject"
                     value={formData.subject}
                     onChange={handleChange}
@@ -103,11 +103,11 @@ ${formData.message}
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-gray-700 mb-2">Message*</label>
+                  <label htmlFor="message" className="block text-gray-700 dark:text-gray-300 mb-2">Message*</label>
                   <textarea 
                     id="message" 
                     rows={5} 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF]"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     placeholder="Enter your message"
                     value={formData.message}
                     onChange={handleChange}
@@ -118,7 +118,7 @@ ${formData.message}
                   <Button type="submit" className="w-full sm:w-auto">
                     Send via WhatsApp
                   </Button>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     *This will open WhatsApp with your message details
                   </p>
                 </div>
@@ -128,7 +128,7 @@ ${formData.message}
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
+                <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Contact Information</h2>
                 <div className="space-y-4">
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-6 w-6 text-[#E94FFF] mr-3">
@@ -137,8 +137,8 @@ ${formData.message}
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-medium">Phone / WhatsApp</h3>
-                      <p className="text-gray-600">+91 8249517832</p>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Phone / WhatsApp</h3>
+                      <p className="text-gray-600 dark:text-gray-400">+91 8249517832</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -148,8 +148,8 @@ ${formData.message}
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-medium">Email</h3>
-                      <p className="text-gray-600">okneppo@gmail.com</p>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Email</h3>
+                      <p className="text-gray-600 dark:text-gray-400">okneppo@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -160,14 +160,14 @@ ${formData.message}
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-medium">Location</h3>
-                      <p className="text-gray-600">Rourkela, Odisha, India</p>
+                      <h3 className="font-medium text-gray-900 dark:text-white">Location</h3>
+                      <p className="text-gray-600 dark:text-gray-400">Rourkela, Odisha, India</p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="relative h-60 rounded-lg overflow-hidden">
+              <div className="relative h-60 rounded-lg overflow-hidden shadow-md dark:shadow-gray-900/50">
                 <Image 
                   src="/images/designer/IMG_4693.jpg" 
                   alt="Nishad Fatma - Ok Neppo Designer" 
@@ -177,8 +177,8 @@ ${formData.message}
               </div>
               
               <div>
-                <h3 className="text-xl font-bold mb-3">Book a Consultation</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Book a Consultation</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Interested in custom designs or want to discuss a collaboration? 
                   Book a personal consultation with Nishad Fatma to explore possibilities.
                 </p>
