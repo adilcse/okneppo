@@ -36,7 +36,7 @@ export default function AdminProducts() {
         
         const data = await response.json();
         // Map each product to ensure consistent field structure
-        const mappedProducts = Array.isArray(data) ? data.map(mapProductFields) : [];
+        const mappedProducts = Array.isArray(data?.products) ? data.products.map(mapProductFields) : [];
         setProducts(mappedProducts);
       } catch (err) {
         setError('Error loading products. Please try again.');
