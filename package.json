@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "import-products": "ts-node --esm src/scripts/import-products.ts",
-    "import-products:force": "ts-node --esm src/scripts/import-products.ts --force"
+    "import-products:force": "ts-node --esm src/scripts/import-products.ts --force",
+    "prepare": "husky"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
@@ -35,6 +36,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "husky": "^9.0.11",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

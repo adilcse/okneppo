@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Load nvm if available
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  export NVM_DIR="$HOME/.nvm"
+  . "$HOME/.nvm/nvm.sh"
+  
+  # Use Node.js 22.15.0 for the build
+  echo "💡 Using Node.js v22.15.0 for the build..."
+  nvm use 22.15.0 || (echo "⚠️ Failed to use Node.js v22.15.0, please install it using 'nvm install 22.15.0'" && exit 1)
+  
+  # Run the build
+  echo "🏗️  Running build before push..."
+  npm run build || (echo "❌ Build failed! Push aborted." && exit 1)
+  
+  echo "✅ Build successful! Proceeding with push."
+else
+  echo "⚠️ nvm not found. Please run build manually using 'nvm use 22.15.0 && npm run build' before pushing."
+  exit 1
+fi 
