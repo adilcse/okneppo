@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/', '/admin/'],
     },
-    sitemap: 'https://okneppo.com/sitemap.xml',
+    sitemap: 'https://okneppo.in/sitemap.xml',
   };
 } 

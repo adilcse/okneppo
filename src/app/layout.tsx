@@ -1,6 +1,7 @@
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 import type { Metadata } from 'next';
+import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 
 const montserrat = Montserrat({ subsets: ['latin'], display: 'swap', variable: '--font-montserrat' });
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://okneppo.com',
+    url: 'https://okneppo.in',
     title: 'Ok Neppo - Luxury Fashion by Nishad Fatma',
     description: 'Discover handcrafted luxury fashion by designer Nishad Fatma. Elegant, timeless pieces for the modern woman.',
     siteName: 'Ok Neppo',
@@ -43,13 +44,16 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={montserrat.className}>
+    <html lang="en" className={montserrat.variable}>
+      <head>
+        <OrganizationJsonLd />
+      </head>
+      <body className="antialiased bg-white">
         {children}
       </body>
     </html>
-  );
+  )
 }

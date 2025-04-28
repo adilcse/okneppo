@@ -6,7 +6,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await getAllProducts();
   
   // Base URL for the site
-  const baseUrl = 'https://okneppo.com';
+  const baseUrl = 'https://okneppo.in';
   
   // Generate product URLs
   const productUrls = products.map((product) => ({
