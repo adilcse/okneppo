@@ -20,6 +20,40 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Testing
+
+This project uses Jest and React Testing Library for testing. Run tests with the following commands:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with watch mode
+npm run test:watch
+
+# Run tests in CI mode
+npm run test:ci
+
+# Run a specific test file
+npm test -- src/__tests__/path/to/test.tsx
+```
+
+Tests are located in the `src/__tests__` directory and follow the same structure as the source code. For example, tests for pages are in `src/__tests__/pages`.
+
+The project includes a pre-commit hook that runs tests before each commit to ensure that all tests pass before code is committed.
+
+### Current Test Coverage
+
+The following pages have test coverage:
+- Home Page (`HomePage.test.tsx`)
+- Product Page (`ProductPage.test.tsx`)
+- Products List Page (`ProductsPage.test.tsx`)
+- About Page (`AboutPage.test.tsx`)
+- Contact Page (`ContactPage.test.tsx`)
+- Privacy Page (`PrivacyPage.test.tsx`)
+
+Each test verifies the page's rendering, content, and functionality while properly mocking dependencies.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

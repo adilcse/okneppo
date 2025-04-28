@@ -1,1 +1,10 @@
+echo "Running tests before commit..."
 npm test
+
+# If tests pass, continue with the commit
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Please fix the tests before committing."
+  exit 1
+fi
+
+echo "Tests passed! Continuing with commit..."
