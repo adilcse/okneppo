@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { mapProductFields } from '@/lib/types';
 
-// Get all products with filtering and sorting
+// Get all products with filtering, sorting and pagination
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,51 +14,66 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy');
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     
+    // Pagination parameters
+    const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 9;
+    const offset = (page - 1) * limit;
+    
     // Build query criteria
-    const criteria: Record<string, string> = {};
+    const criteria: Record<string, unknown> = {};
     
     if (category && category !== 'All') {
       criteria.category = category;
     }
     
-    // Apply price filters using query parameters
-    // We'll handle the price filtering after query execution
+    // Apply price filters directly in the database query
+    if (minPrice !== null || maxPrice !== null) {
+      criteria.price = {};
+      
+      if (minPrice !== null) {
+        (criteria.price as Record<string, number>)['>='] = minPrice;
+      }
+      
+      if (maxPrice !== null && maxPrice !== Infinity) {
+        (criteria.price as Record<string, number>)['<='] = maxPrice;
+      }
+    }
     
-    // Execute query
-    const options = sortBy ? {
-      orderBy: sortBy,
-      order: (sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC') as 'ASC' | 'DESC'
-    } : {};
+    // Get total count for pagination
+    const totalCount = await db.count('products', criteria);
+    
+    // Execute query with pagination
+    const options = {
+      limit,
+      offset,
+      ...(sortBy ? {
+        orderBy: sortBy,
+        order: (sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC') as 'ASC' | 'DESC'
+      } : {})
+    };
     
     // Execute the query
     const products = await db.find('products', criteria, options);
     
-    // Apply price filtering in memory if needed
-    const filteredProducts = products.filter(product => {
-      // Check if we need to filter by price
-      if (minPrice === null && maxPrice === null) {
-        return true;
-      }
-      
-      const productPrice = typeof product.price === 'number' 
-        ? product.price 
-        : parseFloat(String(product.price).replace(/[^\d.]/g, '') || '0');
-      
-      if (minPrice !== null && maxPrice !== null) {
-        return productPrice >= minPrice && productPrice <= maxPrice;
-      } else if (minPrice !== null) {
-        return productPrice >= minPrice;
-      } else if (maxPrice !== null) {
-        return productPrice <= maxPrice;
-      }
-      
-      return true;
-    });
-    
     // Map products to ensure consistent field structure
-    const mappedProducts = filteredProducts.map(mapProductFields);
+    const mappedProducts = products.map(mapProductFields);
     
-    return NextResponse.json(mappedProducts);
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    
+    return NextResponse.json({
+      products: mappedProducts,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(

@@ -3,8 +3,17 @@ import 'server-only';
 import { db } from './db';
 import { Designer, FeaturedProduct, mapProductFields, ModelData, Product } from './types';
 
-
-
+/**
+ * Pagination info interface
+ */
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
 
 /**
  * Filter data interface for product filtering
@@ -14,10 +23,44 @@ export interface FilterData {
   priceRanges: { min: number; max: number; label: string }[];
 }
 
-// Get all products
-export const getAllProducts = async (): Promise<Product[]> => {
-  const result = await db.find('products');
-  return result as unknown as Product[];
+/**
+ * Get products with optional pagination
+ */
+export const getAllProducts = async (page: number = 1, limit: number = 9): Promise<{
+  products: Product[];
+  pagination: PaginationInfo;
+}> => {
+  try {
+    // Fetch from the API endpoint to get pagination info
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/products?page=${page}&limit=${limit}`, {
+      // Use cache: no-store to always get fresh data on server
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching products: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return {
+      products: data.products.map(mapProductFields),
+      pagination: data.pagination
+    };
+  } catch (error) {
+    console.error('Error in getAllProducts:', error);
+    // Return empty data with pagination info
+    return {
+      products: [],
+      pagination: {
+        page,
+        limit,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    };
+  }
 };
 
 // Get a single product by ID

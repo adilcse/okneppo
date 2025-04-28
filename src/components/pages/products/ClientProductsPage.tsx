@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ui/ProductCard';
 import { Product, FilterData, mapProductFields } from '@/lib/types';
+import { PaginationInfo } from '@/lib/api';
 
 interface ClientProductsPageProps {
   initialProducts: Product[];
   initialFilterData?: FilterData;
+  initialPagination?: PaginationInfo;
 }
 
-export default function ClientProductsPage({ initialProducts, initialFilterData }: ClientProductsPageProps) {
+export default function ClientProductsPage({ 
+  initialProducts, 
+  initialFilterData,
+  initialPagination
+}: ClientProductsPageProps) {
+  const searchParams = useSearchParams();
+  
   // Map initial products to ensure all fields are properly structured
   const mappedInitialProducts = Array.isArray(initialProducts) 
     ? initialProducts.map(mapProductFields) 
@@ -21,19 +30,58 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
   const [sortOption, setSortOption] = useState<string>("default");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>(
+    initialPagination || {
+      page: 1,
+      limit: 9,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false
+    }
+  );
   
   const filterData: FilterData = initialFilterData 
     ? { categories: ["All", ...initialFilterData.categories], priceRanges: initialFilterData.priceRanges } 
     : { categories: ["All"], priceRanges: [] };
 
-  // Function to fetch products with filters
-  const fetchProducts = useCallback(async () => {
+  // Get the current page from URL params or use default
+  const getCurrentPage = useCallback(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? parseInt(pageParam) : 1;
+  }, [searchParams]);
+
+  // Function to update URL with new params without full page reload
+  const updateUrlParams = useCallback((params: Record<string, string>) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value);
+      } else {
+        newSearchParams.delete(key);
+      }
+    });
+    
+    // Update URL without triggering navigation
+    const newUrl = `${window.location.pathname}?${newSearchParams.toString()}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  }, [searchParams]);
+
+  // Function to fetch products with filters and pagination
+  const fetchProducts = useCallback(async (page?: number) => {
     setIsLoading(true);
     setError(null);
+    
+    const currentPage = page || getCurrentPage();
     
     try {
       // Build query parameters
       const params = new URLSearchParams();
+      
+      // Add pagination
+      params.append('page', currentPage.toString());
+      params.append('limit', pagination.limit.toString());
       
       // Add category filter
       if (selectedCategory !== "All") {
@@ -64,6 +112,14 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
         }
       }
       
+      // Update browser URL with the new parameters
+      if (currentPage !== 1) {
+        params.set('page', currentPage.toString());
+      } else {
+        params.delete('page');
+      }
+      updateUrlParams({ page: currentPage === 1 ? '' : currentPage.toString() });
+      
       // Fetch filtered products
       const response = await fetch(`/api/products?${params.toString()}`);
       
@@ -72,20 +128,28 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
       }
       
       const data = await response.json();
-      const mappedProducts = Array.isArray(data) ? data.map(mapProductFields) : [];
-      setProducts(mappedProducts);
+      setProducts(data.products.map(mapProductFields));
+      setPagination(data.pagination);
     } catch (err) {
       console.error('Error fetching filtered products:', err);
       setError('Failed to load products. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCategory, selectedPriceRange, sortOption, filterData.priceRanges]);
+  }, [selectedCategory, selectedPriceRange, sortOption, filterData.priceRanges, pagination.limit, getCurrentPage, updateUrlParams]);
   
   // Fetch products whenever filters change
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchProducts(1); // Reset to page 1 when filters change
+  }, [selectedCategory, selectedPriceRange, sortOption]);
+  
+  // Fetch products when page changes in URL
+  useEffect(() => {
+    const page = getCurrentPage();
+    if (page !== pagination.page && !isLoading) {
+      fetchProducts(page);
+    }
+  }, [searchParams, getCurrentPage, pagination.page, isLoading, fetchProducts]);
   
   const resetFilters = () => {
     setSelectedCategory("All");
@@ -95,6 +159,117 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
 
   const handlePriceRangeChange = (range: string | null) => {
     setSelectedPriceRange(range === selectedPriceRange ? null : range);
+  };
+
+  // Handle page changes
+  const handlePageChange = (newPage: number) => {
+    if (newPage !== pagination.page) {
+      fetchProducts(newPage);
+    }
+  };
+
+  // Generate pagination links
+  const getPaginationLinks = () => {
+    const { page, totalPages } = pagination;
+    const links = [];
+    
+    // Previous button
+    links.push(
+      <button
+        key="prev"
+        onClick={() => handlePageChange(page - 1)}
+        disabled={!pagination.hasPrevPage || isLoading}
+        className="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Previous page"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
+    // Determine which page links to show
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, page - Math.floor(maxPagesToShow / 2));
+    const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+    
+    // Adjust if we're near the end
+    if (endPage - startPage + 1 < maxPagesToShow && startPage > 1) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    // Add first page and ellipsis if needed
+    if (startPage > 1) {
+      links.push(
+        <button
+          key="1"
+          onClick={() => handlePageChange(1)}
+          className={`px-3 py-1 rounded-md border text-sm ${page === 1 ? 'bg-black text-white border-black dark:bg-primary dark:border-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'}`}
+          disabled={isLoading}
+        >
+          1
+        </button>
+      );
+      
+      if (startPage > 2) {
+        links.push(
+          <span key="ellipsis1" className="px-2 py-1 text-gray-500 dark:text-gray-400">...</span>
+        );
+      }
+    }
+    
+    // Add page links
+    for (let i = startPage; i <= endPage; i++) {
+      if (i === 1 || i === totalPages) continue; // Skip first and last pages as they're added separately
+      
+      links.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`px-3 py-1 rounded-md border text-sm ${page === i ? 'bg-black text-white border-black dark:bg-primary dark:border-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'}`}
+          disabled={isLoading}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Add last page and ellipsis if needed
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        links.push(
+          <span key="ellipsis2" className="px-2 py-1 text-gray-500 dark:text-gray-400">...</span>
+        );
+      }
+      
+      links.push(
+        <button
+          key={totalPages}
+          onClick={() => handlePageChange(totalPages)}
+          className={`px-3 py-1 rounded-md border text-sm ${page === totalPages ? 'bg-black text-white border-black dark:bg-primary dark:border-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'}`}
+          disabled={isLoading}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    
+    // Next button
+    links.push(
+      <button
+        key="next"
+        onClick={() => handlePageChange(page + 1)}
+        disabled={!pagination.hasNextPage || isLoading}
+        className="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Next page"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
+    return links;
   };
 
   return (
@@ -236,7 +411,7 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6" role="alert">
             <span className="block sm:inline">{error}</span>
             <button 
-              onClick={fetchProducts} 
+              onClick={() => fetchProducts()}
               className="ml-4 text-sm underline"
             >
               Try Again
@@ -246,18 +421,32 @@ export default function ClientProductsPage({ initialProducts, initialFilterData 
 
         {/* Product grid */}
         {!isLoading && !error && products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                image={product.images?.[0] || ''}
-                category={product.category}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  image={product.images?.[0] || ''}
+                  category={product.category}
+                />
+              ))}
+            </div>
+            
+            {/* Pagination controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8 space-x-2">
+                {getPaginationLinks()}
+              </div>
+            )}
+            
+            {/* Products count */}
+            <div className="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
+              Showing {products.length} of {pagination.totalCount} products
+            </div>
+          </>
         ) : !isLoading && !error ? (
           <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <p className="text-gray-600 dark:text-gray-400 mb-4">No products found matching your criteria.</p>

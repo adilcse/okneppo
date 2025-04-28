@@ -15,9 +15,16 @@ const sql = neon(connectionString);
 // Create connection pool for more complex operations
 const pool = new Pool({ connectionString });
 
-// Interface for filtering records
+// Interface for filtering records with support for operators
 export interface FilterCriteria {
-  [key: string]: unknown;
+  [key: string]: unknown | { 
+    '>=': number | string;
+    '<=': number | string;
+    '<': number | string;
+    '>': number | string;
+    '!=': unknown;
+    [key: string]: unknown; 
+  };
 }
 
 // Interface for database records
@@ -37,6 +44,35 @@ export async function testConnection(): Promise<boolean> {
   }
 }
 
+// Helper to build WHERE conditions with operators
+function buildWhereConditions(criteria: FilterCriteria): { 
+  conditions: string; 
+  values: unknown[];
+} {
+  const values: unknown[] = [];
+  let paramIndex = 1;
+  
+  // Process each key in the criteria
+  const conditions = Object.entries(criteria).map(([key, value]) => {
+    // Check if the value is an object with operators
+    if (value !== null && typeof value === 'object') {
+      // It's an object with operators
+      const operatorConditions = Object.entries(value).map(([op, opValue]) => {
+        values.push(opValue);
+        return `"${key}" ${op} $${paramIndex++}`;
+      });
+      
+      return operatorConditions.join(' AND ');
+    } else {
+      // It's a regular equality comparison
+      values.push(value);
+      return `"${key}" = $${paramIndex++}`;
+    }
+  }).join(' AND ');
+  
+  return { conditions, values };
+}
+
 // Database utility object
 export const db = {
   // Find a single record
@@ -48,8 +84,8 @@ export const db = {
       return result[0] || null;
     }
     
-    const values = keys.map(key => criteria[key]);
-    const conditions = keys.map((key, i) => `${key} = $${i + 1}`).join(' AND ');
+    // Use the enhanced condition builder
+    const { conditions, values } = buildWhereConditions(criteria);
     
     const query = `
       SELECT * FROM "${tableName}"
@@ -66,7 +102,7 @@ export const db = {
     return this.findOne(tableName, { id });
   },
   
-  // Find multiple records
+  // Find multiple records with support for operators
   async find(
     tableName: string, 
     criteria: FilterCriteria = {}, 
@@ -77,10 +113,9 @@ export const db = {
       order?: 'ASC' | 'DESC' 
     } = {}
   ): Promise<Record[]> {
-    const keys = Object.keys(criteria);
     const { limit, offset, orderBy, order } = options;
     
-    if (keys.length === 0) {
+    if (Object.keys(criteria).length === 0) {
       let query = `SELECT * FROM "${tableName}"`;
       
       const params: unknown[] = [];
@@ -105,15 +140,16 @@ export const db = {
       return result.rows;
     }
     
-    const values = keys.map(key => criteria[key]);
-    const conditions = keys.map((key, i) => `${key} = $${i + 1}`).join(' AND ');
+    // Use the enhanced condition builder
+    const { conditions, values } = buildWhereConditions(criteria);
     
-    let paramIndex = keys.length + 1;
     let queryStr = `SELECT * FROM "${tableName}" WHERE ${conditions}`;
     
     if (orderBy) {
       queryStr += ` ORDER BY "${orderBy}" ${order === 'DESC' ? 'DESC' : 'ASC'}`;
     }
+    
+    let paramIndex = values.length + 1;
     
     if (limit) {
       queryStr += ` LIMIT $${paramIndex}`;
@@ -143,17 +179,15 @@ export const db = {
     return this.find(tableName, {}, options);
   },
   
-  // Count records
+  // Count records with support for operators
   async count(tableName: string, criteria: FilterCriteria = {}): Promise<number> {
-    const keys = Object.keys(criteria);
-    
-    if (keys.length === 0) {
+    if (Object.keys(criteria).length === 0) {
       const result = await pool.query(`SELECT COUNT(*) as count FROM "${tableName}"`);
       return result.rows[0]?.count ? Number(result.rows[0].count) : 0;
     }
     
-    const values = keys.map(key => criteria[key]);
-    const conditions = keys.map((key, i) => `${key} = $${i + 1}`).join(' AND ');
+    // Use the enhanced condition builder
+    const { conditions, values } = buildWhereConditions(criteria);
     
     const query = `
       SELECT COUNT(*) as count FROM "${tableName}"

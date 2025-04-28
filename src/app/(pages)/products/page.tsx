@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 import ClientProductsPage from "../../../components/pages/products/ClientProductsPage";
-import { getAllProducts, getProductFilters, FilterData } from "@/lib/api";
+import { getAllProducts, getProductFilters, FilterData, PaginationInfo } from "@/lib/api";
 import { Product } from "@/lib/types";
 
 // Generate metadata for SEO
@@ -24,8 +24,27 @@ export const metadata: Metadata = {
 // Set the revalidation timer - refresh the page every hour
 export const revalidate = 3600;
 
-export default async function ProductsPage() {
-  let products: Product[] = [];
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  // Get page and limit from searchParams
+  const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page) : 1;
+  const limit = typeof searchParams?.limit === 'string' ? parseInt(searchParams.limit) : 1;
+  
+  let productsData: { products: Product[], pagination: PaginationInfo } = {
+    products: [],
+    pagination: {
+      page: 1,
+      limit: 9,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false
+    }
+  };
+  
   let filterData: FilterData = {
     categories: [],
     priceRanges: []
@@ -33,13 +52,13 @@ export default async function ProductsPage() {
   
   try {
     // Fetch products and filters on the server for SEO benefits
-    const [productsData, filtersData] = await Promise.all([
-      getAllProducts(),
+    const [productsResult, filtersResult] = await Promise.all([
+      getAllProducts(page, limit),
       getProductFilters()
     ]);
     
-    products = productsData;
-    filterData = filtersData;
+    productsData = productsResult;
+    filterData = filtersResult;
   } catch (error) {
     console.error('Error loading products and filters:', error);
     // Products will remain an empty array
@@ -63,8 +82,9 @@ export default async function ProductsPage() {
       
       {/* Client Component that handles filtering and sorting */}
       <ClientProductsPage 
-        initialProducts={products}
+        initialProducts={productsData.products}
         initialFilterData={filterData}
+        initialPagination={productsData.pagination}
       />
       
       <Footer />
