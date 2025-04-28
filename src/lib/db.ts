@@ -202,9 +202,7 @@ export const db = {
       RETURNING *
     `;
     
-    console.log('Create query:', query);
-    console.log('Create values:', values);
-    
+
     const result = await pool.query(query, values);
     return result.rows[0];
   },
@@ -217,9 +215,7 @@ export const db = {
   ): Promise<[number, Record[]]> {
     const criteriaKeys = Object.keys(criteria);
     
-    console.log(`Updating "${tableName}" where:`, criteria);
-    console.log(`Update data:`, data);
-    
+
     // Special handling for careInstructions and deliveryTime fields
     // Ensure we're using snake_case column names in database operations
     if (tableName === 'products') {
@@ -262,15 +258,12 @@ export const db = {
       RETURNING *
     `;
     
-    console.log('SQL Query:', query);
     
     const values = [...updatedDataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
-    console.log('SQL Values:', values);
-    
+
     try {
       const result = await pool.query(query, values);
-      console.log(`Update result: ${result.rowCount} rows affected`);
-      
+
       // Debug the returned data
       if (result.rows && result.rows.length > 0) {
         console.log('First updated row:', result.rows[0]);

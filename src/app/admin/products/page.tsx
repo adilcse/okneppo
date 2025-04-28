@@ -67,9 +67,28 @@ export default function AdminProducts() {
         throw new Error('Failed to delete product');
       }
       
+      const data = await response.json();
+      
       // Remove product from state
       setProducts(products.filter(product => product.id !== productToDelete));
       setProductToDelete(null);
+      
+      // Show success message with image deletion details if available
+      if (data.imagesDeletionSummary) {
+        const { totalImages, deletedImages, failedImages } = data.imagesDeletionSummary;
+        const imageMessage = totalImages > 0 
+          ? ` ${deletedImages} of ${totalImages} images were deleted.`
+          : ' No images were associated with this product.';
+          
+        const failedMessage = failedImages > 0 
+          ? ` (${failedImages} images could not be deleted)` 
+          : '';
+          
+        alert(`Product deleted successfully.${imageMessage}${failedMessage}`);
+      } else {
+        alert('Product deleted successfully.');
+      }
+      
     } catch (err) {
       setError('Error deleting product. Please try again.');
       console.error(err);

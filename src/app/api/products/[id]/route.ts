@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { bucketName, storage } from '@/lib/gcpStorage';
 
 // Get a single product by ID
 export async function GET(
@@ -153,13 +154,63 @@ export async function DELETE(
       );
     }
     
-    // Check if product exists
+    // Check if product exists and retrieve its data including images
     const existingProduct = await db.findById('products', id);
     if (!existingProduct) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
       );
+    }
+    
+    // If images exist in the product, delete them from storage
+    const deletedImages = [];
+    const failedImages = [];
+    
+    if (existingProduct.images && Array.isArray(existingProduct.images) && existingProduct.images.length > 0) {
+      console.log(`Deleting ${existingProduct.images.length} images for product ${id}`);
+      
+      // Only attempt to delete images if bucket is configured
+      if (bucketName && storage) {
+        const bucket = storage.bucket(bucketName);
+        
+        // Process each image URL
+        for (const imageUrl of existingProduct.images) {
+          try {
+            // Skip if not a cloud storage URL
+            if (!imageUrl.includes('storage.googleapis.com')) {
+              console.log(`Skipping non-GCS image: ${imageUrl}`);
+              continue;
+            }
+            
+            // Extract the file path from the URL
+            // Format: https://storage.googleapis.com/bucketName/path/to/file.jpg
+            let filePath;
+            const url = new URL(imageUrl);
+            if (url.hostname === 'storage.googleapis.com') {
+              // Remove the leading slash and the bucket name from the pathname
+              const pathWithBucket = url.pathname.substring(1); // Remove leading slash
+              filePath = pathWithBucket.substring(pathWithBucket.indexOf('/') + 1);
+            } else {
+              throw new Error('Invalid Google Cloud Storage URL format');
+            }
+            
+            // Delete the file from the bucket
+            const file = bucket.file(filePath);
+            await file.delete();
+            
+            // Track successfully deleted images
+            deletedImages.push(imageUrl);
+            console.log(`Successfully deleted image: ${filePath}`);
+          } catch (imgError) {
+            // Don't stop the deletion process if one image fails
+            console.error(`Error deleting image ${imageUrl}:`, imgError);
+            failedImages.push(imageUrl);
+          }
+        }
+      } else {
+        console.warn('Skipping image deletion: Google Cloud Storage is not properly configured');
+      }
     }
     
     // Delete product using the criteria object { id }
@@ -174,7 +225,12 @@ export async function DELETE(
     
     return NextResponse.json({
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product deleted successfully',
+      imagesDeletionSummary: {
+        totalImages: Array.isArray(existingProduct.images) ? existingProduct.images.length : 0,
+        deletedImages: deletedImages.length,
+        failedImages: failedImages.length
+      }
     });
     
   } catch (error) {

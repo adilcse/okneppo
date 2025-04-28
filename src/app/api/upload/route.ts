@@ -1,35 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Storage } from '@google-cloud/storage';
-import path from 'path';
 import crypto from 'crypto';
+import sharp from 'sharp';
+import { bucketName, storage } from '@/lib/gcpStorage';
+// WebP conversion quality (0-100)
+const WEBP_QUALITY = 95;
+// Maximum width for resized images (maintain aspect ratio)
+const MAX_WIDTH = 1200;
 
-// Initialize Google Cloud Storage
-let storage: Storage;
-try {
-  // If GCP_SERVICE_ACCOUNT is provided, use it
-  const serviceAccount = process.env.GCP_SERVICE_ACCOUNT 
-    ? JSON.parse(process.env.GCP_SERVICE_ACCOUNT)
-    : undefined;
-
-  if (serviceAccount) {
-    storage = new Storage({
-      credentials: serviceAccount,
-      projectId: serviceAccount.project_id
-    });
-    console.log('Google Cloud Storage initialized with service account');
-  } else {
-    // Fall back to application default credentials or environment variables
-    storage = new Storage();
-    console.log('Google Cloud Storage initialized with default credentials');
+/**
+ * Optimizes an image by:
+ * 1. Converting to WebP format for better compression
+ * 2. Resizing large images to a reasonable max width
+ * 3. Stripping metadata to reduce file size
+ */
+async function optimizeImage(buffer: Buffer): Promise<Buffer> {
+  try {
+    // Initialize sharp with the input buffer
+    let imageProcessor = sharp(buffer);
+    
+    // Get image metadata to check dimensions
+    const metadata = await imageProcessor.metadata();
+    
+    // Resize if the image is wider than MAX_WIDTH
+    if (metadata.width && metadata.width > MAX_WIDTH) {
+      imageProcessor = imageProcessor.resize({
+        width: MAX_WIDTH,
+        withoutEnlargement: true, // Don't enlarge if smaller than MAX_WIDTH
+      });
+    }
+    
+    // Convert to WebP with optimal settings
+    return await imageProcessor
+      .webp({
+        quality: WEBP_QUALITY,
+        effort: 4, // Higher compression effort (0-6)
+        smartSubsample: true, // Enables high quality chroma subsampling
+        lossless: true, // Use lossy compression for better size reduction
+      })
+      .toBuffer();
+  } catch (error) {
+    console.error('Image optimization failed:', error);
+    throw error;
   }
-} catch (err) {
-  const error = err as Error;
-  console.error('Google Cloud Storage initialization error:', error.message);
-  storage = new Storage(); // Try with default credentials as fallback
 }
-
-// Get the bucket name from environment variable
-const bucketName = process.env.GCP_STORAGE_BUCKET || '';
 
 // Handle file upload
 export async function POST(request: NextRequest) {
@@ -68,9 +81,12 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create a unique file name
-    const fileExtension = path.extname(file.name);
-    const fileName = `${crypto.randomBytes(16).toString('hex')}${fileExtension}`;
+    // Optimize the image (convert to WebP and resize if needed)
+    const optimizedBuffer = await optimizeImage(buffer);
+
+    // Create a unique file name with WebP extension
+    const uniqueId = crypto.randomBytes(16).toString('hex');
+    const fileName = `${uniqueId}.webp`;
     
     // Define the storage path
     const storagePath = `images/products/${fileName}`;
@@ -78,10 +94,10 @@ export async function POST(request: NextRequest) {
     // Create a file reference in the bucket
     const fileRef = bucket.file(storagePath);
     
-    // Upload the file to Google Cloud Storage
-    await fileRef.save(buffer, {
+    // Upload the optimized WebP image to Google Cloud Storage
+    await fileRef.save(optimizedBuffer, {
       metadata: {
-        contentType: file.type,
+        contentType: 'image/webp',
       },
       public: true, // Make the file publicly accessible
     });
@@ -94,7 +110,10 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ 
       success: true, 
-      filePath: publicUrl
+      filePath: publicUrl,
+      originalSize: buffer.length,
+      optimizedSize: optimizedBuffer.length,
+      compressionRatio: Math.round((buffer.length - optimizedBuffer.length) / buffer.length * 100)
     });
   } catch (error: unknown) {
     console.error('Error uploading file:', error);

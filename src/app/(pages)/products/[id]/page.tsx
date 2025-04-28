@@ -25,5 +25,11 @@ export const revalidate = 3600;
 
 export default async function ProductPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  console.log("Server rendering product page for ID:", params.id);
+  
+  // Validate that the ID is correct to prevent redirects
+  if (!params.id || isNaN(Number(params.id))) {
+    console.error("Invalid product ID:", params.id);
+  }
   return <ProductClientPage params={params} />;
 } 

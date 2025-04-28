@@ -10,47 +10,6 @@ import { Product, mapProductFields, formatPrice } from "../../../../lib/types";
 import ProductJsonLd from '@/components/utils/ProductJsonLd';
 import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
 
-// Mock product data function for client-side
-async function getProductClientSide(id: string): Promise<{ 
-  product: Product; 
-  relatedProducts: Product[] 
-}> {
-  try {
-    // Fetch from API route instead of directly using the server-only getProduct
-    const response = await fetch(`/api/products/${id}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch product (status: ${response.status})`);
-    }
-    
-    const productData = await response.json();
-    
-    // Use the utility function to ensure all fields are properly mapped
-    const product = mapProductFields(productData);
-    
-    // Fetch related products (products in the same category)
-    const relatedResponse = await fetch(`/api/products?category=${encodeURIComponent(product.category)}`);
-    let relatedProducts: Product[] = [];
-    
-    if (relatedResponse.ok) {
-      const allCategoryProducts = await relatedResponse.json();
-      // Filter out the current product and limit to 3 items
-      relatedProducts = allCategoryProducts
-        .filter((p: Partial<Product>) => p.id !== parseInt(id))
-        .slice(0, 3)
-        .map(mapProductFields);
-    }
-    
-    return { 
-      product, 
-      relatedProducts 
-    };
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    throw error;
-  }
-}
-
 export default function ProductClientPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -63,10 +22,37 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         setLoading(true);
         console.log('Loading product with ID:', params.id);
         
-        const { product, relatedProducts } = await getProductClientSide(params.id);
+        // Add a timestamp to prevent caching issues
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/products/${params.id}?t=${timestamp}`);
         
-        if (!product) {
-          throw new Error('Product data is incomplete or missing');
+        // Log the response status to help diagnose issues
+        console.log('Product API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch product (status: ${response.status})`);
+        }
+        
+        const productData = await response.json();
+        console.log('Product data loaded successfully');
+        
+        // Use the utility function to ensure all fields are properly mapped
+        const product = mapProductFields(productData);
+        
+        // Log the product ID to verify it matches the requested ID
+        console.log('Loaded product ID:', product.id, 'vs requested ID:', parseInt(params.id));
+        
+        // Fetch related products (products in the same category)
+        const relatedResponse = await fetch(`/api/products?category=${encodeURIComponent(product.category)}`);
+        let relatedProducts: Product[] = [];
+        
+        if (relatedResponse.ok) {
+          const allCategoryProducts = await relatedResponse.json();
+          // Filter out the current product and limit to 3 items
+          relatedProducts = allCategoryProducts
+            .filter((p: Partial<Product>) => p.id !== parseInt(params.id))
+            .slice(0, 3)
+            .map(mapProductFields);
         }
         
         console.log('Product data loaded:', product.name);

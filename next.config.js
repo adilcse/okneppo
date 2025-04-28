@@ -21,33 +21,6 @@ const nextConfig = {
   // Enable built-in compression
   compress: true,
   
-  // Improve SEO by redirecting common path variants
-  redirects: async () => {
-    return [
-      // Redirect trailing slashes for better SEO
-      {
-        source: '/:path+/',
-        destination: '/:path+',
-        permanent: true,
-      },
-      // Redirect lowercase variants to canonical URLs
-      {
-        source: '/Products/:path*',
-        destination: '/products/:path*',
-        permanent: true,
-      },
-      {
-        source: '/About',
-        destination: '/about',
-        permanent: true,
-      },
-      {
-        source: '/Contact',
-        destination: '/contact',
-        permanent: true,
-      },
-    ];
-  },
   
   // Add HTTP/2 Server Push
   experimental: {
