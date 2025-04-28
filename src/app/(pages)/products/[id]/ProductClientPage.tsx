@@ -34,8 +34,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         }
         
         const productData = await response.json();
-        console.log('Product data loaded successfully');
-        
+
         // Use the utility function to ensure all fields are properly mapped
         const product = mapProductFields(productData);
         
@@ -43,16 +42,16 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         console.log('Loaded product ID:', product.id, 'vs requested ID:', parseInt(params.id));
         
         // Fetch related products (products in the same category)
-        const relatedResponse = await fetch(`/api/products?category=${encodeURIComponent(product.category)}`);
+        const relatedResponse = await fetch(`/api/products?limit=4&category=${encodeURIComponent(product.category)}`);
         let relatedProducts: Product[] = [];
         
         if (relatedResponse.ok) {
           const allCategoryProducts = await relatedResponse.json();
           // Filter out the current product and limit to 3 items
-          relatedProducts = allCategoryProducts
-            .filter((p: Partial<Product>) => p.id !== parseInt(params.id))
+          relatedProducts = allCategoryProducts?.products
+            ?.filter((p: Partial<Product>) => p.id !== parseInt(params.id))
             .slice(0, 3)
-            .map(mapProductFields);
+            .map(mapProductFields) || [];
         }
         
         console.log('Product data loaded:', product.name);
