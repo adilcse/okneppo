@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "../../../../components/layout/Header";
 import Footer from "../../../../components/layout/Footer";
@@ -9,6 +9,25 @@ import ProductCard from "@/components/ui/ProductCard";
 import { Product, mapProductFields, formatPrice } from "../../../../lib/types";
 import ProductJsonLd from '@/components/utils/ProductJsonLd';
 import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
+
+// Helper function to format text with line breaks
+function formatText(text: string): React.ReactNode {
+  if (!text) return '';
+  
+  // Split text by newline character
+  const parts = text.split('\\n');
+  
+  // If there are no special newline characters, return plain text
+  if (parts.length === 1) return text;
+  
+  // Create an array of elements with line breaks
+  return parts.map((part, index) => (
+    <React.Fragment key={index}>
+      {part}
+      {index < parts.length - 1 && <br />}
+    </React.Fragment>
+  ));
+}
 
 export default function ProductClientPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -156,7 +175,9 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                       <p className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
                       
                       <div className="mb-8">
-                        <p className="text-gray-800 dark:text-gray-200 mb-8">{product.description}</p>
+                        <p className="text-gray-800 dark:text-gray-200 mb-8">
+                          {formatText(product.description)}
+                        </p>
                         
                         <a 
                           href={`https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}%20(Price%3A%20${encodeURIComponent(formatPrice(product.price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(window.location.href)}.%20Could%20you%20provide%20more%20information%3F`}
@@ -173,7 +194,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Product Details</h2>
                         <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-800 dark:text-gray-200">
                           {product.details.map((detail, index) => (
-                            <li key={index}>{detail}</li>
+                            <li key={index}>{formatText(detail)}</li>
                           ))}
                         </ul>
                       </div>
@@ -181,14 +202,16 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                       {/* Care Instructions */}
                       <div className="mb-6">
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Care Instructions</h2>
-                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">{product.careInstructions}</p>
+                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                          {formatText(product.careInstructions)}
+                        </p>
                       </div>
                       
                       {/* Delivery Information */}
                       <div>
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Delivery</h2>
                         <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                          Estimated delivery time: {product.deliveryTime}
+                          Estimated delivery time: {formatText(product.deliveryTime)}
                         </p>
                       </div>
                     </div>
