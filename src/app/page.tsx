@@ -50,11 +50,11 @@ export default async function Home() {
       recognition: { industry: "", influence: "", legacy: "" },
       studio: { description: "" },
       images: {
-        portrait: "/images/designer/Nishad.jpg",
-        at_work: "/images/designer/Nishad.jpg",
-        fashion_show: "/images/designer/Nishad.jpg", 
-        studio: "/images/designer/Nishad.jpg",
-        homepage: "/images/designer/Nishad.jpg"
+        portrait: "/images/designer/Nishad-crop.jpg",
+        at_work: "/images/designer/Nishad-crop.jpg",
+        fashion_show: "/images/designer/Nishad-crop.jpg", 
+        studio: "/images/designer/Nishad-crop.jpg",
+        homepage: "/images/designer/Nishad-crop.jpg"
       }
     };
   }

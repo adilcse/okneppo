@@ -13,10 +13,9 @@ import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
 // Helper function to format text with line breaks
 function formatText(text: string): React.ReactNode {
   if (!text) return '';
-  
+
   // Split text by newline character
-  const parts = text.split('\\n');
-  
+  const parts = text.split(`\n`);
   // If there are no special newline characters, return plain text
   if (parts.length === 1) return text;
   

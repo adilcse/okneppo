@@ -53,9 +53,9 @@ export default function ClientHomeContent({ modelData, designer }: ClientHomeCon
               <p className="text-gray-600 dark:text-gray-400 mb-6 text-center md:text-left">
                 {designer.achievements}
               </p>
-              <div className="text-center md:text-left">
+              <div className="text-gray-600 dark:text-gray-400 text-center md:text-left">
                 <Link href="/about">
-                  <Button>Learn More</Button>
+                  <Button variant='secondary'>Learn More</Button>
                 </Link>
               </div>
             </div>
