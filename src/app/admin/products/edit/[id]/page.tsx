@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 import Image from 'next/image';
 import { Product, mapProductFields } from '@/lib/types';
 import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
+import JsonFormFiller, { ProductFormData as JsonProductFormData } from '@/components/admin/JsonFormFiller';
 
 interface ProductFormData {
   name: string;
@@ -347,21 +348,31 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
       deliveryTime: prev.deliveryTime || generatedData.deliveryTime,
     }));
   };
+
+  // Add handler for JSON form filling
+  const handleFillFromJson = (jsonData: JsonProductFormData) => {
+    setFormData(prev => ({
+      name: jsonData.name || prev.name,
+      price: jsonData.price || prev.price,
+      category: jsonData.category || prev.category,
+      description: jsonData.description || prev.description,
+      images: prev.images, // Always keep existing images
+      details: jsonData.details || prev.details,
+      careInstructions: jsonData.careInstructions || prev.careInstructions,
+      deliveryTime: jsonData.deliveryTime || prev.deliveryTime,
+      featured: typeof jsonData.featured !== 'undefined' ? jsonData.featured : prev.featured
+    }));
+  };
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-black text-white shadow-md">
-          <div className="container mx-auto px-4 py-3 flex items-center">
-            <Link href="/admin/products" className="mr-6 hover:underline">
-              ← Back to Products
-            </Link>
-            <h1 className="text-xl font-semibold">Edit Product</h1>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-t-emerald-500 border-r-emerald-500 border-b-transparent border-l-transparent rounded-full" role="status">
+            <span className="sr-only">Loading...</span>
           </div>
-        </header>
-        <main className="container mx-auto px-4 py-8 flex items-center justify-center">
-          <p className="text-xl">Loading product data...</p>
-        </main>
+          <p className="mt-2 text-gray-600">Loading product data...</p>
+        </div>
       </div>
     );
   }
@@ -390,12 +401,15 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
         
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-            <span className="block sm:inline">Product updated successfully! Redirecting...</span>
+            <span className="block sm:inline">Product updated successfully!</span>
           </div>
         )}
-
+        
         <div className="bg-white rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit}>
+            {/* Add JSON Form Filler Component */}
+            <JsonFormFiller onFillForm={handleFillFromJson} />
+            
             {/* Basic Information */}
             <div className="mb-6">
               <h2 className="text-lg font-medium mb-4">Basic Information</h2>

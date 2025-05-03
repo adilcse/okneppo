@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Cookies from 'js-cookie';
 import Image from 'next/image';
 import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
+import JsonFormFiller, { ProductFormData as JsonProductFormData } from '@/components/admin/JsonFormFiller';
 
 interface ProductFormData {
   name: string;
@@ -259,6 +260,21 @@ export default function NewProduct() {
     }));
   };
 
+  // Add this new function to handle JSON form filling
+  const handleFillFromJson = (jsonData: JsonProductFormData) => {
+    setFormData(prev => ({
+      name: jsonData.name || prev.name,
+      price: jsonData.price || prev.price,
+      category: jsonData.category || prev.category,
+      description: jsonData.description || prev.description,
+      images: prev.images, // Always keep existing images
+      details: jsonData.details || prev.details,
+      careInstructions: jsonData.careInstructions || prev.careInstructions,
+      deliveryTime: jsonData.deliveryTime || prev.deliveryTime,
+      featured: typeof jsonData.featured !== 'undefined' ? jsonData.featured : prev.featured
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Admin Header */}
@@ -289,6 +305,9 @@ export default function NewProduct() {
         
         <div className="bg-white rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit}>
+            {/* Add JSON Form Filler Component */}
+            <JsonFormFiller onFillForm={handleFillFromJson} />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Name */}
               <div>

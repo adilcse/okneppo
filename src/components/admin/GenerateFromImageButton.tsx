@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const USE_AI_API = process.env.NEXT_PUBLIC_USE_AI_API === 'true';
+
 interface GenerateFromImageProps {
   images: string[];
   onSuccess: (generatedData: {
@@ -57,6 +59,9 @@ export default function GenerateFromImageButton({
     }
   };
 
+  if (!USE_AI_API) {
+    return null;
+  }
   return (
     <div className="mb-4">
       <button
