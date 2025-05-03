@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 import Image from 'next/image';
+import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
 
 interface ProductFormData {
   name: string;
@@ -16,6 +17,16 @@ interface ProductFormData {
   careInstructions: string;
   deliveryTime: string;
   featured: boolean;
+}
+
+interface GeneratedProductData {
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  details: string[];
+  careInstructions: string;
+  deliveryTime: string;
 }
 
 export default function NewProduct() {
@@ -230,7 +241,24 @@ export default function NewProduct() {
       setIsSubmitting(false);
     }
   };
-  
+
+  const handleGenerateSuccess = (generatedData: GeneratedProductData) => {
+    // Update form data with generated content while keeping existing values
+    setFormData(prev => ({
+      name: prev.name || generatedData.name,
+      price: prev.price || generatedData.price.toString(),
+      category: prev.category || generatedData.category,
+      description: prev.description || generatedData.description,
+      images: prev.images, // Keep existing images
+      details: prev.details.length === 1 && !prev.details[0] 
+        ? generatedData.details // Replace empty details
+        : prev.details, // Keep existing details
+      careInstructions: prev.careInstructions || generatedData.careInstructions,
+      deliveryTime: prev.deliveryTime || generatedData.deliveryTime,
+      featured: prev.featured
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Admin Header */}
@@ -449,28 +477,37 @@ export default function NewProduct() {
               
               {/* Uploaded Images */}
               {formData.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                  {formData.images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <div className="aspect-square relative border border-gray-200 rounded overflow-hidden">
-                        <Image 
-                          src={image} 
-                          alt={`Product image ${index + 1}`}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover"
-                        />
+                <>
+                  <div className="mb-4">
+                    <GenerateFromImageButton 
+                      images={formData.images}
+                      onSuccess={handleGenerateSuccess}
+                      disabled={uploadingImage}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square relative border border-gray-200 rounded overflow-hidden">
+                          <Image 
+                            src={image} 
+                            alt={`Product image ${index + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
               
               {formData.images.length === 0 && !uploadingImage && (

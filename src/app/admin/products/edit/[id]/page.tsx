@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Cookies from 'js-cookie';
 import Image from 'next/image';
 import { Product, mapProductFields } from '@/lib/types';
+import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
 
 interface ProductFormData {
   name: string;
@@ -17,6 +18,16 @@ interface ProductFormData {
   careInstructions: string;
   deliveryTime: string;
   featured: boolean;
+}
+
+interface GeneratedProductData {
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  details: string[];
+  careInstructions: string;
+  deliveryTime: string;
 }
 
 export default function EditProduct({params}: { params: Promise<{ id: string }> }) {
@@ -320,6 +331,22 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
       setIsSubmitting(false);
     }
   };
+
+  const handleGenerateSuccess = (generatedData: GeneratedProductData) => {
+    // Update form data with generated content while keeping existing values
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || generatedData.name,
+      price: prev.price || generatedData.price.toString(),
+      category: prev.category || generatedData.category,
+      description: prev.description || generatedData.description,
+      details: prev.details.length === 1 && !prev.details[0] 
+        ? generatedData.details // Replace empty details
+        : prev.details, // Keep existing details
+      careInstructions: prev.careInstructions || generatedData.careInstructions,
+      deliveryTime: prev.deliveryTime || generatedData.deliveryTime,
+    }));
+  };
   
   if (isLoading) {
     return (
@@ -521,33 +548,42 @@ export default function EditProduct({params}: { params: Promise<{ id: string }> 
               
               {/* Image Preview */}
               {formData.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {formData.images.map((src, index) => (
-                    <div key={index} className="relative group">
-                      <div className="aspect-square bg-gray-100 rounded-md overflow-hidden">
-                        <Image
-                          src={src}
-                          alt={`Product image ${index + 1}`}
-                          width={150}
-                          height={150}
-                          className="object-cover w-full h-full"
-                        />
+                <>
+                  <div className="mb-4">
+                    <GenerateFromImageButton 
+                      images={formData.images}
+                      onSuccess={handleGenerateSuccess}
+                      disabled={uploadingImage}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                    {formData.images.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square bg-gray-100 rounded-md overflow-hidden">
+                          <Image
+                            src={image}
+                            alt={`Product image ${index + 1}`}
+                            width={150}
+                            height={150}
+                            className="object-cover w-full h-full"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ✕
+                        </button>
+                        {index === 0 && (
+                          <span className="absolute top-1 left-1 bg-black text-white text-xs px-2 py-1 rounded">
+                            Main
+                          </span>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ✕
-                      </button>
-                      {index === 0 && (
-                        <span className="absolute top-1 left-1 bg-black text-white text-xs px-2 py-1 rounded">
-                          Main
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
             
