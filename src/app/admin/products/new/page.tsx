@@ -188,7 +188,7 @@ export default function NewProduct() {
     setFormData(prev => ({ ...prev, details: newDetails }));
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, createNext: boolean = false) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
@@ -229,10 +229,22 @@ export default function NewProduct() {
       }
       
       setSuccess(true);
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push('/admin/products');
-      }, 2000);
+      
+      if (createNext) {
+        // Reset form for next product
+        setTimeout(() => {
+          setFormData({
+            ...initialFormData,
+            category: formData.category, // Keep the same category for convenience
+          });
+          setSuccess(false);
+        }, 1500);
+      } else {
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          router.push('/admin/products');
+        }, 2000);
+      }
       
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error creating product. Please try again.';
@@ -304,7 +316,7 @@ export default function NewProduct() {
         )}
         
         <div className="bg-white rounded-lg shadow-md p-6">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => handleSubmit(e)}>
             {/* Add JSON Form Filler Component */}
             <JsonFormFiller onFillForm={handleFillFromJson} />
 
@@ -566,21 +578,34 @@ export default function NewProduct() {
               </button>
             </div>
             
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <Link
-                href="/admin/products"
-                className="px-6 py-2 mr-4 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting || uploadingImage}
-                className="px-6 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-70"
-              >
-                {isSubmitting ? 'Creating...' : 'Create Product'}
-              </button>
+            {/* Submit Buttons */}
+            <div className="flex justify-between items-center mt-6">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin/products')}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded mr-4 hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={(e) => handleSubmit(e, true)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-70"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save & Create Next'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-70"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Product'}
+                </button>
+              </div>
             </div>
           </form>
         </div>

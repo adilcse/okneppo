@@ -14,6 +14,11 @@ export default function AdminProducts() {
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const router = useRouter();
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
   // Check authentication
   useEffect(() => {
     const token = Cookies.get('admin-token');
@@ -29,7 +34,8 @@ export default function AdminProducts() {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetch('/api/products');
+        // Add pagination params to the API call
+        const response = await fetch(`/api/products?page=${currentPage}&limit=${itemsPerPage}`);
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
@@ -38,6 +44,16 @@ export default function AdminProducts() {
         // Map each product to ensure consistent field structure
         const mappedProducts = Array.isArray(data?.products) ? data.products.map(mapProductFields) : [];
         setProducts(mappedProducts);
+        
+        // Set pagination data if available from API
+        if (data.pagination) {
+          setTotalPages(data.pagination.totalPages || 1);
+        } else {
+          // If the API doesn't provide pagination info, calculate it here
+          const allProducts = await fetch('/api/products?all=true').then(res => res.json());
+          const total = allProducts?.products?.length || 0;
+          setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
+        }
       } catch (err) {
         setError('Error loading products. Please try again.');
         console.error(err);
@@ -47,7 +63,7 @@ export default function AdminProducts() {
     }
     
     loadProducts();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   // Delete product handler
   const handleDelete = async () => {
@@ -93,6 +109,83 @@ export default function AdminProducts() {
       setError('Error deleting product. Please try again.');
       console.error(err);
     }
+  };
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  // Generate pagination buttons
+  const renderPaginationButtons = () => {
+    const pages = [];
+    const maxButtons = 5; // Max number of pagination buttons to show
+    
+    // Calculate range of page numbers to display
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = startPage + maxButtons - 1;
+    
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    // Previous button
+    pages.push(
+      <button
+        key="prev"
+        onClick={() => goToPage(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Previous</span>
+        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => goToPage(i)}
+          aria-current={i === currentPage ? "page" : undefined}
+          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+            i === currentPage
+              ? 'z-10 bg-emerald-50 border-emerald-500 text-emerald-600'
+              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Next button
+    pages.push(
+      <button
+        key="next"
+        onClick={() => goToPage(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="sr-only">Next</span>
+        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
+    return pages;
   };
 
   return (
@@ -215,6 +308,52 @@ export default function AdminProducts() {
                 </table>
               </div>
             </div>
+            
+            {/* Pagination */}
+            {products.length > 0 && (
+              <div className="py-3 flex items-center justify-between mt-4">
+                <div className="flex-1 flex justify-between sm:hidden">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{products.length}</span> product{products.length !== 1 ? 's' : ''} - Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center">
+                    <label htmlFor="itemsPerPage" className="mr-2 text-sm text-gray-600">Show:</label>
+                    <select
+                      id="itemsPerPage"
+                      value={itemsPerPage}
+                      onChange={handleItemsPerPageChange}
+                      className="mr-4 border-gray-300 rounded-md shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      {renderPaginationButtons()}
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>
