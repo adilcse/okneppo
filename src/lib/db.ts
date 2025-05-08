@@ -162,6 +162,7 @@ export const db = {
       values.push(offset);
     }
     
+    console.log('Query:', queryStr);
     const result = await pool.query(queryStr, values);
     return result.rows;
   },

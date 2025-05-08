@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Product, mapProductFields } from '@/lib/types';
+import { Product } from '@/lib/types';
 import Cookies from 'js-cookie';
 
 export default function AdminProducts() {
@@ -34,15 +34,15 @@ export default function AdminProducts() {
         setIsLoading(true);
         setError(null);
         
-        // Add pagination params to the API call
-        const response = await fetch(`/api/products?page=${currentPage}&limit=${itemsPerPage}`);
+        // Add pagination params to the API call and sort by created_at desc
+        const response = await fetch(`/api/products?page=${currentPage}&limit=${itemsPerPage}&sortBy=created_at&sortOrder=desc`);
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
         
         const data = await response.json();
         // Map each product to ensure consistent field structure
-        const mappedProducts = Array.isArray(data?.products) ? data.products.map(mapProductFields) : [];
+        const mappedProducts = Array.isArray(data?.products) ? data.products : [];
         setProducts(mappedProducts);
         
         // Set pagination data if available from API
@@ -50,7 +50,7 @@ export default function AdminProducts() {
           setTotalPages(data.pagination.totalPages || 1);
         } else {
           // If the API doesn't provide pagination info, calculate it here
-          const allProducts = await fetch('/api/products?all=true').then(res => res.json());
+          const allProducts = await fetch('/api/products?all=true&sortBy=created_at&sortOrder=desc').then(res => res.json());
           const total = allProducts?.products?.length || 0;
           setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
         }
@@ -237,6 +237,9 @@ export default function AdminProducts() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Price
                       </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created At
+                      </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
@@ -280,6 +283,15 @@ export default function AdminProducts() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {product.price}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {product.createdAt
+                              ? new Date(product.createdAt).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })
+                              : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <Link 

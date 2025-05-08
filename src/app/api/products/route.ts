@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       details: Array.isArray(productData.details) ? productData.details : [],
       care_instructions: productData.careInstructions || '',
       delivery_time: productData.deliveryTime || '',
-      featured: Boolean(productData.featured)
+      featured: Boolean(productData.featured),
     };
     
     // Create new product

@@ -11,6 +11,7 @@ export interface Product {
   careInstructions: string;
   deliveryTime: string;
   featured: boolean;
+  createdAt: string;
 }
 
 
@@ -72,6 +73,7 @@ export interface FeaturedProduct {
 export function mapProductFields(data: Partial<Product> & { 
   care_instructions?: string; 
   delivery_time?: string; 
+  created_at?: string;
 }): Product {
   // Convert price to number if it's a string (for backward compatibility)
   let price = 0;
@@ -104,7 +106,8 @@ export function mapProductFields(data: Partial<Product> & {
     details: Array.isArray(data.details) ? data.details : [],
     careInstructions,
     deliveryTime,
-    featured: !!data.featured
+    featured: !!data.featured,
+    createdAt: data.created_at || '',
   };
 }
 
