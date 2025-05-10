@@ -4,19 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Product } from '@/lib/types';
 import Cookies from 'js-cookie';
+import { useAdminProducts, useDeleteProduct } from '@/hooks/useAdminProducts';
 
 export default function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const router = useRouter();
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
   // Check authentication
@@ -27,71 +23,35 @@ export default function AdminProducts() {
     }
   }, [router]);
 
-  // Load products
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Add pagination params to the API call and sort by created_at desc
-        const response = await fetch(`/api/products?page=${currentPage}&limit=${itemsPerPage}&sortBy=created_at&sortOrder=desc`);
-        if (!response.ok) {
-          throw new Error('Failed to load products');
-        }
-        
-        const data = await response.json();
-        // Map each product to ensure consistent field structure
-        const mappedProducts = Array.isArray(data?.products) ? data.products : [];
-        setProducts(mappedProducts);
-        
-        // Set pagination data if available from API
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-        } else {
-          // If the API doesn't provide pagination info, calculate it here
-          const allProducts = await fetch('/api/products?all=true&sortBy=created_at&sortOrder=desc').then(res => res.json());
-          const total = allProducts?.products?.length || 0;
-          setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
-        }
-      } catch (err) {
-        setError('Error loading products. Please try again.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    loadProducts();
-  }, [currentPage, itemsPerPage]);
+  // Load products using React Query
+  const { 
+    data,
+    isLoading,
+    error: queryError
+  } = useAdminProducts({
+    page: currentPage,
+    limit: itemsPerPage,
+    sortBy: 'created_at',
+    sortOrder: 'desc'
+  });
+  
+  const products = data?.products || [];
+  const totalPages = data?.pagination?.totalPages || 1;
+  const error = queryError instanceof Error ? queryError.message : null;
+  
+  // Delete product mutation
+  const deleteProductMutation = useDeleteProduct();
 
   // Delete product handler
   const handleDelete = async () => {
     if (!productToDelete) return;
     
     try {
-      setError(null);
-      
-      const response = await fetch(`/api/products/${productToDelete}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${Cookies.get('admin-token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
-      
-      const data = await response.json();
-      
-      // Remove product from state
-      setProducts(products.filter(product => product.id !== productToDelete));
-      setProductToDelete(null);
+      const result = await deleteProductMutation.mutateAsync(productToDelete);
       
       // Show success message with image deletion details if available
-      if (data.imagesDeletionSummary) {
-        const { totalImages, deletedImages, failedImages } = data.imagesDeletionSummary;
+      if (result.imagesDeletionSummary) {
+        const { totalImages, deletedImages, failedImages } = result.imagesDeletionSummary;
         const imageMessage = totalImages > 0 
           ? ` ${deletedImages} of ${totalImages} images were deleted.`
           : ' No images were associated with this product.';
@@ -105,9 +65,11 @@ export default function AdminProducts() {
         alert('Product deleted successfully.');
       }
       
+      // Close the modal
+      setProductToDelete(null);
     } catch (err) {
-      setError('Error deleting product. Please try again.');
-      console.error(err);
+      console.error('Error deleting product:', err);
+      alert('Error deleting product. Please try again.');
     }
   };
 
@@ -303,15 +265,19 @@ export default function AdminProducts() {
                             <button
                               onClick={() => setProductToDelete(product.id)}
                               className="text-red-600 hover:text-red-900"
+                              disabled={deleteProductMutation.isPending}
                             >
-                              Delete
+                              {deleteProductMutation.isPending && productToDelete === product.id 
+                                ? 'Deleting...' 
+                                : 'Delete'
+                              }
                             </button>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                           No products found. Add your first product to get started.
                         </td>
                       </tr>
@@ -382,14 +348,16 @@ export default function AdminProducts() {
               <button
                 onClick={() => setProductToDelete(null)}
                 className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                disabled={deleteProductMutation.isPending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                disabled={deleteProductMutation.isPending}
               >
-                Delete
+                {deleteProductMutation.isPending ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

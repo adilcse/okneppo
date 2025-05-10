@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import QueryProvider from '@/providers/QueryProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 import PageTransition from '@/components/ui/PageTransition';
 
@@ -44,9 +45,11 @@ export default function RootLayout({
       <head />
       <body className="antialiased">
         <ThemeProvider>
-          {children}
-          <OrganizationJsonLd />
-          <PageTransition />
+          <QueryProvider>
+            {children}
+            <OrganizationJsonLd />
+            <PageTransition />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

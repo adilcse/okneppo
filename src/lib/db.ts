@@ -15,7 +15,7 @@ const sql = neon(connectionString);
 // Create connection pool for more complex operations
 const pool = new Pool({ connectionString });
 
-// Interface for filtering records with support for operators
+// Enhanced interface for filtering records with support for logical operators
 export interface FilterCriteria {
   [key: string]: unknown | { 
     '>=': number | string;
@@ -23,8 +23,11 @@ export interface FilterCriteria {
     '<': number | string;
     '>': number | string;
     '!=': unknown;
+    '$like': string;
     [key: string]: unknown; 
-  };
+  } | FilterCriteria[];
+  $or?: FilterCriteria[];
+  $and?: FilterCriteria[];
 }
 
 // Interface for database records
@@ -44,33 +47,73 @@ export async function testConnection(): Promise<boolean> {
   }
 }
 
-// Helper to build WHERE conditions with operators
-function buildWhereConditions(criteria: FilterCriteria): { 
+// Enhanced helper to build WHERE conditions with operators
+function buildWhereConditions(criteria: FilterCriteria, startParamIndex = 1): { 
   conditions: string; 
   values: unknown[];
+  paramIndex: number;
 } {
   const values: unknown[] = [];
-  let paramIndex = 1;
+  let paramIndex = startParamIndex;
   
-  // Process each key in the criteria
-  const conditions = Object.entries(criteria).map(([key, value]) => {
-    // Check if the value is an object with operators
-    if (value !== null && typeof value === 'object') {
-      // It's an object with operators
-      const operatorConditions = Object.entries(value).map(([op, opValue]) => {
-        values.push(opValue);
-        return `"${key}" ${op} $${paramIndex++}`;
-      });
-      
-      return operatorConditions.join(' AND ');
-    } else {
-      // It's a regular equality comparison
-      values.push(value);
-      return `"${key}" = $${paramIndex++}`;
-    }
-  }).join(' AND ');
+  // Handle special logical operators first
+  if ('$or' in criteria && Array.isArray(criteria.$or)) {
+    const orConditions = criteria.$or.map(subCriteria => {
+      const result = buildWhereConditions(subCriteria, paramIndex);
+      paramIndex = result.paramIndex;
+      values.push(...result.values);
+      return `(${result.conditions})`;
+    });
+    
+    return { 
+      conditions: orConditions.join(' OR '), 
+      values, 
+      paramIndex 
+    };
+  }
   
-  return { conditions, values };
+  if ('$and' in criteria && Array.isArray(criteria.$and)) {
+    const andConditions = criteria.$and.map(subCriteria => {
+      const result = buildWhereConditions(subCriteria, paramIndex);
+      paramIndex = result.paramIndex;
+      values.push(...result.values);
+      return `(${result.conditions})`;
+    });
+    
+    return { 
+      conditions: andConditions.join(' AND '), 
+      values, 
+      paramIndex 
+    };
+  }
+  
+  // Process regular criteria
+  const conditions = Object.entries(criteria)
+    .filter(([key]) => key !== '$or' && key !== '$and') // Skip logical operators
+    .map(([key, value]) => {
+      // Check if the value is an object with operators
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        // It's an object with operators
+        const operatorConditions = Object.entries(value as { [key: string]: unknown }).map(([op, opValue]) => {
+          values.push(opValue);
+          
+          // Handle special operators
+          if (op === '$like') {
+            return `"${key}" ILIKE $${paramIndex++}`;
+          }
+          
+          return `"${key}" ${op} $${paramIndex++}`;
+        });
+        
+        return operatorConditions.join(' AND ');
+      } else {
+        // It's a regular equality comparison
+        values.push(value);
+        return `"${key}" = $${paramIndex++}`;
+      }
+    }).join(' AND ');
+  
+  return { conditions, values, paramIndex };
 }
 
 // Database utility object
@@ -92,6 +135,9 @@ export const db = {
       WHERE ${conditions}
       LIMIT 1
     `;
+    
+    console.log('Query:', query);
+    console.log('Values:', values);
     
     const result = await pool.query(query, values);
     return result.rows[0] || null;
@@ -163,6 +209,7 @@ export const db = {
     }
     
     console.log('Query:', queryStr);
+    console.log('Values:', values);
     const result = await pool.query(queryStr, values);
     return result.rows;
   },
@@ -194,6 +241,9 @@ export const db = {
       SELECT COUNT(*) as count FROM "${tableName}"
       WHERE ${conditions}
     `;
+
+    console.log('Query:', query);
+    console.log('Values:', values);
     
     const result = await pool.query(query, values);
     return result.rows[0]?.count ? Number(result.rows[0].count) : 0;
@@ -225,8 +275,9 @@ export const db = {
     criteria: FilterCriteria, 
     data: Record
   ): Promise<[number, Record[]]> {
-    const criteriaKeys = Object.keys(criteria);
-    
+    if (Object.keys(criteria).length === 0) {
+      throw new Error('Cannot update without criteria');
+    }
 
     // Special handling for careInstructions and deliveryTime fields
     // Ensure we're using snake_case column names in database operations
@@ -253,25 +304,32 @@ export const db = {
     }
     
     // Recalculate keys after potential field conversions
-    const updatedDataKeys = Object.keys(data);
+    const dataKeys = Object.keys(data);
     
-    if (updatedDataKeys.length === 0) {
+    if (dataKeys.length === 0) {
       console.log('No data keys found, skipping update');
       return [0, []];
     }
     
-    const setClauses = updatedDataKeys.map((key, i) => `${key} = $${i + 1}`).join(', ');
-    const whereConditions = criteriaKeys.map((key, i) => `${key} = $${i + updatedDataKeys.length + 1}`).join(' AND ');
+    // Build SET clause for update
+    const setClauses = dataKeys.map((key, i) => `"${key}" = $${i + 1}`).join(', ');
+    
+    // Use the enhanced condition builder for WHERE clause
+    // We need to offset the parameter index by the number of data fields
+    const { conditions, values: whereValues } = buildWhereConditions(criteria, dataKeys.length + 1);
     
     const query = `
       UPDATE "${tableName}"
       SET ${setClauses}
-      WHERE ${whereConditions}
+      WHERE ${conditions}
       RETURNING *
     `;
     
+    // Combine data values with where clause values
+    const values = [...dataKeys.map(key => data[key]), ...whereValues];
     
-    const values = [...updatedDataKeys.map(key => data[key]), ...criteriaKeys.map(key => criteria[key])];
+    console.log('Query:', query);
+    console.log('Values:', values);
 
     try {
       const result = await pool.query(query, values);
@@ -290,16 +348,21 @@ export const db = {
   
   // Delete records
   async destroy(tableName: string, criteria: FilterCriteria): Promise<number> {
-    const keys = Object.keys(criteria);
-    const values = keys.map(key => criteria[key]);
+    if (Object.keys(criteria).length === 0) {
+      throw new Error('Cannot delete without criteria');
+    }
     
-    const conditions = keys.map((key, i) => `${key} = $${i + 1}`).join(' AND ');
+    // Use the enhanced condition builder
+    const { conditions, values } = buildWhereConditions(criteria);
     
     const query = `
       DELETE FROM "${tableName}"
       WHERE ${conditions}
       RETURNING *
     `;
+    
+    console.log('Query:', query);
+    console.log('Values:', values);
     
     const result = await pool.query(query, values);
     return result.rowCount || 0;

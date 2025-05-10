@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : null;
     const sortBy = searchParams.get('sortBy');
     const sortOrder = searchParams.get('sortOrder') || 'asc';
+    const search = searchParams.get('search');
     
     // Pagination parameters
     const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
@@ -39,6 +40,18 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // Apply search query if provided
+    if (search && search.trim()) {
+      const searchValue = search.trim();
+      criteria.$or = [
+        { name: { $like: `%${searchValue}%` } },
+        { description: { $like: `%${searchValue}%` } },
+        { category: { $like: `%${searchValue}%` } }
+      ];
+    }
+
+    console.log(JSON.stringify(criteria));
+    
     // Get total count for pagination
     const totalCount = await db.count('products', criteria);
     
@@ -52,6 +65,7 @@ export async function GET(request: NextRequest) {
       } : {})
     };
     
+    console.log(options);
     // Execute the query
     const products = await db.find('products', criteria, options);
     

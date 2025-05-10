@@ -6,9 +6,10 @@ import Header from "../../../../components/layout/Header";
 import Footer from "../../../../components/layout/Footer";
 import ClientProductImageGallery from "./ClientProductImageGallery";
 import ProductCard from "@/components/ui/ProductCard";
-import { Product, mapProductFields, formatPrice } from "../../../../lib/types";
+import { formatPrice } from "../../../../lib/types";
 import ProductJsonLd from '@/components/utils/ProductJsonLd';
 import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
+import { useProduct, useRelatedProducts } from "@/hooks/useProduct";
 
 // Helper function to format text with line breaks
 function formatText(text: string): React.ReactNode {
@@ -29,68 +30,25 @@ function formatText(text: string): React.ReactNode {
 }
 
 export default function ProductClientPage({ params }: { params: { id: string } }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showStickyButton, setShowStickyButton] = useState(false);
   const buttonRef = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    async function loadProduct() {
-      try {
-        setLoading(true);
-        console.log('Loading product with ID:', params.id);
-        
-        // Add a timestamp to prevent caching issues
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/products/${params.id}?t=${timestamp}`);
-        
-        // Log the response status to help diagnose issues
-        console.log('Product API response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch product (status: ${response.status})`);
-        }
-        
-        const productData = await response.json();
-
-        // Use the utility function to ensure all fields are properly mapped
-        const product = mapProductFields(productData);
-        
-        // Log the product ID to verify it matches the requested ID
-        console.log('Loaded product ID:', product.id, 'vs requested ID:', parseInt(params.id));
-        
-        // Fetch related products (products in the same category)
-        const relatedResponse = await fetch(`/api/products?limit=4&category=${encodeURIComponent(product.category)}`);
-        let relatedProducts: Product[] = [];
-        
-        if (relatedResponse.ok) {
-          const allCategoryProducts = await relatedResponse.json();
-          // Filter out the current product and limit to 3 items
-          relatedProducts = allCategoryProducts?.products
-            ?.filter((p: Partial<Product>) => p.id !== parseInt(params.id))
-            .slice(0, 3)
-            .map(mapProductFields) || [];
-        }
-        
-        console.log('Product data loaded:', product.name);
-        setProduct(product);
-        setRelatedProducts(relatedProducts || []);
-        setError(null);
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-        console.error("Error loading product:", errorMessage);
-        setError("Failed to load product. Please try again later.");
-        setProduct(null);
-        setRelatedProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProduct();
-  }, [params.id]);
+  
+  // Fetch product data using React Query
+  const { 
+    data: product,
+    isLoading,
+    error: productError
+  } = useProduct(params.id);
+  
+  // Fetch related products if product data is available
+  const {
+    data: relatedProducts = [],
+    isLoading: relatedLoading
+  } = useRelatedProducts(
+    product?.category,
+    params.id,
+    3
+  );
 
   // Add scroll event listener to check if button is in viewport
   useEffect(() => {
@@ -118,7 +76,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
     return `https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(name)}%20(Price%3A%20${encodeURIComponent(formatPrice(price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}.%20Could%20you%20provide%20more%20information%3F`;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
         <Header />
@@ -130,14 +88,15 @@ export default function ProductClientPage({ params }: { params: { id: string } }
     );
   }
 
-  if (error || !product) {
+  if (productError || !product) {
+    const errorMessage = productError instanceof Error ? productError.message : "Failed to load product. Please try again later.";
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-8 sm:py-12 flex items-center justify-center bg-white dark:bg-gray-900">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-semibold mb-4 text-gray-900 dark:text-white">Product Not Found</h1>
-            <p className="mb-6 text-gray-700 dark:text-gray-300">{error || "The requested product could not be found."}</p>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">{errorMessage}</p>
             <Link href="/products" className="bg-black dark:bg-primary text-white px-6 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors">
               Return to Products
             </Link>
@@ -251,17 +210,21 @@ export default function ProductClientPage({ params }: { params: { id: string } }
               {relatedProducts.length > 0 && (
                 <div className="container mx-auto px-4 py-6 mb-8">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">You May Also Like</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {relatedProducts.map((relatedProduct) => (
-                      <ProductCard
-                        key={relatedProduct.id}
-                        id={relatedProduct.id}
-                        name={relatedProduct.name}
-                        price={relatedProduct.price}
-                        image={relatedProduct.images[0]}
-                      />
-                    ))}
-                  </div>
+                  {relatedLoading ? (
+                    <p className="text-gray-500">Loading related products...</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                      {relatedProducts.map((relatedProduct) => (
+                        <ProductCard
+                          key={relatedProduct.id}
+                          id={relatedProduct.id}
+                          name={relatedProduct.name}
+                          price={relatedProduct.price}
+                          image={relatedProduct.images[0]}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </main>
