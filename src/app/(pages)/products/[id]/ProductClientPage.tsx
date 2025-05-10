@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Header from "../../../../components/layout/Header";
 import Footer from "../../../../components/layout/Footer";
@@ -33,6 +33,8 @@ export default function ProductClientPage({ params }: { params: { id: string } }
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showStickyButton, setShowStickyButton] = useState(false);
+  const buttonRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     async function loadProduct() {
@@ -89,6 +91,32 @@ export default function ProductClientPage({ params }: { params: { id: string } }
 
     loadProduct();
   }, [params.id]);
+
+  // Add scroll event listener to check if button is in viewport
+  useEffect(() => {
+    const handleScroll = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const isVisible = (
+          rect.top >= 0 &&
+          rect.bottom <= window.innerHeight
+        );
+        setShowStickyButton(!isVisible);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial state
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [product]);
+
+  // Function to create WhatsApp link with product details
+  const getWhatsAppLink = (name: string, price: number) => {
+    return `https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(name)}%20(Price%3A%20${encodeURIComponent(formatPrice(price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}.%20Could%20you%20provide%20more%20information%3F`;
+  };
 
   if (loading) {
     return (
@@ -179,7 +207,8 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                         </p>
                         
                         <a 
-                          href={`https://wa.me/918249517832?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(product.name)}%20(Price%3A%20${encodeURIComponent(formatPrice(product.price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(window.location.href)}.%20Could%20you%20provide%20more%20information%3F`}
+                          ref={buttonRef}
+                          href={getWhatsAppLink(product.name, product.price)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full sm:w-auto bg-black dark:bg-primary text-white px-8 py-3 rounded-md hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors inline-block"
@@ -236,6 +265,22 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                 </div>
               )}
             </main>
+            
+            {/* Sticky Contact Button that appears when original button is out of view */}
+            {showStickyButton && (
+              <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-white dark:bg-gray-900 shadow-[0_-4px_10px_rgba(0,0,0,0.1)] border-t border-gray-200 dark:border-gray-700">
+                <div className="container mx-auto flex justify-center">
+                  <a 
+                    href={getWhatsAppLink(product.name, product.price)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:max-w-md bg-black dark:bg-primary text-white px-6 py-3 rounded-md hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors text-center font-medium"
+                  >
+                    Contact About This Item
+                  </a>
+                </div>
+              </div>
+            )}
             
             <Footer />
           </div>
