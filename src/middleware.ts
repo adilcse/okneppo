@@ -12,52 +12,76 @@ const PROTECTED_API_ROUTES = [
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const method = request.method;
+  const origin = request.headers.get('origin');
   
-  // Check if the path is a protected API route
-  const isProtectedApiRoute = PROTECTED_API_ROUTES.some(route => 
-    pathname.startsWith(route)
-  );
-  
-  // For product-specific endpoints (PUT, DELETE operations)
-  const isProductEndpoint = pathname.match(/^\/api\/products\/\d+$/);
-  
-  // Only apply authentication for protected API routes with specific methods
-  // or for product-specific endpoints with PUT/DELETE methods
-  if (
-    (isProtectedApiRoute && method !== 'GET') || 
-    (isProductEndpoint && (method === 'PUT' || method === 'DELETE'))
-  ) {
-    const token = getTokenFromRequest(request);
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const { verified, error } = await verifyToken(token);
+  // Handle CORS for API routes
+  if (pathname.startsWith('/api/')) {
+    // Create a response object to modify
+    const response = NextResponse.next();
     
-    if (!verified) {
-      return NextResponse.json(
-        { error: error || 'Invalid or expired token' },
-        { status: 401 }
-      );
+    // Set CORS headers
+    response.headers.set('Access-Control-Allow-Origin', origin || '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight requests
+    if (method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 204,
+        headers: response.headers,
+      });
     }
     
-    // Token is valid, proceed with the request
-    return NextResponse.next();
+    // Check if the path is a protected API route
+    const isProtectedApiRoute = PROTECTED_API_ROUTES.some(route => 
+      pathname.startsWith(route)
+    );
+    
+    // For product-specific endpoints (PUT, DELETE operations)
+    const isProductEndpoint = pathname.match(/^\/api\/products\/\d+$/);
+    
+    // Only apply authentication for protected API routes with specific methods
+    // or for product-specific endpoints with PUT/DELETE methods
+    if (
+      (isProtectedApiRoute && method !== 'GET') || 
+      (isProductEndpoint && (method === 'PUT' || method === 'DELETE'))
+    ) {
+      const token = getTokenFromRequest(request);
+
+      if (!token) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { 
+            status: 401,
+            headers: response.headers
+          }
+        );
+      }
+
+      const { verified, error } = await verifyToken(token);
+      
+      if (!verified) {
+        return NextResponse.json(
+          { error: error || 'Invalid or expired token' },
+          { 
+            status: 401,
+            headers: response.headers
+          }
+        );
+      }
+    }
+    
+    return response;
   }
 
-  // Not a protected route, proceed normally
+  // Not an API route, proceed normally
   return NextResponse.next();
 }
 
 // Configure which routes use this middleware
 export const config = {
   matcher: [
-    '/api/products/:path*',
-    '/api/upload/:path*',
-    '/api/categories/:path*',
+    '/api/:path*',
   ],
 }; 
