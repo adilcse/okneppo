@@ -60,6 +60,7 @@ function ClientProductsPageContent({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [filterData, setFilterData] = useState<FilterData>(initialFilterData || { categories: ["All"], priceRanges: [] });
   
   // Initialize search from URL params
   useEffect(() => {
@@ -124,8 +125,8 @@ function ClientProductsPageContent({
     }
     
     // Add price range filter
-    if (selectedPriceRange && initialFilterData) {
-      const priceRange = initialFilterData.priceRanges.find(range => range.label === selectedPriceRange);
+    if (selectedPriceRange && filterData) {
+      const priceRange = filterData.priceRanges.find(range => range.label === selectedPriceRange);
       if (priceRange) {
         params.minPrice = priceRange.min;
         if (priceRange.max !== Infinity) {
@@ -146,9 +147,9 @@ function ClientProductsPageContent({
         params.sortOrder = direction === 'z' ? 'desc' : 'asc';
       }
     }
-    
+
     return params;
-  }, [getCurrentPage, initialPagination?.limit, selectedCategory, selectedPriceRange, sortOption, initialFilterData, searchQuery]);
+  }, [getCurrentPage, initialPagination?.limit, selectedCategory, selectedPriceRange, sortOption, filterData, searchQuery]);
   
   // Call the React Query hook with computed params
   const { 
@@ -159,12 +160,18 @@ function ClientProductsPageContent({
     filterData: fetchedFilterData,
   } = useProductsPage(getQueryParams());
   
-  // Use initialFilterData as fallback if fetchedFilterData is not available yet
-  const filterData: FilterData = fetchedFilterData 
-    ? { categories: ["All", ...fetchedFilterData.categories], priceRanges: fetchedFilterData.priceRanges } 
-    : initialFilterData 
-      ? { categories: ["All", ...initialFilterData.categories], priceRanges: initialFilterData.priceRanges } 
-      : { categories: ["All"], priceRanges: [] };
+  useEffect(() => {
+    if (!fetchedFilterData) {
+      return;
+    }
+    
+    const filterData: FilterData = {
+      categories: ["All", ...fetchedFilterData.categories],
+      priceRanges: fetchedFilterData.priceRanges
+    };
+    
+    setFilterData(filterData);
+  }, [fetchedFilterData]);
 
   // Function to update URL with new params without full page reload
   const updateUrlParams = useCallback((params: Record<string, string>) => {

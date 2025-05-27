@@ -15,6 +15,7 @@ interface SearchResult {
 }
 
 export default function Header() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -24,14 +25,14 @@ export default function Header() {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
+
 
   // Handle clicks outside the search dropdown to close it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-      }
+      // if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      //   setShowResults(false);
+      // }
       
       // Also handle clicks outside mobile search
       if (
@@ -57,7 +58,6 @@ export default function Header() {
       return;
     }
 
-    setIsSearching(true);
     try {
       const response = await axiosClient.get('/api/products', {
         params: { 
@@ -104,9 +104,11 @@ export default function Header() {
     
     if (value.trim()) {
       debouncedSearch(value);
+      setIsSearching(true);
     } else {
       setSearchResults([]);
       setShowResults(false);
+      setIsSearching(false);
     }
   };
 
@@ -146,7 +148,6 @@ export default function Header() {
     }
   };
 
-  console.log({mobileSearchVisible});
 
   return (
     <header className="bg-black dark:bg-gray-900 shadow-sm text-white">
@@ -330,9 +331,7 @@ export default function Header() {
                         setSearchQuery('');
                         setShowResults(false);
                         // Then navigate
-                        setTimeout(() => {
-                          router.push(`/products?search=${encodeURIComponent(query)}`);
-                        }, 0);
+                        router.push(`/products?search=${encodeURIComponent(query)}`);
                       }
                     }}
                     className="ml-2 p-1 text-gray-500 hover:text-[#E94FFF]"
@@ -392,19 +391,15 @@ export default function Header() {
                       </div>
                     ))}
                     <div className="p-2 text-center">
-                      <button 
+                      <button
+                        id="mobile-search-button-see-all"
                         onClick={() => {
                           if (searchQuery.trim()) {
-                            // Store the query before clearing state
-                            const query = searchQuery;
-                            // Clear state first
+                            const query = searchQuery.trim();
                             setMobileSearchVisible(false);
                             setSearchQuery('');
                             setShowResults(false);
-                            // Then navigate
-                            setTimeout(() => {
-                              router.push(`/products?search=${encodeURIComponent(query)}`);
-                            }, 0);
+                            router.push(`/products?search=${encodeURIComponent(query)}`);
                           }
                         }}
                         className="text-sm text-gray-600 hover:text-[#E94FFF]"

@@ -55,65 +55,54 @@ function buildWhereConditions(criteria: FilterCriteria, startParamIndex = 1): {
 } {
   const values: unknown[] = [];
   let paramIndex = startParamIndex;
-  
-  // Handle special logical operators first
-  if ('$or' in criteria && Array.isArray(criteria.$or)) {
-    const orConditions = criteria.$or.map(subCriteria => {
-      const result = buildWhereConditions(subCriteria, paramIndex);
-      paramIndex = result.paramIndex;
-      values.push(...result.values);
-      return `(${result.conditions})`;
-    });
-    
-    return { 
-      conditions: orConditions.join(' OR '), 
-      values, 
-      paramIndex 
-    };
-  }
-  
-  if ('$and' in criteria && Array.isArray(criteria.$and)) {
-    const andConditions = criteria.$and.map(subCriteria => {
-      const result = buildWhereConditions(subCriteria, paramIndex);
-      paramIndex = result.paramIndex;
-      values.push(...result.values);
-      return `(${result.conditions})`;
-    });
-    
-    return { 
-      conditions: andConditions.join(' AND '), 
-      values, 
-      paramIndex 
-    };
-  }
-  
-  // Process regular criteria
-  const conditions = Object.entries(criteria)
-    .filter(([key]) => key !== '$or' && key !== '$and') // Skip logical operators
-    .map(([key, value]) => {
-      // Check if the value is an object with operators
-      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        // It's an object with operators
-        const operatorConditions = Object.entries(value as { [key: string]: unknown }).map(([op, opValue]) => {
-          values.push(opValue);
-          
-          // Handle special operators
-          if (op === '$like') {
-            return `"${key}" ILIKE $${paramIndex++}`;
-          }
-          
-          return `"${key}" ${op} $${paramIndex++}`;
-        });
-        
-        return operatorConditions.join(' AND ');
-      } else {
-        // It's a regular equality comparison
-        values.push(value);
-        return `"${key}" = $${paramIndex++}`;
+  const conditions: string[] = [];
+
+  // Process all criteria including logical operators
+  for (const [key, value] of Object.entries(criteria)) {
+    if (key === '$or' && Array.isArray(value)) {
+      const orConditions = value.map(subCriteria => {
+        const result = buildWhereConditions(subCriteria, paramIndex);
+        paramIndex = result.paramIndex;
+        values.push(...result.values);
+        return `(${result.conditions})`;
+      });
+      if (orConditions.length > 0) {
+        conditions.push(`(${orConditions.join(' OR ')})`); 
       }
-    }).join(' AND ');
-  
-  return { conditions, values, paramIndex };
+    } else if (key === '$and' && Array.isArray(value)) {
+      const andConditions = value.map(subCriteria => {
+        const result = buildWhereConditions(subCriteria, paramIndex);
+        paramIndex = result.paramIndex;
+        values.push(...result.values);
+        return `(${result.conditions})`;
+      });
+      if (andConditions.length > 0) {
+        conditions.push(`(${andConditions.join(' AND ')})`); 
+      }
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      // Handle operator conditions (>, <, >=, <=, !=, $like)
+      const operatorConditions = Object.entries(value as { [key: string]: unknown }).map(([op, opValue]) => {
+        values.push(opValue);
+        if (op === '$like') {
+          return `"${key}" ILIKE $${paramIndex++}`;
+        }
+        return `"${key}" ${op} $${paramIndex++}`;
+      });
+      if (operatorConditions.length > 0) {
+        conditions.push(`(${operatorConditions.join(' AND ')})`); 
+      }
+    } else {
+      // Regular equality comparison
+      values.push(value);
+      conditions.push(`"${key}" = $${paramIndex++}`);
+    }
+  }
+
+  return { 
+    conditions: conditions.length > 0 ? conditions.join(' AND ') : 'TRUE',
+    values, 
+    paramIndex 
+  };
 }
 
 // Database utility object
@@ -229,6 +218,7 @@ export const db = {
   
   // Count records with support for operators
   async count(tableName: string, criteria: FilterCriteria = {}): Promise<number> {
+    console.log('Count criteria:', criteria);
     if (Object.keys(criteria).length === 0) {
       const result = await pool.query(`SELECT COUNT(*) as count FROM "${tableName}"`);
       return result.rows[0]?.count ? Number(result.rows[0].count) : 0;
