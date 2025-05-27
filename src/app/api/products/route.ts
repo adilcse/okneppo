@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { mapProductFields } from '@/lib/types';
+import { withCors } from '@/lib/cors';
 
 // Get all products with filtering, sorting and pagination
-export async function GET(request: NextRequest) {
+export const GET = withCors(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     
@@ -95,10 +96,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // Create a new product
-export async function POST(request: NextRequest) {
+export const POST = withCors(async (request: NextRequest) => {
   try {
     // Parse request body
     const productData = await request.json();
@@ -148,4 +149,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}); 

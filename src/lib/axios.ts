@@ -8,8 +8,8 @@ const getBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL || 'https://okneppo.in';
   }
   
-  // If running in the browser, use the current origin
-  return process.env.NEXT_PUBLIC_API_URL || window.location.origin;
+  // If running in the browser, always use the current origin to avoid CORS issues
+  return window.location.origin;
 };
 
 // Create an axios instance with custom configuration

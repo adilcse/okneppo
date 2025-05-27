@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { withCors } from '@/lib/cors';
 
-export async function GET() {
+export const GET = withCors(async () => {
   try {
     // Fetch unique categories from products
     const products = await db.find('products');
@@ -46,4 +47,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}); 
