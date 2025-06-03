@@ -5,6 +5,7 @@ import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 import Button from "../../../components/ui/Button";
 import { useState } from "react";
+import { WHATSAPP_NUMBER } from "@/constant";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ ${formData.message}
     `;
     
     // Create WhatsApp URL with encoded message
-    const waURL = `https://wa.me/918249517832?text=${encodeURIComponent(whatsappMessage)}`;
+    const waURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
     
     // Open WhatsApp in a new tab
     window.open(waURL, '_blank');
@@ -138,7 +139,7 @@ ${formData.message}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Phone / WhatsApp</h3>
-                      <p className="text-gray-600 dark:text-gray-400">+91 8249517832</p>
+                      <p className="text-gray-600 dark:text-gray-400">+{WHATSAPP_NUMBER}</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -182,7 +183,7 @@ ${formData.message}
                   Interested in custom designs or want to discuss a collaboration? 
                   Book a personal consultation with Nishad Fatma to explore possibilities.
                 </p>
-                <a href="https://wa.me/918249517832" target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline">Chat on WhatsApp</Button>
                 </a>
               </div>

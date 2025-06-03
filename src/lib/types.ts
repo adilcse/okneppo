@@ -14,6 +14,15 @@ export interface Product {
   createdAt: string;
 }
 
+export interface Course {
+  id: number;
+  name: string;
+  description: string;
+  duration: string;
+  price: number;
+  level: string;
+  createdAt: string;
+}
 
 export interface FilterData {
   categories: string[];

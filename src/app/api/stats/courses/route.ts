@@ -1,0 +1,17 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { withCors } from '@/lib/cors';
+
+export const GET = withCors(async (request: NextRequest) => {
+  try {
+    const count = await db.count('courses', {});
+    
+    return NextResponse.json({ count });
+  } catch (error) {
+    console.error('Error fetching courses count:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch courses count' },
+      { status: 500 }
+    );
+  }
+}); 

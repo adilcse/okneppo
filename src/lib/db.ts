@@ -80,8 +80,14 @@ function buildWhereConditions(criteria: FilterCriteria, startParamIndex = 1): {
         conditions.push(`(${andConditions.join(' AND ')})`); 
       }
     } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      // Handle operator conditions (>, <, >=, <=, !=, $like)
+      // Handle operator conditions (>, <, >=, <=, !=, $like, $in)
       const operatorConditions = Object.entries(value as { [key: string]: unknown }).map(([op, opValue]) => {
+        if (op === '$in' && Array.isArray(opValue)) {
+          // Handle $in operator with array values
+          const placeholders = opValue.map(() => `$${paramIndex++}`).join(', ');
+          values.push(...opValue);
+          return `"${key}" IN (${placeholders})`;
+        }
         values.push(opValue);
         if (op === '$like') {
           return `"${key}" ILIKE $${paramIndex++}`;
@@ -108,12 +114,12 @@ function buildWhereConditions(criteria: FilterCriteria, startParamIndex = 1): {
 // Database utility object
 export const db = {
   // Find a single record
-  async findOne(tableName: string, criteria: FilterCriteria = {}): Promise<Record | null> {
+  async findOne<T = Record>(tableName: string, criteria: FilterCriteria = {}): Promise<T | null> {
     const keys = Object.keys(criteria);
     
     if (keys.length === 0) {
       const result = await sql`SELECT * FROM "${tableName}" LIMIT 1`;
-      return result[0] || null;
+      return result[0] as T || null;
     }
     
     // Use the enhanced condition builder
@@ -129,61 +135,71 @@ export const db = {
     console.log('Values:', values);
     
     const result = await pool.query(query, values);
-    return result.rows[0] || null;
+    return result.rows[0] as T || null;
   },
   
   // Find a record by ID
-  async findById(tableName: string, id: string | number): Promise<Record | null> {
-    return this.findOne(tableName, { id });
+  async findById<T = Record>(tableName: string, id: string | number): Promise<T | null> {
+    return this.findOne<T>(tableName, { id });
   },
   
   // Find multiple records with support for operators
-  async find(
+  async find<T = Record>(
     tableName: string, 
     criteria: FilterCriteria = {}, 
     options: { 
       limit?: number; 
       offset?: number; 
       orderBy?: string; 
-      order?: 'ASC' | 'DESC' 
+      order?: 'ASC' | 'DESC';
+      join?: {
+        table: string;
+        on: string;
+        type: 'LEFT' | 'INNER' | 'RIGHT';
+      };
+      select?: string[];
+      groupBy?: string;
     } = {}
-  ): Promise<Record[]> {
-    const { limit, offset, orderBy, order } = options;
+  ): Promise<T[]> {
+    const { limit, offset, orderBy, order, join, select, groupBy } = options;
     
-    if (Object.keys(criteria).length === 0) {
-      let query = `SELECT * FROM "${tableName}"`;
-      
-      const params: unknown[] = [];
-      let paramIndex = 1;
-      
-      if (orderBy) {
-        query += ` ORDER BY "${orderBy}" ${order === 'DESC' ? 'DESC' : 'ASC'}`;
-      }
-      
-      if (limit) {
-        query += ` LIMIT $${paramIndex}`;
-        params.push(limit);
-        paramIndex++;
-      }
-      
-      if (offset) {
-        query += ` OFFSET $${paramIndex}`;
-        params.push(offset);
-      }
-      
-      const result = await pool.query(query, params);
-      return result.rows;
+    // Build the base query
+    let queryStr = 'SELECT ';
+    
+    // Add select fields
+    if (select && select.length > 0) {
+      queryStr += select.join(', ');
+    } else {
+      queryStr += `${tableName}.*`;
     }
     
-    // Use the enhanced condition builder
-    const { conditions, values } = buildWhereConditions(criteria);
+    // Add FROM clause
+    queryStr += ` FROM ${tableName}`;
     
-    let queryStr = `SELECT * FROM "${tableName}" WHERE ${conditions}`;
+    // Add JOIN if specified
+    if (join) {
+      queryStr += ` ${join.type} JOIN ${join.table} ON ${join.on}`;
+    }
     
+    // Add WHERE clause if criteria exists
+    const values: unknown[] = [];
+    if (Object.keys(criteria).length > 0) {
+      const { conditions } = buildWhereConditions(criteria);
+      queryStr += ` WHERE ${conditions}`;
+      values.push(...buildWhereConditions(criteria).values);
+    }
+    
+    // Add GROUP BY if specified
+    if (groupBy) {
+      queryStr += ` GROUP BY ${groupBy}`;
+    }
+    
+    // Add ORDER BY if specified
     if (orderBy) {
-      queryStr += ` ORDER BY "${orderBy}" ${order === 'DESC' ? 'DESC' : 'ASC'}`;
+      queryStr += ` ORDER BY ${orderBy} ${order === 'DESC' ? 'DESC' : 'ASC'}`;
     }
     
+    // Add LIMIT and OFFSET
     let paramIndex = values.length + 1;
     
     if (limit) {
@@ -199,6 +215,7 @@ export const db = {
     
     console.log('Query:', queryStr);
     console.log('Values:', values);
+    
     const result = await pool.query(queryStr, values);
     return result.rows;
   },
@@ -240,10 +257,9 @@ export const db = {
   },
   
   // Insert a new record
-  async create(tableName: string, data: Record): Promise<Record> {
-    
+  async create<T = Record>(tableName: string, data: Partial<T>): Promise<T> {
     const keys = Object.keys(data);
-    const values = keys.map(key => data[key]);
+    const values = keys.map(key => data[key as keyof T]);
     
     const columns = keys.join(', ');
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
@@ -254,9 +270,39 @@ export const db = {
       RETURNING *
     `;
     
-
     const result = await pool.query(query, values);
     return result.rows[0];
+  },
+
+  async createMany<T = Record>(tableName: string, data: Partial<T>[]): Promise<T[]> {
+    if (!data.length) {
+      return [];
+    }
+
+    const columns = Object.keys(data[0]).join(', ');
+    const values: unknown[] = [];
+    const placeholders: string[] = [];
+    let paramIndex = 1;
+
+    // Build values array and placeholders
+    data.forEach((item) => {
+      const rowValues = Object.values(item);
+      const rowPlaceholders = rowValues.map(() => `$${paramIndex++}`).join(', ');
+      values.push(...rowValues);
+      placeholders.push(`(${rowPlaceholders})`);
+    });
+
+    const query = `
+      INSERT INTO "${tableName}" (${columns})
+      VALUES ${placeholders.join(', ')}
+      RETURNING *
+    `;
+
+    console.log('Query:', query);
+    console.log('Values:', values);
+
+    const result = await pool.query(query, values);
+    return result.rows;
   },
   
   // Update records
@@ -398,6 +444,67 @@ export const db = {
       console.log('Products table created with NUMERIC price and featured fields');
     }
     
+    const tableCheckCourses = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'courses'
+      ) as exists
+    `);
+    
+    const tableExistsCourses = tableCheckCourses.rows[0]?.exists;
+    
+    if (!tableExistsCourses) {
+    // Create courses table
+    await sql`
+      CREATE TABLE IF NOT EXISTS courses (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        max_price DECIMAL NOT NULL,
+        discounted_price DECIMAL NOT NULL,
+        discount_percentage DECIMAL NOT NULL,
+        description TEXT NOT NULL,
+        images TEXT[] NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    }
+
+    const tableCheckSubjects = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'subjects'
+      ) as exists
+    `);
+
+    const tableExistsSubjects = tableCheckSubjects.rows[0]?.exists;
+
+    if (!tableExistsSubjects) {
+      // Create subjects table
+      await sql`
+        CREATE TABLE IF NOT EXISTS subjects (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          images TEXT[] NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      // Create course_subjects junction table
+      await sql`
+        CREATE TABLE IF NOT EXISTS course_subjects (
+          course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+          subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (course_id, subject_id)
+        );
+      `;
+    }
+    
     console.log('Database tables initialized');
   }
 };
+
+// db.initializeTables();

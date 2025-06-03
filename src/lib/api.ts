@@ -2,6 +2,7 @@
 import 'server-only';
 import { db } from './db';
 import { Designer, FeaturedProduct, mapProductFields, ModelData, Product } from './types';
+import { Course } from '@/types/course';
 
 /**
  * Pagination info interface
@@ -165,3 +166,17 @@ export const  getFeaturedProducts = async (): Promise<FeaturedProduct[]> => {
       return [];
     }
   }
+
+// Get all courses
+export const getCourses = async (): Promise<Course[]> => {
+  try {
+    const courses = await db.find<Course>('courses', {}, {
+      orderBy: 'created_at',
+      order: 'DESC'
+    });
+    return courses;
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    return [];
+  }
+};

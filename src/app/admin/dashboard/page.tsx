@@ -4,74 +4,98 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
+import { useQuery } from '@tanstack/react-query';
+
+// API functions
+const fetchProductStats = async () => {
+  const response = await fetch('/api/stats/products');
+  if (!response.ok) {
+    throw new Error('Failed to fetch product stats');
+  }
+  return response.json();
+};
+
+const fetchCategoryStats = async () => {
+  const response = await fetch('/api/stats/categories');
+  if (!response.ok) {
+    throw new Error('Failed to fetch category stats');
+  }
+  return response.json();
+};
+
+const fetchFeaturedStats = async () => {
+  const response = await fetch('/api/stats/featured');
+  if (!response.ok) {
+    throw new Error('Failed to fetch featured stats');
+  }
+  return response.json();
+};
+
+const fetchCourseStats = async () => {
+  const response = await fetch('/api/stats/courses');
+  if (!response.ok) {
+    throw new Error('Failed to fetch course stats');
+  }
+  return response.json();
+};
+
+const fetchSubjectStats = async () => {
+  const response = await fetch('/api/stats/subjects');
+  if (!response.ok) {
+    throw new Error('Failed to fetch subject stats');
+  }
+  return response.json();
+};
 
 export default function AdminDashboard() {
-  const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    categories: 0,
-    featuredProducts: 0
-  });
   const router = useRouter();
 
+  // Check authentication
   useEffect(() => {
-    // Check if admin token exists in cookie
     const token = Cookies.get('admin-token');
-
     if (!token) {
       router.push('/admin/login');
       return;
     }
-    
-    // In a real app, we'd verify the token here
-    // For now, we're just checking if it exists
     setIsAuthorized(true);
-    
-    // Fetch stats
-    fetchStats();
   }, [router]);
-  
-  const fetchStats = async () => {
-    try {
-      // Fetch product count
-      const productResponse = await fetch('/api/stats/products');
-      const categoriesResponse = await fetch('/api/stats/categories');
-      const featuredResponse = await fetch('/api/stats/featured');
-      
-      if (productResponse.ok && categoriesResponse.ok && featuredResponse.ok) {
-        const productData = await productResponse.json();
-        const categoriesData = await categoriesResponse.json();
-        const featuredData = await featuredResponse.json();
-        
-        setStats({
-          totalProducts: productData.count,
-          categories: categoriesData.count,
-          featuredProducts: featuredData.count
-        });
-      } else {
-        console.error('Failed to fetch stats');
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+  // Fetch stats using TanStack Query
+  const { data: productStats, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['stats', 'products'],
+    queryFn: fetchProductStats,
+    enabled: isAuthorized
+  });
+
+  const { data: categoryStats, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['stats', 'categories'],
+    queryFn: fetchCategoryStats,
+    enabled: isAuthorized
+  });
+
+  const { data: featuredStats, isLoading: isLoadingFeatured } = useQuery({
+    queryKey: ['stats', 'featured'],
+    queryFn: fetchFeaturedStats,
+    enabled: isAuthorized
+  });
+
+  const { data: courseStats, isLoading: isLoadingCourses } = useQuery({
+    queryKey: ['stats', 'courses'],
+    queryFn: fetchCourseStats,
+    enabled: isAuthorized
+  });
+
+  const { data: subjectStats, isLoading: isLoadingSubjects } = useQuery({
+    queryKey: ['stats', 'subjects'],
+    queryFn: fetchSubjectStats,
+    enabled: isAuthorized
+  });
 
   const handleLogout = () => {
-    // Remove the token from cookie
     Cookies.remove('admin-token', { path: '/' });
     router.push('/admin/login');
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl">Loading dashboard...</p>
-      </div>
-    );
-  }
 
   if (!isAuthorized) {
     return null; // Will redirect in useEffect
@@ -94,7 +118,62 @@ export default function AdminDashboard() {
 
       {/* Admin Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-1 mb-8">
+      <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-500 uppercase">Total Products</h3>
+              {isLoadingProducts ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold">{productStats?.count || 0}</p>
+              )}
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-500 uppercase">Categories</h3>
+              {isLoadingCategories ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold">{categoryStats?.count || 0}</p>
+              )}
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-500 uppercase">Featured Products</h3>
+              {isLoadingFeatured ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold">{featuredStats?.count || 0}</p>
+              )}
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-500 uppercase">Total Courses</h3>
+              {isLoadingCourses ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold">{courseStats?.count || 0}</p>
+              )}
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-sm text-gray-500 uppercase">Total Subjects</h3>
+              {isLoadingSubjects ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              ) : (
+                <p className="text-2xl font-bold">{subjectStats?.count || 0}</p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold mb-4">Products Management</h2>
             <p className="text-gray-600 mb-4">
@@ -107,23 +186,31 @@ export default function AdminDashboard() {
               Manage Products
             </Link>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h3 className="text-sm text-gray-500 uppercase">Total Products</h3>
-              <p className="text-2xl font-bold">{stats.totalProducts}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h3 className="text-sm text-gray-500 uppercase">Categories</h3>
-              <p className="text-2xl font-bold">{stats.categories}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h3 className="text-sm text-gray-500 uppercase">Featured Products</h3>
-              <p className="text-2xl font-bold">{stats.featuredProducts}</p>
-            </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Courses Management</h2>
+            <p className="text-gray-600 mb-4">
+              Manage your courses - create new courses, edit existing ones, or remove courses from your platform.
+            </p>
+            <Link
+              href="/admin/courses"
+              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Manage Courses
+            </Link>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Subjects Management</h2>
+            <p className="text-gray-600 mb-4">
+              Manage your subjects - add new subjects, edit existing ones, or remove subjects from your platform.
+            </p>
+            <Link
+              href="/admin/subjects"
+              className="inline-block px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+            >
+              Manage Subjects
+            </Link>
           </div>
         </div>
       </main>
