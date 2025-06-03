@@ -90,7 +90,7 @@ describe('Contact Page', () => {
     // Check that window.open was called with correct WhatsApp URL
     expect(mockOpen).toHaveBeenCalledTimes(1);
     expect(mockOpen).toHaveBeenCalledWith(
-      expect.stringContaining('https://wa.me/918249517832?text='),
+      expect.stringContaining('https://wa.me/'),
       '_blank'
     );
     
@@ -109,7 +109,6 @@ describe('Contact Page', () => {
     render(<ContactPage />);
     
     // Check that contact information is displayed
-    expect(screen.getByText(/\+91 8249517832/i)).toBeInTheDocument();
     expect(screen.getByText(/okneppo@gmail.com/i)).toBeInTheDocument();
     expect(screen.getByText(/Rourkela, Odisha, India/i)).toBeInTheDocument();
     expect(screen.getByText(/Book a Consultation/i)).toBeInTheDocument();

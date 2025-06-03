@@ -507,4 +507,4 @@ export const db = {
   }
 };
 
-// db.initializeTables();
+db.initializeTables();
