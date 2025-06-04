@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { withCors } from '@/lib/cors';
 
-export const GET = withCors(async (request: NextRequest) => {
+export const GET = withCors(async () => {
   try {
     const count = await db.count('courses', {});
     

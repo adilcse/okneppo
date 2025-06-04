@@ -64,7 +64,7 @@ function ClientProductsPageContent({
   
   // Initialize search from URL params
   useEffect(() => {
-    const query = searchParams.get('search');
+    const query = searchParams?.get('search');
     if (query) {
       setSearchQuery(query);
       setDebouncedSearchQuery(query);
@@ -93,7 +93,7 @@ function ClientProductsPageContent({
   
   // When debounced search query changes, update URL params
   useEffect(() => {
-    if (debouncedSearchQuery !== searchParams.get('search')) {
+    if (debouncedSearchQuery !== searchParams?.get('search')) {
       if (debouncedSearchQuery) {
         updateUrlParams({ search: debouncedSearchQuery, page: '' });
       }
@@ -102,7 +102,7 @@ function ClientProductsPageContent({
   
   // Get the current page from URL params or use default
   const getCurrentPage = useCallback(() => {
-    const pageParam = searchParams.get('page');
+    const pageParam = searchParams?.get('page');
     return pageParam ? parseInt(pageParam) : 1;
   }, [searchParams]);
   
@@ -175,7 +175,7 @@ function ClientProductsPageContent({
 
   // Function to update URL with new params without full page reload
   const updateUrlParams = useCallback((params: Record<string, string>) => {
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString() || '');
     
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
@@ -211,7 +211,7 @@ function ClientProductsPageContent({
     setSearchQuery("");
     
     // Update URL to remove search parameter
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString() || '');
     newSearchParams.delete('search');
     router.replace(`${window.location.pathname}?${newSearchParams.toString()}`, { scroll: false });
   };
@@ -349,7 +349,7 @@ function ClientProductsPageContent({
   const handleClearSearch = () => {
     setSearchQuery('');
     setDebouncedSearchQuery('');
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString() || '');
     newSearchParams.delete('search');
     router.replace(`${window.location.pathname}?${newSearchParams.toString()}`, { scroll: false });
   };

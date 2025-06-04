@@ -5,11 +5,11 @@ import { withCors } from '@/lib/cors';
 // Get a single subject by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withCors(async () => {
     try {
-      const { id } = params;
+      const { id } = await params;
     
       if (!id) {
         return NextResponse.json(
@@ -41,11 +41,11 @@ export async function GET(
 // Update a subject
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withCors(async () => {
     try {
-      const { id } = params;
+      const { id } = await params;
       const subjectData = await request.json();
 
       if (!id) {
@@ -96,7 +96,7 @@ export async function PUT(
 // Delete a subject
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withCors(async () => {
     try {

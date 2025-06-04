@@ -25,11 +25,14 @@ export const GET = withCors(async (request: NextRequest) => {
       groupBy: 'courses.id'
     };
 
-    const courses = await db.find<Course & { subject_ids?: string; subject_orders?: string }>('courses', { id }, options);
+    const courses = await db.find<Course & { subject_ids?: string }>('courses', { id }, options);
     const course = courses[0];
-
+    
     if (!course) {
-      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Course not found' },
+        { status: 404 }
+      );
     }
 
     // Get subject details for each subject ID
@@ -38,10 +41,10 @@ export const GET = withCors(async (request: NextRequest) => {
       ? await db.find<Subject>('subjects', { id: { $in: subjectIds } })
       : [];
 
-
     // Format the response
     const formattedCourse = {
       ...course,
+      subject_ids: undefined, // Remove the temporary field
       subjects: subjects,
     };
 

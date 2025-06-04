@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Course, Subject } from '../types/course';
 import { dummyCourses } from '../data/dummyCourses';
+import Image from 'next/image';
 
 // Placeholder for getting courseId, e.g., from URL params or props
 interface CourseDetailPageProps {
@@ -33,15 +34,15 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ courseId }) => {
     <div style={{ padding: '20px' }}>
       <h1>{course.title}</h1>
       {course.images && course.images.length > 0 && (
-        <img 
+        <Image 
           src={course.images[0]} 
           alt={course.title} 
           style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '20px' }} 
         />
       )}
       <p><strong>Description:</strong> {course.description}</p>
-      <p style={{ textDecoration: 'line-through', color: 'gray' }}>Original Price: ${course.maxPrice.toFixed(2)}</p>
-      <h3 style={{ color: 'green' }}>Discounted Price: ${course.discountedPrice.toFixed(2)} ({course.discountPercentage.toFixed(2)}% off)</h3>
+      <p style={{ textDecoration: 'line-through', color: 'gray' }}>Original Price: ₹{course.max_price}</p>
+      <h3 style={{ color: 'green' }}>Discounted Price: ₹{course.discounted_price} ({course.discount_percentage}% off)</h3>
       
       <button 
         onClick={handleEnquiry} 
@@ -61,12 +62,12 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ courseId }) => {
       </button>
 
       <h2>Subjects Offered:</h2>
-      {course.subjects.length > 0 ? (
+      {course.subjects && course.subjects.length > 0 ? (
         course.subjects.map((subject: Subject, index: number) => (
           <div key={index} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '15px', margin: '15px 0' }}>
             <h4>{subject.title}</h4>
             {subject.images && subject.images.length > 0 && (
-              <img 
+              <Image 
                 src={subject.images[0]} 
                 alt={subject.title} 
                 style={{ width: '100%', maxWidth:'300px', height: 'auto', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} 

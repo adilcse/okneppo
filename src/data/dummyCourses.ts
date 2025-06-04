@@ -17,7 +17,6 @@ export const dummyCourses: Course[] = [
         title: 'Module 1: Frontend with React',
         description: 'Dive deep into React, learning about components, state, props, hooks, and routing. Build interactive UIs and single-page applications.',
         images: ['/images/react_logo.png'],
-        course_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -26,7 +25,6 @@ export const dummyCourses: Course[] = [
         title: 'Module 2: Backend with Node.js & Express',
         description: 'Master backend development with Node.js and Express. Learn to create RESTful APIs, handle databases, and manage authentication.',
         images: ['/images/nodejs_logo.png'],
-        course_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -35,7 +33,6 @@ export const dummyCourses: Course[] = [
         title: 'Module 3: Databases with MongoDB',
         description: 'Understand NoSQL databases with MongoDB. Learn data modeling, querying, and aggregation.',
         images: ['/images/mongodb_logo.png'],
-        course_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -57,7 +54,6 @@ export const dummyCourses: Course[] = [
         title: 'Advanced Python Concepts',
         description: 'Covering decorators, generators, context managers, and more.',
         images: ['/images/python_advanced.png'],
-        course_id: '2',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -66,7 +62,6 @@ export const dummyCourses: Course[] = [
         title: 'Asynchronous Programming in Python',
         description: 'Learn asyncio, async/await, and building concurrent applications.',
         images: ['/images/python_async.png'],
-        course_id: '2',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -75,7 +70,6 @@ export const dummyCourses: Course[] = [
         title: 'Introduction to Data Science with Python',
         description: 'Explore libraries like NumPy, Pandas, and Matplotlib for data analysis and visualization.',
         images: ['/images/python_datascience.png'],
-        course_id: '2',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -97,7 +91,6 @@ export const dummyCourses: Course[] = [
         title: 'User Research & Personas',
         description: 'Understanding your users and their needs through effective research methods.',
         images: ['/images/uiux_research.png'],
-        course_id: '3',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -106,7 +99,6 @@ export const dummyCourses: Course[] = [
         title: 'Wireframing & Prototyping',
         description: 'Creating low-fidelity and high-fidelity prototypes using tools like Figma.',
         images: ['/images/uiux_prototyping.png'],
-        course_id: '3',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -115,7 +107,6 @@ export const dummyCourses: Course[] = [
         title: 'Visual Design Principles',
         description: 'Learning about color theory, typography, layout, and creating style guides.',
         images: ['/images/uiux_visual.png'],
-        course_id: '3',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },

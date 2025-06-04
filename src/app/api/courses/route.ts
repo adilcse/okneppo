@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, FilterCriteria } from '@/lib/db';
 import { withCors } from '@/lib/cors';
-import { Course, Subject } from '@/types/course';
+import { Course } from '@/types/course';
 
 // Get all courses with optional pagination and filtering
 export const GET = withCors(async (request: NextRequest) => {
@@ -124,25 +124,3 @@ export const POST = withCors(async (request: NextRequest) => {
     );
   }
 });
-
-export async function GET_SUBJECTS() {
-  try {
-    const courses = await db.find<Course>('courses', {}, {
-      orderBy: 'created_at',
-      order: 'DESC'
-    });
-
-    // Fetch subjects for each course
-    const coursesWithSubjects = await Promise.all(
-      courses.map(async (course) => {
-        const subjects = await db.find<Subject>('subjects', { course_id: course.id });
-        return { ...course, subjects };
-      })
-    );
-
-    return NextResponse.json(coursesWithSubjects);
-  } catch (error) {
-    console.error('Failed to fetch courses:', error);
-    return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 });
-  }
-} 
