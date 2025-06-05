@@ -65,6 +65,7 @@ ${formData.message}
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <Input
                   id="name"
+                  data-testid="name-input"
                   label="Your Name*"
                   placeholder="Enter your name"
                   value={formData.name}
@@ -74,6 +75,7 @@ ${formData.message}
                 <Input
                   id="phone"
                   type="tel"
+                  data-testid="phone-input"
                   label="Phone Number*"
                   placeholder="Enter your phone number"
                   value={formData.phone}
@@ -82,6 +84,7 @@ ${formData.message}
                 />
                 <Input
                   id="subject"
+                  data-testid="subject-input"
                   label="Subject*"
                   placeholder="Enter subject"
                   value={formData.subject}
@@ -90,6 +93,7 @@ ${formData.message}
                 />
                 <Textarea
                   id="message"
+                  data-testid="message-input"
                   label="Message*"
                   placeholder="Enter your message"
                   value={formData.message}

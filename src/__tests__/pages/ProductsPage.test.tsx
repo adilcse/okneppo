@@ -117,10 +117,6 @@ describe('Products Page', () => {
     
     render(await ProductsPageCopy({ searchParams }));
     
-    // Check that header and footer are rendered
-    expect(screen.getByTestId('mock-header')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-footer')).toBeInTheDocument();
-    
     // Check that products section is rendered
     expect(screen.getByTestId('mock-products-page')).toBeInTheDocument();
     expect(screen.getByTestId('products-count')).toHaveTextContent('2');

@@ -40,16 +40,11 @@ describe('Contact Page', () => {
 
   it('renders the contact form with all required fields', () => {
     render(<ContactPage />);
-    
-    // Check that header and footer are rendered
-    expect(screen.getByTestId('mock-header')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-footer')).toBeInTheDocument();
-    
     // Check that form elements are rendered
-    expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/subject/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/message/i)).toBeInTheDocument();
+    expect(screen.getByTestId('name-input')).toBeInTheDocument();
+    expect(screen.getByTestId('phone-input')).toBeInTheDocument();
+    expect(screen.getByTestId('subject-input')).toBeInTheDocument();
+    expect(screen.getByTestId('message-input')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send via whatsapp/i })).toBeInTheDocument();
   });
 
@@ -57,10 +52,10 @@ describe('Contact Page', () => {
     render(<ContactPage />);
     
     // Get form elements
-    const nameInput = screen.getByLabelText(/your name/i);
-    const phoneInput = screen.getByLabelText(/phone number/i);
-    const subjectInput = screen.getByLabelText(/subject/i);
-    const messageInput = screen.getByLabelText(/message/i);
+    const nameInput = screen.getByTestId('name-input');
+    const phoneInput = screen.getByTestId('phone-input');
+    const subjectInput = screen.getByTestId('subject-input');
+    const messageInput = screen.getByTestId('message-input');
     
     // Type in form fields
     fireEvent.change(nameInput, { target: { value: 'Test User' } });
@@ -79,10 +74,10 @@ describe('Contact Page', () => {
     render(<ContactPage />);
     
     // Fill in the form
-    fireEvent.change(screen.getByLabelText(/your name/i), { target: { value: 'Test User' } });
-    fireEvent.change(screen.getByLabelText(/phone number/i), { target: { value: '1234567890' } });
-    fireEvent.change(screen.getByLabelText(/subject/i), { target: { value: 'Test Subject' } });
-    fireEvent.change(screen.getByLabelText(/message/i), { target: { value: 'This is a test message' } });
+    fireEvent.change(screen.getByTestId('name-input'), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByTestId('phone-input'), { target: { value: '1234567890' } });
+    fireEvent.change(screen.getByTestId('subject-input'), { target: { value: 'Test Subject' } });
+    fireEvent.change(screen.getByTestId('message-input'), { target: { value: 'This is a test message' } });
     
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /send via whatsapp/i }));

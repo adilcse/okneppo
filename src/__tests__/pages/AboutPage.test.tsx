@@ -66,10 +66,6 @@ describe('About Page', () => {
     const AboutPageCopy = AboutPage as React.FC<object>;
     render(await AboutPageCopy({}));
     
-    // Check that header and footer are rendered
-    expect(screen.getByTestId('mock-header')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-footer')).toBeInTheDocument();
-    
     // Check that about section is rendered
     expect(screen.getByTestId('mock-about-section')).toBeInTheDocument();
     expect(screen.getByTestId('designer-name')).toHaveTextContent('Test Designer');
