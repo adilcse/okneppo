@@ -6,14 +6,11 @@ import Link from 'next/link';
 import { Course } from '@/types/course';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import axiosClient from '@/lib/axios';
 
 async function fetchCourses() {
-  const response = await fetch('/api/courses');
-  if (!response.ok) {
-    throw new Error('Failed to fetch courses');
-  }
-  const data = await response.json();
-  return data.courses as Course[];
+  const response = await axiosClient.get('/api/courses');
+  return response.data.courses as Course[];
 }
 
 export default function CoursesPage() {

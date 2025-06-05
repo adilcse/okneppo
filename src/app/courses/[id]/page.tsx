@@ -8,6 +8,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { use } from 'react';
 import { WHATSAPP_NUMBER } from '@/constant';
+import axiosClient from '@/lib/axios';
+import { AxiosError } from 'axios';
 
 function generateWhatsAppLink(course: Course) {
   const message = `Hello!
@@ -23,14 +25,15 @@ Reference: ${location.href}`;
 }
 
 async function fetchCourse(id: string) {
-  const response = await fetch(`/api/courses/${id}`);
-  if (!response.ok) {
-    if (response.status === 404) {
+  try {
+    const response = await axiosClient.get(`/api/courses/${id}`);
+    return response.data as Course;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
       notFound();
     }
     throw new Error('Failed to fetch course');
   }
-  return response.json() as Promise<Course>;
 }
 
 export default function CourseDetailPage({

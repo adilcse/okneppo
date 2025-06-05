@@ -2,22 +2,16 @@ import { Metadata } from 'next';
 import { generateSEOMetadata } from "../../../../components/utils/SEOMetaTags";
 import ProductClientPage from "./ProductClientPage";
 import { Product, formatPrice } from "../../../../lib/types";
+import axiosClient from '@/lib/axios';
 
 // Generate metadata for the product detail page dynamically
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const params = await props.params;
   try {
     // Fetch product data to use in the metadata
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/api/products/${params.id}`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
+    const response = await axiosClient.get(`/api/products/${params.id}`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch product with ID: ${params.id}`);
-    }
-    
-    const productData = await response.json();
-    const product: Product = productData;
+    const product: Product = response.data;
     
     // Extract primary image URL
     const imageUrl = product.images && product.images.length > 0 

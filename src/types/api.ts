@@ -1,4 +1,5 @@
 import { Product } from '@/models/Product';
+import { Subject, Course } from '@/types/course';
 
 // Products API Response Types
 export interface GetProductsResponse {
@@ -86,4 +87,42 @@ export interface UpdateProductRequest {
 export interface ApiErrorResponse {
   error: string;
   status?: number;
-} 
+}
+
+export interface GetSubjectsRequest {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface GetSubjectsResponse {
+  subjects: Subject[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface GetCoursesRequest {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface GetCoursesResponse {
+  courses: Course[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}

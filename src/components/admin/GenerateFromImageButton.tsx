@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axiosClient from '@/lib/axios';
 
 const USE_AI_API = process.env.NEXT_PUBLIC_USE_AI_API === 'true';
 
@@ -34,20 +35,8 @@ export default function GenerateFromImageButton({
       // Use the first image to generate product details
       const imageUrl = images[0];
       
-      const response = await fetch('/api/generate-product-details', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imageUrl }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate product details');
-      }
-      
-      const generatedData = await response.json();
+      const response = await axiosClient.post('/api/generate-product-details', { imageUrl });
+      const generatedData = response.data;
       
       // Call the success handler with the generated data
       onSuccess(generatedData);

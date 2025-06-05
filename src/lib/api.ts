@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from './db';
 import { Designer, FeaturedProduct, mapProductFields, ModelData, Product } from './types';
 import { Course } from '@/types/course';
+import axiosClient from './axios';
 
 /**
  * Pagination info interface
@@ -33,19 +34,16 @@ export const getAllProducts = async (page: number = 1, limit: number = 9): Promi
 }> => {
   try {
     // Fetch from the API endpoint to get pagination info
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/products?page=${page}&limit=${limit}`, {
+    const response = await axiosClient.get(`/api/products?page=${page}&limit=${limit}`, {
       // Use cache: no-store to always get fresh data on server
-      cache: 'no-store'
+      headers: {
+        'Cache-Control': 'no-store'
+      }
     });
     
-    if (!response.ok) {
-      throw new Error(`Error fetching products: ${response.status}`);
-    }
-    
-    const data = await response.json();
     return {
-      products: data.products.map(mapProductFields),
-      pagination: data.pagination
+      products: response.data.products.map(mapProductFields),
+      pagination: response.data.pagination
     };
   } catch (error) {
     console.error('Error in getAllProducts:', error);

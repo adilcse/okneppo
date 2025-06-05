@@ -3,10 +3,14 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie';
 import Image from 'next/image';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FiUpload, FiX } from 'react-icons/fi';
+import { Button } from '@/components/common';
 import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
 import JsonFormFiller, { ProductFormData as JsonProductFormData } from '@/components/admin/JsonFormFiller';
+import axiosClient from '@/lib/axios';
+import { removeImageFromUrl } from '@/lib/clientUtils';
 
 interface ProductFormData {
   name: string;
@@ -18,6 +22,7 @@ interface ProductFormData {
   careInstructions: string;
   deliveryTime: string;
   featured: boolean;
+  createNew?: boolean;
 }
 
 interface GeneratedProductData {
@@ -29,6 +34,12 @@ interface GeneratedProductData {
   careInstructions: string;
   deliveryTime: string;
 }
+
+// API functions
+const createProduct = async (data: ProductFormData) => {
+  const response = await axiosClient.post('/api/products', data);
+  return response.data;
+};
 
 export default function NewProduct() {
   const initialFormData: ProductFormData = {
@@ -45,36 +56,47 @@ export default function NewProduct() {
 
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const [isNewCategory, setIsNewCategory] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  // Check authentication
+  // Load categories
   useEffect(() => {
-    const token = Cookies.get('admin-token');
-    if (!token) {
-      router.push('/admin/login');
-    }
-    
-    // Load categories
     async function loadCategories() {
       try {
-        const response = await fetch('/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableCategories(data.categories || []);
-        }
+        const response = await axiosClient.get('/api/categories');
+        setAvailableCategories(response.data.categories || []);
       } catch (err) {
         console.error('Error loading categories:', err);
       }
     }
     
     loadCategories();
-  }, [router]);
+  }, []);
+
+  // Create product mutation
+  const createMutation = useMutation({
+    mutationFn: createProduct,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      if (variables.createNew) {
+        // Reset form data
+        setFormData({
+          ...initialFormData,
+          category: formData.category, // Keep the same category for convenience
+        });
+        setError(null);
+      } else {
+        router.push('/admin/products');
+      }
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+    }
+  });
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -91,7 +113,22 @@ export default function NewProduct() {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDetailChange = (index: number, value: string) => {
+    const newDetails = [...formData.details];
+    newDetails[index] = value;
+    setFormData(prev => ({ ...prev, details: newDetails }));
+  };
+
+  const addDetailField = () => {
+    setFormData(prev => ({ ...prev, details: [...prev.details, ''] }));
+  };
+
+  const removeDetailField = (index: number) => {
+    const newDetails = formData.details.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, details: newDetails }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
@@ -115,9 +152,10 @@ export default function NewProduct() {
       
       try {
         // Upload the file
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
+        const response = await axiosClient.post('/api/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
         
         // Update progress to 100%
@@ -126,16 +164,10 @@ export default function NewProduct() {
           [fileId]: 100
         }));
         
-        if (!response.ok) {
-          throw new Error(`Failed to upload ${file.name}`);
-        }
-        
-        const data = await response.json();
-        
         // Add the uploaded image path to form data
         setFormData(prev => ({
           ...prev,
-          images: [...prev.images, data.filePath]
+          images: [...prev.images, response.data.filePath]
         }));
         
         // Remove from progress tracker after 1 second
@@ -166,93 +198,40 @@ export default function NewProduct() {
     e.target.value = '';
   };
 
-  const removeImage = (index: number) => {
-    if (formData.images.length <= 0) return;
+  const removeImage = async (index: number) => {
+    const imageUrl = formData.images[index];
     const newImages = formData.images.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, images: newImages }));
+    const success = await removeImageFromUrl(imageUrl);
+    if (!success) {
+      setFormData(prev => ({ ...prev, images: [...prev.images, imageUrl] }));
+    }
   };
 
-  const handleDetailChange = (index: number, value: string) => {
-    const newDetails = [...formData.details];
-    newDetails[index] = value;
-    setFormData(prev => ({ ...prev, details: newDetails }));
-  };
-
-  const addDetailField = () => {
-    setFormData(prev => ({ ...prev, details: [...prev.details, ''] }));
-  };
-
-  const removeDetailField = (index: number) => {
-    if (formData.details.length <= 1) return;
-    const newDetails = formData.details.filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, details: newDetails }));
-  };
-
-  const handleSubmit = async (e: FormEvent, createNext: boolean = false) => {
+  const handleSubmit = async (e: FormEvent, createNew: boolean = false) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError(null);
     
     // Validation
     if (!formData.name.trim() || !formData.price.trim() || !formData.category.trim()) {
       setError('Please fill in all required fields (name, price, category)');
-      setIsSubmitting(false);
       return;
     }
     
     // Ensure at least one image
     if (formData.images.length === 0) {
       setError('Please upload at least one image');
-      setIsSubmitting(false);
       return;
     }
     
     // Clean up empty fields
     const cleanedData = {
       ...formData,
-      details: formData.details.filter(d => d.trim() !== '')
+      details: formData.details.filter(d => d.trim() !== ''),
+      createNew
     };
     
-    try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Cookies.get('admin-token')}`
-        },
-        body: JSON.stringify(cleanedData)
-      });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create product');
-      }
-      
-      setSuccess(true);
-      
-      if (createNext) {
-        // Reset form for next product
-        setTimeout(() => {
-          setFormData({
-            ...initialFormData,
-            category: formData.category, // Keep the same category for convenience
-          });
-          setSuccess(false);
-        }, 1500);
-      } else {
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          router.push('/admin/products');
-        }, 2000);
-      }
-      
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error creating product. Please try again.';
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
+    createMutation.mutate(cleanedData);
   };
 
   const handleGenerateSuccess = (generatedData: GeneratedProductData) => {
@@ -264,15 +243,14 @@ export default function NewProduct() {
       description: prev.description || generatedData.description,
       images: prev.images, // Keep existing images
       details: prev.details.length === 1 && !prev.details[0] 
-        ? generatedData.details // Replace empty details
-        : prev.details, // Keep existing details
+        ? generatedData.details 
+        : prev.details,
       careInstructions: prev.careInstructions || generatedData.careInstructions,
       deliveryTime: prev.deliveryTime || generatedData.deliveryTime,
       featured: prev.featured
     }));
   };
 
-  // Add this new function to handle JSON form filling
   const handleFillFromJson = (jsonData: JsonProductFormData) => {
     setFormData(prev => ({
       name: jsonData.name || prev.name,
@@ -288,328 +266,296 @@ export default function NewProduct() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Admin Header */}
-      <header className="bg-black text-white shadow-md">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/admin/products" className="mr-6 hover:underline">
-              ← Back to Products
-            </Link>
-            <h1 className="text-xl font-semibold">Add New Product</h1>
-          </div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">New Product</h1>
+          <Link
+            href="/admin/products"
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+          >
+            Back to Products
+          </Link>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6" role="alert">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-            <span className="block sm:inline">Product created successfully! Redirecting...</span>
-          </div>
-        )}
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <form onSubmit={(e) => handleSubmit(e)}>
-            {/* Add JSON Form Filler Component */}
-            <JsonFormFiller onFillForm={handleFillFromJson} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+        <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          {/* Add JSON Form Filler Component */}
+          <JsonFormFiller onFillForm={handleFillFromJson} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Product Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleTextChange}
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                required
+              />
+            </div>
+
+            {/* Price */}
+            <div>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Price *
+              </label>
+              <input
+                type="text"
+                id="price"
+                name="price"
+                value={formData.price}
+                onChange={handleTextChange}
+                placeholder="₹12,500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                required
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Category *
+              </label>
+              {!isNewCategory ? (
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
                   onChange={handleTextChange}
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
                   required
-                />
-              </div>
-              
-              {/* Price */}
-              <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Price <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleTextChange}
-                  placeholder="₹12,500"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  required
-                />
-              </div>
-              
-              {/* Category */}
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Category <span className="text-red-500">*</span>
-                </label>
-                {!isNewCategory ? (
-                  <select
+                >
+                  <option value="">Select a category</option>
+                  {availableCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="new">+ Add New Category</option>
+                </select>
+              ) : (
+                <div className="flex">
+                  <input
+                    type="text"
                     id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleTextChange}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="Enter new category"
+                    className="flex-1 mt-1 block w-full rounded-l-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
                     required
-                  >
-                    <option value="">Select a category</option>
-                    {availableCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                    <option value="new">+ Add New Category</option>
-                  </select>
-                ) : (
-                  <div className="flex">
-                    <input
-                      type="text"
-                      id="category"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleTextChange}
-                      placeholder="Enter new category"
-                      className="flex-1 p-2 border border-gray-300 rounded-l focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => 
-                        (false)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-r hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* Delivery Time */}
-              <div>
-                <label htmlFor="deliveryTime" className="block text-sm font-medium text-gray-700 mb-1">
-                  Delivery Time
-                </label>
-                <input
-                  type="text"
-                  id="deliveryTime"
-                  name="deliveryTime"
-                  value={formData.deliveryTime}
-                  onChange={handleTextChange}
-                  placeholder="1-2 weeks"
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
-            </div>
-            
-            {/* Description */}
-            <div className="mb-6">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={4}
-                value={formData.description}
-                onChange={handleTextChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            
-            {/* Care Instructions */}
-            <div className="mb-6">
-              <label htmlFor="careInstructions" className="block text-sm font-medium text-gray-700 mb-1">
-                Care Instructions
-              </label>
-              <textarea
-                id="careInstructions"
-                name="careInstructions"
-                rows={2}
-                value={formData.careInstructions}
-                onChange={handleTextChange}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            
-            {/* Featured Product */}
-            <div className="mb-6">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="featured"
-                  name="featured"
-                  checked={formData.featured}
-                  onChange={handleCheckboxChange}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                />
-                <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">
-                  Feature this product on homepage
-                </label>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Featured products will be displayed in the showcase section on the home page
-              </p>
-            </div>
-            
-            {/* Image Upload */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Product Images <span className="text-red-500">*</span>
-              </label>
-              
-              {/* Upload Button */}
-              <div className="mb-4">
-                <label className="inline-block px-4 py-2 bg-emerald-600 text-white rounded cursor-pointer hover:bg-emerald-700 transition-colors">
-                  <span>Upload Images</span>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden" 
-                    disabled={uploadingImage}
-                  />
-                </label>
-                <span className="ml-3 text-sm text-gray-500">
-                  Upload one or multiple product images
-                </span>
-              </div>
-              
-              {/* Upload Progress */}
-              {Object.keys(uploadProgress).length > 0 && (
-                <div className="mb-4">
-                  {Object.entries(uploadProgress).map(([id, progress]) => (
-                    <div key={id} className="mb-2">
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-emerald-500 transition-all duration-300" 
-                          style={{ width: `${progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Uploading... {progress}%</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {/* Uploaded Images */}
-              {formData.images.length > 0 && (
-                <>
-                  <div className="mb-4">
-                    <GenerateFromImageButton 
-                      images={formData.images}
-                      onSuccess={handleGenerateSuccess}
-                      disabled={uploadingImage}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square relative border border-gray-200 rounded overflow-hidden">
-                          <Image 
-                            src={image} 
-                            alt={`Product image ${index + 1}`}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                            className="object-cover"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              {formData.images.length === 0 && !uploadingImage && (
-                <p className="text-sm text-gray-500 italic">No images uploaded yet</p>
-              )}
-            </div>
-            
-            {/* Product Details */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Details
-              </label>
-              {formData.details.map((detail, index) => (
-                <div key={index} className="flex mb-2">
-                  <input
-                    type="text"
-                    value={detail}
-                    onChange={(e) => handleDetailChange(index, e.target.value)}
-                    placeholder="Product detail or feature"
-                    className="flex-grow p-2 border border-gray-300 rounded-l focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                   <button
                     type="button"
-                    onClick={() => removeDetailField(index)}
-                    className="px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                    onClick={() => setIsNewCategory(false)}
+                    className="mt-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-r hover:bg-gray-300"
                   >
-                    −
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Delivery Time */}
+            <div>
+              <label htmlFor="deliveryTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Delivery Time
+              </label>
+              <input
+                type="text"
+                id="deliveryTime"
+                name="deliveryTime"
+                value={formData.deliveryTime}
+                onChange={handleTextChange}
+                placeholder="1-2 weeks"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleTextChange}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              rows={4}
+            />
+          </div>
+
+          {/* Care Instructions */}
+          <div>
+            <label htmlFor="careInstructions" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Care Instructions
+            </label>
+            <textarea
+              id="careInstructions"
+              name="careInstructions"
+              rows={2}
+              value={formData.careInstructions}
+              onChange={handleTextChange}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Featured Product */}
+          <div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="featured"
+                name="featured"
+                checked={formData.featured}
+                onChange={handleCheckboxChange}
+                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+              />
+              <label htmlFor="featured" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                Feature this product on homepage
+              </label>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Featured products will be displayed in the showcase section on the home page
+            </p>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Product Images *
+            </label>
+            
+            {/* Generate from Image Button */}
+            {formData.images.length > 0 && (
+              <div className="mb-4">
+                <GenerateFromImageButton 
+                  images={formData.images}
+                  onSuccess={handleGenerateSuccess}
+                  disabled={uploadingImage}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {formData.images.map((image, index) => (
+                <div key={index} className="relative">
+                  <Image
+                    src={image}
+                    alt={`Product image ${index + 1}`}
+                    width={200}
+                    height={200}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-100 transition-opacity z-1"
+                  >
+                    <FiX className="w-4 h-4" />
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={addDetailField}
-                className="mt-2 px-4 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-              >
-                + Add Detail
-              </button>
+              {Object.entries(uploadProgress).map(([fileId, progress]) => (
+                <div key={fileId} className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg bg-gray-50 dark:bg-gray-700">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <FiUpload className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                      Uploading...
+                    </p>
+                    <div className="w-full px-4">
+                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                        <div 
+                          className="bg-emerald-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <FiUpload className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                />
+              </label>
             </div>
-            
-            {/* Submit Buttons */}
-            <div className="flex justify-between items-center mt-6">
-              <div>
+          </div>
+
+          {/* Product Details */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Product Details
+            </label>
+            {formData.details.map((detail, index) => (
+              <div key={index} className="flex mb-2">
+                <input
+                  type="text"
+                  value={detail}
+                  onChange={(e) => handleDetailChange(index, e.target.value)}
+                  placeholder="Product detail or feature"
+                  className="flex-grow mt-1 block w-full rounded-l-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                />
                 <button
                   type="button"
-                  onClick={() => router.push('/admin/products')}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded mr-4 hover:bg-gray-400 transition-colors"
+                  onClick={() => removeDetailField(index)}
+                  className="mt-1 px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 transition-colors rounded-r"
                 >
-                  Cancel
+                  −
                 </button>
               </div>
-              <div className="flex space-x-4">
-                <button
-                  type="button"
-                  onClick={(e) => handleSubmit(e, true)}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-70"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save & Create Next'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-70"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Product'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </main>
+            ))}
+            <button
+              type="button"
+              onClick={addDetailField}
+              className="mt-2 px-4 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              + Add Detail
+            </button>
+          </div>
+
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleSubmit(e as unknown as FormEvent, true)}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Saving...' : 'Save & Create New'}
+            </Button>
+            <Button
+              type="submit"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleSubmit(e as unknown as FormEvent, false)}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Creating...' : 'Create Product'}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 } 

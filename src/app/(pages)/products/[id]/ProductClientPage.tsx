@@ -81,7 +81,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         <Container className="flex-grow flex items-center justify-center py-8 sm:py-12">
           <p className="text-xl text-gray-900 dark:text-white">Loading product...</p>
         </Container>
-      </main>
+        </main>
     );
   }
 
@@ -98,7 +98,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
             </Link>
           </div>
         </Container>
-      </main>
+        </main>
     );
   }
 
@@ -120,7 +120,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
           />
           
           <main className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
-            {/* Breadcrumbs for better navigation and SEO */}
+              {/* Breadcrumbs for better navigation and SEO */}
             <Container className="pt-6 mb-2">
               <nav className="text-sm" aria-label="Breadcrumb">
                 <ol className="flex flex-wrap items-center">
@@ -138,62 +138,62 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                 </ol>
               </nav>
             </Container>
-            
-            {/* Product Details Section */}
+              
+              {/* Product Details Section */}
             <Container className="py-6">
-              <div className="mb-16">
-                <div className="flex flex-col lg:flex-row gap-8 md:gap-12">
-                  {/* Product Images - Client Component */}
-                  <ClientProductImageGallery 
-                    images={product.images} 
-                    productName={product.name} 
-                  />
-                  
-                  {/* Product Information */}
+                <div className="mb-16">
+                  <div className="flex flex-col lg:flex-row gap-8 md:gap-12">
+                    {/* Product Images - Client Component */}
+                    <ClientProductImageGallery 
+                      images={product.images} 
+                      productName={product.name} 
+                    />
+                    
+                    {/* Product Information */}
                   <Card variant="elevated" className="w-full lg:w-1/2 p-6">
-                    <h1 className="text-2xl sm:text-3xl font-semibold mb-3 text-gray-900 dark:text-white">{product.name}</h1>
-                    <p className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
-                    
-                    <div className="mb-8">
-                      <p className="text-gray-800 dark:text-gray-200 mb-8">
-                        {formatText(product.description)}
-                      </p>
+                      <h1 className="text-2xl sm:text-3xl font-semibold mb-3 text-gray-900 dark:text-white">{product.name}</h1>
+                      <p className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
                       
-                      <a 
-                        ref={buttonRef}
-                        href={getWhatsAppLink(product.name, product.price)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <div className="mb-8">
+                        <p className="text-gray-800 dark:text-gray-200 mb-8">
+                          {formatText(product.description)}
+                        </p>
+                        
+                        <a 
+                          ref={buttonRef}
+                          href={getWhatsAppLink(product.name, product.price)}
+                          target="_blank"
+                          rel="noopener noreferrer"
                         className="inline-block w-full sm:w-auto bg-black dark:bg-primary text-white px-8 py-3 rounded-md hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors"
-                      >
-                        Contact About This Item
-                      </a>
-                    </div>
-                    
-                    {/* Product Details */}
-                    <div className="mb-6">
-                      <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Product Details</h2>
-                      <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                        {product.details.map((detail, index) => (
-                          <li key={index}>{formatText(detail)}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    {/* Care Instructions */}
-                    <div className="mb-6">
-                      <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Care Instructions</h2>
-                      <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                        {formatText(product.careInstructions)}
-                      </p>
-                    </div>
-                    
-                    {/* Delivery Information */}
-                    <div>
-                      <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Delivery</h2>
-                      <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                        >
+                          Contact About This Item
+                        </a>
+                      </div>
+                      
+                      {/* Product Details */}
+                      <div className="mb-6">
+                        <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Product Details</h2>
+                        <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                          {product.details.map((detail, index) => (
+                            <li key={index}>{formatText(detail)}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      {/* Care Instructions */}
+                      <div className="mb-6">
+                        <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Care Instructions</h2>
+                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                          {formatText(product.careInstructions)}
+                        </p>
+                      </div>
+                      
+                      {/* Delivery Information */}
+                      <div>
+                        <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Delivery</h2>
+                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
                         {formatText(product.deliveryTime)}
-                      </p>
+                        </p>
                     </div>
                   </Card>
                 </div>
@@ -204,16 +204,16 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                 <div className="mt-16">
                   <h2 className="text-2xl sm:text-3xl font-semibold mb-8 text-gray-900 dark:text-white">You May Also Like</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {relatedProducts.map((relatedProduct) => (
-                      <ProductCard
-                        key={relatedProduct.id}
-                        id={relatedProduct.id}
-                        name={relatedProduct.name}
-                        price={relatedProduct.price}
-                        image={relatedProduct.images[0]}
-                      />
-                    ))}
-                  </div>
+                      {relatedProducts.map((relatedProduct) => (
+                        <ProductCard
+                          key={relatedProduct.id}
+                          id={relatedProduct.id}
+                          name={relatedProduct.name}
+                          price={relatedProduct.price}
+                          image={relatedProduct.images[0]}
+                        />
+                      ))}
+                    </div>
                 </div>
               )}
             </Container>
@@ -221,14 +221,14 @@ export default function ProductClientPage({ params }: { params: { id: string } }
             {/* Sticky WhatsApp Button */}
             {showStickyButton && (
               <div className="fixed bottom-4 right-4 z-50">
-                <a 
-                  href={getWhatsAppLink(product.name, product.price)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  <a 
+                    href={getWhatsAppLink(product.name, product.price)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   className="inline-block bg-black dark:bg-primary text-white px-8 py-3 rounded-md hover:bg-gray-800 dark:hover:bg-primary-dark transition-colors shadow-lg"
-                >
-                  Contact About This Item
-                </a>
+                  >
+                    Contact About This Item
+                  </a>
               </div>
             )}
           </main>
