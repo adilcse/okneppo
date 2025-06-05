@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosClient from '@/lib/axios';
 import Image from 'next/image';
+import { debounce } from 'lodash';
 
 interface SearchResult {
   id: number;
@@ -24,17 +25,10 @@ export default function Header() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
 
   // Handle clicks outside the search dropdown to close it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-      //   setShowResults(false);
-      // }
-      
-      // Also handle clicks outside mobile search
       if (
         mobileSearchVisible && 
         mobileSearchRef.current && 
@@ -75,27 +69,13 @@ export default function Header() {
     }
   };
 
-  // Debounced search implementation
-  const debouncedSearch = useCallback((query: string) => {
-    // Clear any existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    // Set a new timeout
-    searchTimeoutRef.current = setTimeout(() => {
+  // Create debounced search function
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
       handleSearch(query);
-    }, 2000);
-  }, []);
-
-  // Clear timeout on component unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, []);
+    }, 500),
+    []
+  );
 
   // Handle search input changes
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,8 +83,8 @@ export default function Header() {
     setSearchQuery(value);
     
     if (value.trim()) {
-      debouncedSearch(value);
       setIsSearching(true);
+      debouncedSearch(value);
     } else {
       setSearchResults([]);
       setShowResults(false);

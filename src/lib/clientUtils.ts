@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useState } from "react";
 import axiosClient from "./axios";
 import Cookies from "js-cookie";
 
@@ -18,3 +20,15 @@ export async function removeImageFromUrl(imageUrl: string): Promise<boolean> {
     }
     return false;
 }
+
+export const useDebouncedState = <T>(initialValue: T, delay: number) => {
+  const [state, setState] = useState(initialValue);
+  const [debouncedState, setDebouncedState] = useState(initialValue);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedState(state);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [state, delay]);
+  return [state, setState, debouncedState] as const;
+};

@@ -11,6 +11,7 @@ import { GetCoursesRequest, GetCoursesResponse } from '@/types/api';
 import { DataGrid, Column } from '@/components/admin/DataGrid';
 import Image from 'next/image';
 import axiosClient from '@/lib/axios';
+import { useDebouncedState } from '@/lib/clientUtils';
 
 // API function
 const fetchCourses = async (params: GetCoursesRequest): Promise<GetCoursesResponse> => {
@@ -34,17 +35,17 @@ const deleteCourse = async (id: string) => {
 export default function CoursesPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [, setSearchQuery, debouncedSearchQuery] = useDebouncedState('', 1000);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['courses', { page, searchQuery, sortBy, sortOrder }],
+    queryKey: ['courses', { page, searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
     queryFn: () => fetchCourses({
       page,
       limit: 10,
-      search: searchQuery,
+      search: debouncedSearchQuery,
       sortBy,
       sortOrder
     })

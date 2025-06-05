@@ -11,6 +11,7 @@ import { GetProductsRequest, GetProductsResponse } from '@/types/api';
 import { DataGrid, Column } from '@/components/admin/DataGrid';
 import Image from 'next/image';
 import axiosClient from '@/lib/axios';
+import { useDebouncedState } from '@/lib/clientUtils';
 
 // API function
 const fetchProducts = async (params: GetProductsRequest): Promise<GetProductsResponse> => {
@@ -37,17 +38,17 @@ const deleteProduct = async (id: string) => {
 export default function ProductsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [, setSearchQuery, debouncedSearchQuery] = useDebouncedState('', 1000);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['products', { page, searchQuery, sortBy, sortOrder }],
+    queryKey: ['products', { page, searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
     queryFn: () => fetchProducts({
       page,
       limit: 10,
-      search: searchQuery,
+      search: debouncedSearchQuery,
       sortBy,
       sortOrder
     })
