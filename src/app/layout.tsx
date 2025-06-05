@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/providers/ThemeProvider';
 import QueryProvider from '@/providers/QueryProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 import PageTransition from '@/components/ui/PageTransition';
+import { Analytics } from "@vercel/analytics/next"
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <QueryProvider>
+            <Analytics />
             {children}
             <OrganizationJsonLd />
             <PageTransition />

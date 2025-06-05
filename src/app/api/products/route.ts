@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { mapProductFields } from '@/lib/types';
 import { withCors } from '@/lib/cors';
+import { snakeCase } from '@/lib/utils';
 
 // Get all products with filtering, sorting and pagination
 export const GET = withCors(async (request: NextRequest) => {
@@ -61,7 +62,7 @@ export const GET = withCors(async (request: NextRequest) => {
       limit,
       offset,
       ...(sortBy ? {
-        orderBy: sortBy,
+        orderBy: snakeCase(sortBy),
         order: (sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC') as 'ASC' | 'DESC'
       } : {})
     };

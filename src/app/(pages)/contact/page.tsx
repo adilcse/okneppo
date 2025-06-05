@@ -1,11 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Header from "../../../components/layout/Header";
-import Footer from "../../../components/layout/Footer";
-import Button from "../../../components/ui/Button";
 import { useState } from "react";
 import { WHATSAPP_NUMBER } from "@/constant";
+import { Button, Input, Textarea, Container, Card } from "@/components/common";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -47,76 +45,60 @@ ${formData.message}
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
-      <Header />
-      
       {/* Contact Header */}
       <section className="bg-gray-100 dark:bg-gray-800 py-12">
-        <div className="container mx-auto px-4">
+        <Container>
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">Contact Us</h1>
           <p className="text-gray-600 dark:text-gray-400 text-center max-w-2xl mx-auto">
             We&apos;d love to hear from you. Get in touch for consultations, custom designs, or any inquiries.
           </p>
-        </div>
+        </Container>
       </section>
       
       {/* Contact Form and Info */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
+        <Container>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Form */}
-            <div>
+            <Card variant="elevated" className="p-6">
               <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Send Us a Message</h2>
               <form className="space-y-4" onSubmit={handleSubmit}>
+                <Input
+                  id="name"
+                  label="Your Name*"
+                  placeholder="Enter your name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+                <Input
+                  id="phone"
+                  type="tel"
+                  label="Phone Number*"
+                  placeholder="Enter your phone number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                />
+                <Input
+                  id="subject"
+                  label="Subject*"
+                  placeholder="Enter subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
+                />
+                <Textarea
+                  id="message"
+                  label="Message*"
+                  placeholder="Enter your message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                />
                 <div>
-                  <label htmlFor="name" className="block text-gray-700 dark:text-gray-300 mb-2">Your Name*</label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    placeholder="Enter your name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-gray-700 dark:text-gray-300 mb-2">Phone Number*</label>
-                  <input 
-                    type="tel" 
-                    id="phone" 
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="subject" className="block text-gray-700 dark:text-gray-300 mb-2">Subject*</label>
-                  <input 
-                    type="text" 
-                    id="subject" 
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    placeholder="Enter subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-gray-700 dark:text-gray-300 mb-2">Message*</label>
-                  <textarea 
-                    id="message" 
-                    rows={5} 
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E94FFF] bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    placeholder="Enter your message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                  ></textarea>
-                </div>
-                <div>
-                  <Button type="submit" className="w-full sm:w-auto">
+                  <Button type="submit" fullWidth>
                     Send via WhatsApp
                   </Button>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -124,11 +106,11 @@ ${formData.message}
                   </p>
                 </div>
               </form>
-            </div>
+            </Card>
             
             {/* Contact Information */}
             <div className="space-y-8">
-              <div>
+              <Card variant="elevated" className="p-6">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Contact Information</h2>
                 <div className="space-y-4">
                   <div className="flex items-start">
@@ -166,7 +148,7 @@ ${formData.message}
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
               
               <div className="relative h-60 rounded-lg overflow-hidden shadow-md dark:shadow-gray-900/50">
                 <Image 
@@ -177,7 +159,7 @@ ${formData.message}
                 />
               </div>
               
-              <div>
+              <Card variant="elevated" className="p-6">
                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Book a Consultation</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Interested in custom designs or want to discuss a collaboration? 
@@ -186,13 +168,11 @@ ${formData.message}
                 <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline">Chat on WhatsApp</Button>
                 </a>
-              </div>
+              </Card>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
-      
-      <Footer />
     </div>
   );
 } 

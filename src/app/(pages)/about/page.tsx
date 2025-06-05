@@ -1,8 +1,7 @@
 import { Metadata } from "next";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { getDesignerData } from "@/lib/api";
 import ClientAboutSection from "@/components/pages/about/ClientAboutSection";
+import { Container } from "@/components/common";
 
 // Generate metadata for the about page
 export const metadata: Metadata = {
@@ -24,22 +23,18 @@ export default async function AboutPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      
       {/* About Header */}
       <section className="bg-gray-100 dark:bg-gray-800 py-8 sm:py-12">
-        <div className="container mx-auto px-4">
+        <Container>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-2 sm:mb-4 text-gray-900 dark:text-white">About Ok Neppo</h1>
           <p className="text-gray-600 dark:text-gray-300 text-center max-w-2xl mx-auto text-sm sm:text-base">
             Discover the journey and passion behind {designer.name}&apos;s fashion designs.
           </p>
-        </div>
+        </Container>
       </section>
       
       {/* Client component with all the designer information */}
       <ClientAboutSection designer={designer} />
-      
-      <Footer />
     </div>
   );
 } 

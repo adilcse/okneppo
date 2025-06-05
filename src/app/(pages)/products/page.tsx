@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import Header from "../../../components/layout/Header";
-import Footer from "../../../components/layout/Footer";
+import { Container } from "@/components/common";
 import ClientProductsPage from "../../../components/pages/products/ClientProductsPage";
 import { getAllProducts, getProductFilters, FilterData, PaginationInfo } from "@/lib/api";
 import { Product } from "@/lib/types";
@@ -65,19 +64,17 @@ export default async function ProductsPage(Props: {
   }
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      
+    <main className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="bg-gray-50 dark:bg-gray-900 py-8 sm:py-12">
-        <div className="container mx-auto px-4">
+        <Container>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">Our Collections</h1>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl text-sm sm:text-base">
             Each piece in our collection is meticulously crafted by designer Nishad Fatma, 
             combining traditional techniques with contemporary designs. Explore our 
             curated selection of premium garments and accessories.
           </p>
-        </div>
+        </Container>
       </section>
       
       {/* Client Component that handles filtering and sorting */}
@@ -86,8 +83,6 @@ export default async function ProductsPage(Props: {
         initialFilterData={filterData}
         initialPagination={productsData.pagination}
       />
-      
-      <Footer />
-    </div>
+    </main>
   );
 } 
