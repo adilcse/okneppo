@@ -271,7 +271,7 @@ export default function Header() {
         {/* Mobile search overlay */}
         {mobileSearchVisible && (
           <div 
-            className="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-start justify-center pt-16 px-4"
+            className="fixed inset-0 z-80 bg-black bg-opacity-50 flex items-start justify-center pt-16 px-4"
             onClick={() => setMobileSearchVisible(false)}
           >
             <div 
@@ -404,7 +404,7 @@ export default function Header() {
         )}
 
         {/* Mobile menu */}
-        <div className={`fixed inset-0 bg-black bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-95 z-30 transition-transform duration-300 md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`fixed inset-0 bg-black bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-95 z-60 transition-transform duration-300 md:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex flex-col items-center justify-center h-full">
             <ul className="flex flex-col space-y-8 text-center">
               <li>

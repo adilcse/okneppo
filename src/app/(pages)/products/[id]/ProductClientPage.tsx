@@ -89,7 +89,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
     const errorMessage = productError instanceof Error ? productError.message : "Failed to load product. Please try again later.";
     return (
       <main className="min-h-screen flex flex-col">
-        <Container className="flex-grow flex items-center justify-center py-8 sm:py-12">
+        <Container className="flex-grow flex items-center justify-center py-8 sm:py-12 sm:mx-0">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl font-semibold mb-4 text-gray-900 dark:text-white">Product Not Found</h1>
             <p className="mb-6 text-gray-700 dark:text-gray-300">{errorMessage}</p>
@@ -140,7 +140,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
             </Container>
               
               {/* Product Details Section */}
-            <Container className="py-6" size="full">
+            <Container className="py-6 sm:mx-0" size="full">
                 <div className="mb-16">
                   <div className="flex flex-col lg:flex-row gap-8 md:gap-12">
                     {/* Product Images - Client Component */}

@@ -13,7 +13,7 @@ export default function Container({ children, className, size = 'lg' }: Containe
     md: 'max-w-4xl',
     lg: 'max-w-6xl',
     xl: 'max-w-7xl',
-    full: 'max-w-full mx-4',
+    full: 'max-w-full mx-0 sm:mx-0 md:mx-2 lg:mx-4',
   };
 
   return (
