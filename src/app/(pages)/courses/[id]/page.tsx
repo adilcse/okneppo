@@ -17,10 +17,9 @@ async function fetchCourse(id: string) {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
-    const { id } = await params;
-    const course = await fetchCourse(id);
+    const course = await fetchCourse(params.id);
     
     if (!course) {
       return {
@@ -62,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         images: course.images && course.images.length > 0 ? [course.images[0]] : [],
       },
       alternates: {
-        canonical: `https://okneppo.in/courses/${id}`,
+        canonical: `https://okneppo.in/courses/${params.id}`,
       },
     };
   } catch {
@@ -76,10 +75,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function CourseDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
-  const course = await fetchCourse(id);
+  const course = await fetchCourse(params.id);
   
   if (!course) {
     return (
