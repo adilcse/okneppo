@@ -13,7 +13,7 @@ export default function Card({ children, className, variant = 'default' }: CardP
   const variants = {
     default: 'bg-white',
     bordered: 'bg-white border border-gray-200',
-    elevated: 'bg-white shadow-md',
+    elevated: 'bg-white shadow-md dark:bg-gray-800',
   };
 
   return (

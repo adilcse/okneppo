@@ -6,6 +6,7 @@ import QueryProvider from '@/providers/QueryProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 import PageTransition from '@/components/ui/PageTransition';
 import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from 'react-hot-toast';
 
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 
@@ -51,6 +52,7 @@ export default function RootLayout({
             {children}
             <OrganizationJsonLd />
             <PageTransition />
+            <Toaster position="top-right" />
           </QueryProvider>
         </ThemeProvider>
       </body>

@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Card, Button } from '@/components/common';
 import { FiPlus, FiSearch, FiFilter, FiChevronDown } from 'react-icons/fi';
+import Input from '@/components/common/Input';
 
 interface ListingPageProps {
   title: string;
@@ -10,9 +11,9 @@ interface ListingPageProps {
   addButtonText: string;
   onAddClick: () => void;
   searchPlaceholder: string;
-  onSearch: (query: string) => void;
-  filters?: React.ReactNode;
-  children: React.ReactNode;
+  onSearch: (value: string) => void;
+  filters?: ReactNode;
+  children: ReactNode;
 }
 
 export default function ListingPage({
@@ -46,13 +47,12 @@ export default function ListingPage({
       {/* Search and Filters Section */}
       <Card variant="elevated" className="p-4">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
+          <div className="flex-1">
+            <Input
               type="text"
               placeholder={searchPlaceholder}
               onChange={(e) => onSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              leftIcon={<FiSearch className="w-5 h-5" />}
             />
           </div>
           {filters && (

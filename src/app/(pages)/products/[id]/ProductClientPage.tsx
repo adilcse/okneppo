@@ -121,7 +121,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
           
           <main className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
               {/* Breadcrumbs for better navigation and SEO */}
-            <Container className="pt-6 mb-2">
+            <Container className="pt-6 mb-2" size="full">
               <nav className="text-sm" aria-label="Breadcrumb">
                 <ol className="flex flex-wrap items-center">
                   <li className="flex items-center">
@@ -140,7 +140,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
             </Container>
               
               {/* Product Details Section */}
-            <Container className="py-6">
+            <Container className="py-6" size="full">
                 <div className="mb-16">
                   <div className="flex flex-col lg:flex-row gap-8 md:gap-12">
                     {/* Product Images - Client Component */}

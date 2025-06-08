@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiUpload, FiX } from 'react-icons/fi';
-import { Button } from '@/components/common';
+import { Button, Input, Textarea } from '@/components/common';
 import GenerateFromImageButton from '@/components/admin/GenerateFromImageButton';
 import JsonFormFiller, { ProductFormData as JsonProductFormData } from '@/components/admin/JsonFormFiller';
 import axiosClient from '@/lib/axios';
@@ -378,7 +378,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               <label htmlFor="deliveryTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Delivery Time
               </label>
-              <input
+              <Input
                 type="text"
                 id="deliveryTime"
                 name="deliveryTime"
@@ -395,7 +395,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Description
             </label>
-            <textarea
+            <Textarea
               id="description"
               name="description"
               value={formData.description}
@@ -410,7 +410,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             <label htmlFor="careInstructions" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Care Instructions
             </label>
-            <textarea
+            <Textarea
               id="careInstructions"
               name="careInstructions"
               rows={2}
@@ -423,7 +423,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           {/* Featured Product */}
           <div>
             <div className="flex items-center">
-              <input
+              <Input
                 type="checkbox"
                 id="featured"
                 name="featured"
@@ -494,7 +494,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                   </div>
                 </div>
               ))}
-              <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+              <label className="relative p-4 flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <FiUpload className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
                   <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
@@ -520,7 +520,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             </label>
             {formData.details.map((detail, index) => (
               <div key={index} className="flex mb-2">
-                <input
+                <Input
                   type="text"
                   value={detail}
                   onChange={(e) => handleDetailChange(index, e.target.value)}

@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import CourseCard from '@/components/CourseCard';
 import Link from 'next/link';
 import { Course } from '@/types/course';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import axiosClient from '@/lib/axios';
 
 async function fetchCourses() {
@@ -21,8 +19,6 @@ export default function CoursesPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      
       {/* Hero Section */}
       <section className="bg-gray-50 dark:bg-gray-900 py-8 sm:py-12">
         <div className="container mx-auto px-4">
@@ -56,8 +52,6 @@ export default function CoursesPage() {
           )}
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 } 

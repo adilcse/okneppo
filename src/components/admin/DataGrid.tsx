@@ -116,7 +116,7 @@ export function DataGrid<T extends object>({
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-gray-700 dark:text-gray-800">
                 Showing <span className="font-medium">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
                 <span className="font-medium">
                   {Math.min(pagination.page * pagination.limit, pagination.totalCount)}

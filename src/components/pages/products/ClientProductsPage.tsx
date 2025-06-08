@@ -6,6 +6,7 @@ import ProductCard from '@/components/ui/ProductCard';
 import { Product, mapProductFields } from '@/lib/types';
 import { Suspense } from 'react';
 import { useProductsPage, FilterData, PaginationInfo, InputParams } from '@/hooks/useProductsPage';
+import Input from '@/components/common/Input';
 
 interface ClientProductsPageProps {
   initialProducts: Product[];
@@ -380,12 +381,12 @@ function ClientProductsPageContent({
               <div className="mb-6 hidden lg:block">
                 <h2 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Search</h2>
                 <div className="flex">
-                  <input
+                  <Input
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchInputChange}
                     placeholder="Search products..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md"
+                    className="rounded-r-none"
                   />
                   <button
                     onClick={() => updateUrlParams({ search: searchQuery, page: '' })}

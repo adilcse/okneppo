@@ -84,68 +84,68 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-white dark:bg-gray-900 min-h-screen">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products</h3>
               {isLoadingProducts ? (
                 <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               ) : (
             <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{productStats?.count || 0}</p>
               )}
         </Card>
         
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Categories</h3>
               {isLoadingCategories ? (
                 <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               ) : (
             <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{categoryStats?.count || 0}</p>
               )}
         </Card>
         
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Featured Products</h3>
               {isLoadingFeatured ? (
                 <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               ) : (
             <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{featuredStats?.count || 0}</p>
               )}
         </Card>
         
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Courses</h3>
               {isLoadingCourses ? (
                 <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               ) : (
             <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{courseStats?.count || 0}</p>
               )}
         </Card>
         
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Subjects</h3>
               {isLoadingSubjects ? (
                 <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
                 </div>
               ) : (
             <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{subjectStats?.count || 0}</p>
               )}
         </Card>
-            </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Products Management</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
               Manage your products inventory - add new products, edit existing ones, or remove products from your store.
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
             </Link>
         </Card>
 
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Courses Management</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
               Manage your courses - create new courses, edit existing ones, or remove courses from your platform.
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
             </Link>
         </Card>
 
-        <Card variant="elevated" className="p-6">
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subjects Management</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             Manage your subjects - create new subjects, edit existing ones, or remove subjects from your platform.
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
             <Button variant="primary">Manage Subjects</Button>
             </Link>
         </Card>
-        </div>
+      </div>
     </div>
   );
 } 

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FiUpload, FiX } from 'react-icons/fi';
-import { Button } from '@/components/common';
+import { Button, Input, Textarea } from '@/components/common';
 import { Course, Subject } from '@/types/course';
 import axiosClient from '@/lib/axios';
 import { removeImageFromUrl } from '@/lib/clientUtils';
@@ -271,7 +271,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Title *
             </label>
-            <input
+            <Input
               type="text"
               id="title"
               value={formData.title}
@@ -285,7 +285,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Description
             </label>
-            <textarea
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -299,7 +299,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
               <label htmlFor="max_price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Max Price
               </label>
-              <input
+              <Input
                 type="number"
                 id="max_price"
                 value={formData.max_price}
@@ -313,7 +313,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
               <label htmlFor="discounted_price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Discounted Price
               </label>
-              <input
+              <Input
                 type="number"
                 id="discounted_price"
                 value={formData.discounted_price}
@@ -327,7 +327,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
               <label htmlFor="discount_percentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Discount Percentage
               </label>
-              <input
+              <Input
                 type="number"
                 id="discount_percentage"
                 value={formData.discount_percentage}
@@ -380,14 +380,14 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
                   </div>
                 </div>
               ))}
-              <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+              <label className="relative p-4 flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <FiUpload className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
                   <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                     <span className="font-semibold">Click to upload</span> or drag and drop
                   </p>
                 </div>
-                <input
+                <Input
                   type="file"
                   className="hidden"
                   accept="image/*"
