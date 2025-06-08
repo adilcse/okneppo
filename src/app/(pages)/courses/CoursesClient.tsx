@@ -21,13 +21,24 @@ export default function CoursesClient({ initialCourses }: { initialCourses: Cour
       {/* Main Content */}
       <main className="flex-grow">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {initialCourses.map((course) => (
-              <Link href={`/courses/${course.id}`} key={course.id}>
-                <CourseCard course={course} />
-              </Link>
-            ))}
-          </div>
+          {initialCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                No Courses Available
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                We&apos;re currently updating our course catalog. Please check back soon!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {initialCourses.map((course) => (
+                <Link href={`/courses/${course.id}`} key={course.id}>
+                  <CourseCard course={course} />
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

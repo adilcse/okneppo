@@ -34,9 +34,17 @@ export const metadata: Metadata = {
   },
 };
 
+// Set the revalidation timer - refresh the page every hour
+export const revalidate = 3600;
+
 async function fetchCourses() {
-  const response = await axiosClient.get('/api/courses');
-  return response.data.courses as Course[];
+  try {
+    const response = await axiosClient.get('/api/courses');
+    return response.data.courses as Course[];
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    return []; // Return empty array as fallback
+  }
 }
 
 export default async function CoursesPage() {
