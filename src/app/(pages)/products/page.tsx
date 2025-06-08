@@ -7,16 +7,49 @@ import { Product } from "@/lib/types";
 // Generate metadata for SEO
 export const metadata: Metadata = {
   title: 'Premium Designer Collections | Ok Neppo',
-  description: 'Browse our exclusive collection of high-quality designer clothing and accessories by Nishad Fatma. Each piece is crafted with attention to detail and fine artisanship.',
+  description: 'Browse our exclusive collection of high-quality designer clothing and accessories by Nishad Fatma. Each piece is crafted with attention to detail and fine artisanship. Discover unique, sustainable fashion pieces.',
+  keywords: ['designer collection', 'luxury fashion', 'handcrafted clothing', 'sustainable fashion', 'premium garments', 'Nishad Fatma designs'],
   openGraph: {
     title: 'Premium Designer Collections | Ok Neppo',
-    description: 'Browse our exclusive collection of high-quality designer clothing and accessories by Nishad Fatma.',
+    description: 'Browse our exclusive collection of high-quality designer clothing and accessories by Nishad Fatma. Each piece is crafted with attention to detail and fine artisanship.',
     images: [
-      '/images/model/DSC04122 Copy-EDIT.jpg',
-      '/images/model/DSC04246.jpeg', 
-      '/images/model/DSC04341.jpeg',
-      '/images/model/IMG_8033.JPG'
+      {
+        url: '/images/model/DSC04122 Copy-EDIT.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Ok Neppo Designer Collection',
+      },
+      {
+        url: '/images/model/DSC04246.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'Ok Neppo Fashion Pieces',
+      },
+      {
+        url: '/images/model/DSC04341.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'Ok Neppo Luxury Collection',
+      },
+      {
+        url: '/images/model/IMG_8033.JPG',
+        width: 1200,
+        height: 630,
+        alt: 'Ok Neppo Designer Wear',
+      }
     ],
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Ok Neppo',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Premium Designer Collections | Ok Neppo',
+    description: 'Browse our exclusive collection of high-quality designer clothing and accessories by Nishad Fatma.',
+    images: ['/images/model/DSC04122 Copy-EDIT.jpg'],
+  },
+  alternates: {
+    canonical: 'https://okneppo.in/products',
   },
 };
 

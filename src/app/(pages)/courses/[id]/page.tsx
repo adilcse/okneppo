@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata } from 'next';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -8,6 +9,56 @@ import { use } from 'react';
 import { WHATSAPP_NUMBER } from '@/constant';
 import axiosClient from '@/lib/axios';
 import { AxiosError } from 'axios';
+
+// Generate metadata for SEO
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const course = await fetchCourse(id);
+    
+    return {
+      title: `${course.title} | Ok Neppo Courses`,
+      description: course.description,
+      keywords: [
+        'fashion design course',
+        course.title.toLowerCase(),
+        'fashion education',
+        'design techniques',
+        'Nishad Fatma',
+        'fashion training'
+      ],
+      openGraph: {
+        title: `${course.title} | Ok Neppo Courses`,
+        description: course.description,
+        images: course.images && course.images.length > 0 ? [
+          {
+            url: course.images[0],
+            width: 1200,
+            height: 630,
+            alt: course.title,
+          }
+        ] : [],
+        type: 'article',
+        locale: 'en_US',
+        siteName: 'Ok Neppo',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${course.title} | Ok Neppo Courses`,
+        description: course.description,
+        images: course.images && course.images.length > 0 ? [course.images[0]] : [],
+      },
+      alternates: {
+        canonical: `https://okneppo.in/courses/${id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Course Not Found | Ok Neppo',
+      description: 'The requested course could not be found.',
+    };
+  }
+}
 
 function generateWhatsAppLink(course: Course) {
   const message = `Hello!

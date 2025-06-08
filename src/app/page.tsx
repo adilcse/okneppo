@@ -6,10 +6,11 @@ import { getDesignerData, getFeaturedProducts, getModelData } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
-  description: 'Exquisite handcrafted fashion pieces by designer Nishad Fatma. Premium quality clothing with meticulous attention to detail and sustainable practices.',
+  description: 'Exquisite handcrafted fashion pieces by designer Nishad Fatma. Premium quality clothing with meticulous attention to detail and sustainable practices. Discover our unique collection of luxury garments.',
+  keywords: ['luxury fashion', 'handcrafted clothing', 'Nishad Fatma', 'sustainable fashion', 'premium garments', 'designer collection'],
   openGraph: {
     title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
-    description: 'Explore exquisite handcrafted fashion pieces by designer Nishad Fatma.',
+    description: 'Explore exquisite handcrafted fashion pieces by designer Nishad Fatma. Each piece is crafted with precision and sustainable practices.',
     images: [
       {
         url: '/images/OkneppoLogo.jpeg',
@@ -18,7 +19,19 @@ export const metadata: Metadata = {
         alt: 'Ok Neppo by Nishad Fatma',
       }
     ],
-  }
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Ok Neppo',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Luxury Fashion Designs | Ok Neppo by Nishad Fatma',
+    description: 'Explore exquisite handcrafted fashion pieces by designer Nishad Fatma.',
+    images: ['/images/OkneppoLogo.jpeg'],
+  },
+  alternates: {
+    canonical: 'https://okneppo.in',
+  },
 };
 
 // Revalidate page data every hour for fresh content

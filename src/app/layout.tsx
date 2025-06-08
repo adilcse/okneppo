@@ -12,9 +12,31 @@ const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://okneppo.in'),
-  title: 'OKNEPPO | Innovative Fashion Designer',
-  description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO.',
-  keywords: ['fashion', 'design', 'clothing', 'sustainable', 'ethical', 'innovative'],
+  title: {
+    default: 'OKNEPPO | Innovative Fashion Designer',
+    template: '%s | OKNEPPO'
+  },
+  description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO. Explore our exclusive collection of handcrafted luxury garments.',
+  keywords: ['fashion', 'design', 'clothing', 'sustainable', 'ethical', 'innovative', 'luxury fashion', 'handcrafted', 'Nishad Fatma', 'Indian fashion'],
+  authors: [{ name: 'Nishad Fatma' }],
+  creator: 'Nishad Fatma',
+  publisher: 'OKNEPPO',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -30,6 +52,16 @@ export const metadata: Metadata = {
         alt: 'OKNEPPO Fashion',
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OKNEPPO | Innovative Fashion Designer',
+    description: 'Discover unique, sustainable fashion designs crafted with precision by OKNEPPO.',
+    images: ['/images/og-image.jpg'],
+    creator: '@okneppo',
+  },
+  verification: {
+    google: 'your-google-site-verification',
   },
 };
 
