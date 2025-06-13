@@ -148,7 +148,7 @@ ${formData.message}
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-white">Location</h3>
-                      <p className="text-gray-600 dark:text-gray-400">Rourkela, Odisha, India</p>
+                      <a href="https://maps.app.goo.gl/rc2z5svbhZrjZPj19" target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-400">Jhirpani, Rourkela, Odisha, India</a>
                     </div>
                   </div>
                 </div>
