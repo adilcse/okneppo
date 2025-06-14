@@ -143,6 +143,9 @@ export default function ProductForm({
     };
     
     await onSubmit(cleanedData);
+    if (createNew) {
+      setFormData(initialData);
+    }
   };
 
   const handleFillFromJson = (jsonData: JsonProductFormData) => {
