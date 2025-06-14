@@ -48,9 +48,9 @@ const JsonFormFiller: React.FC<JsonFormFillerProps> = ({ onFillForm }) => {
   };
 
   return (
-    <div className="mb-6 p-4 border border-gray-300 rounded bg-gray-50">
+    <div className="mb-6 p-4 border border-gray-300 rounded bg-gray-50 dark:bg-gray-800">
       <div className="flex justify-between items-center cursor-pointer" onClick={toggleCollapse}>
-        <h3 className="text-md font-semibold">
+        <h3 className="text-md font-semibold text-gray-700 dark:text-white">
           Import Product Data from JSON
         </h3>
         <button 
@@ -97,10 +97,10 @@ const JsonFormFiller: React.FC<JsonFormFillerProps> = ({ onFillForm }) => {
             </button>
           </div>
           
-          <div className="mt-3 text-xs text-gray-500">
+          <div className="mt-3 text-xs text-gray-500 dark:text-white">
             <p>Paste a JSON object with product fields to quickly fill the form.</p>
             <p className="mt-1">Example format:</p>
-            <pre className="bg-gray-100 p-2 rounded mt-1 text-xs overflow-auto">
+            <pre className="bg-gray-100 dark:bg-gray-600 p-2 rounded mt-1 text-xs overflow-auto">
               {`{
   "name": "Product Name",
   "price": "1999",

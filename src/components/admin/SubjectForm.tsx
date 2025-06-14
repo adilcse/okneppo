@@ -4,8 +4,8 @@ import { useState, FormEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { FiUpload, FiX } from 'react-icons/fi';
 import { Button, Input, Textarea } from '@/components/common';
-import axiosClient from '@/lib/axios';
 import { removeImageFromUrl } from '@/lib/clientUtils';
+import { handleMultipleImageUpload } from '@/lib/imageUpload';
 import toast from 'react-hot-toast';
 
 export interface SubjectFormData {
@@ -95,66 +95,18 @@ export default function SubjectForm({
     setUploadingImage(true);
     setValidationError(null);
     
-    // Process each file
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileId = `upload-${Date.now()}-${i}`;
-      
-      // Create an entry in the progress tracker
-      setUploadProgress(prev => ({
-        ...prev,
-        [fileId]: 0
-      }));
-      
-      // Create FormData object
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      try {
-        // Upload the file
-        const response = await axiosClient.post('/api/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        
-        // Update progress to 100%
-        setUploadProgress(prev => ({
-          ...prev,
-          [fileId]: 100
-        }));
-        
-        // Add the uploaded image path to form data
+    await handleMultipleImageUpload(files, {
+      onProgressUpdate: setUploadProgress,
+      onError: (error) => setValidationError(error),
+      onSuccess: (filePath) => {
         setFormData(prev => ({
           ...prev,
-          images: [...prev.images, response.data.filePath]
+          images: [...prev.images, filePath]
         }));
-        
-        // Remove from progress tracker after 1 second
-        setTimeout(() => {
-          setUploadProgress(prev => {
-            const newProgress = {...prev};
-            delete newProgress[fileId];
-            return newProgress;
-          });
-        }, 1000);
-        
-      } catch (err) {
-        console.error('Upload error:', err);
-        setValidationError('Failed to upload image. Please try again.');
-        
-        // Remove from progress tracker
-        setUploadProgress(prev => {
-          const newProgress = {...prev};
-          delete newProgress[fileId];
-          return newProgress;
-        });
       }
-    }
+    });
     
     setUploadingImage(false);
-    
-    // Reset the file input
     e.target.value = '';
   };
 

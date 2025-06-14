@@ -19,6 +19,7 @@ export default function Footer() {
             <Link href="/contact" className="text-gray-300 hover:text-primary dark:hover:text-primary">Contact</Link>
             <Link href="/terms" className="text-gray-300 hover:text-primary dark:hover:text-primary">Terms</Link>
             <Link href="/privacy" className="text-gray-300 hover:text-primary dark:hover:text-primary">Privacy</Link>
+            <Link href="/admin" className="text-gray-300 hover:text-primary dark:hover:text-primary">Admin</Link>
           </div>
           
           <div className="flex gap-4">
