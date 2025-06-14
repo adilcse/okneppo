@@ -35,6 +35,7 @@ export default function ProductForm({
   initialData,
   onSubmit,
   isSubmitting,
+  error,
   submitButtonText,
   showCreateNewButton = false
 }: ProductFormProps) {
@@ -160,6 +161,12 @@ export default function ProductForm({
 
   return (
     <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6" role="alert">
+          <span className="block sm:inline" data-testid="error-message">{error}</span>
+        </div>
+      )}
+
       {/* Add JSON Form Filler Component */}
       <JsonFormFiller onFillForm={handleFillFromJson} />
 
@@ -414,6 +421,7 @@ export default function ProductForm({
         <Button
           type="submit"
           disabled={isSubmitting}
+          data-testid="submit-button"
         >
           {isSubmitting ? 'Saving...' : submitButtonText}
         </Button>

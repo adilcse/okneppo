@@ -9,16 +9,34 @@ import CourseForm, { CourseFormData } from '@/components/admin/CourseForm';
 import { Course } from '@/types/course';
 import { GetSubjectsResponse } from '@/types/api';
 import { use } from 'react';
+import axios from 'axios';
 
 // API functions
 const fetchCourse = async (id: string): Promise<Course> => {
-  const response = await axiosClient.get(`/api/courses/${id}`);
-  return response.data as Course;
+  try {
+    const response = await axiosClient.get(`/api/courses/${id}`);
+    return response.data as Course;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error('Course not found');
+      }
+      throw new Error(error.response?.data?.message || 'Failed to fetch course');
+    }
+    throw error;
+  }
 };
 
 const updateCourse = async ({ id, data }: { id: string; data: CourseFormData }) => {
-  const response = await axiosClient.put(`/api/courses/${id}`, data);
-  return response.data;
+  try {
+    const response = await axiosClient.put(`/api/courses/${id}`, data);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to update course');
+    }
+    throw error;
+  }
 };
 
 const fetchSubjects = async (page: number): Promise<GetSubjectsResponse> => {
@@ -33,7 +51,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
   const queryClient = useQueryClient();
 
   // Fetch course query
-  const { data: courseData, isLoading: isLoadingCourse } = useQuery({
+  const { data: courseData, isLoading: isLoadingCourse, error: courseError } = useQuery({
     queryKey: ['course', id],
     queryFn: () => fetchCourse(id),
   });
@@ -58,15 +76,12 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
   });
 
   const handleSubmit = async (data: CourseFormData) => {
+    setError(null); // Clear any previous errors
     try {
       await updateMutation.mutateAsync({ id, data });
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
-      throw err;
+    } catch {
+      // Error is already handled by onError in the mutation
+      // We don't need to set it again here
     }
   };
 
@@ -74,14 +89,14 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto" role="status" aria-label="Loading"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading course...</p>
         </div>
       </div>
     );
   }
 
-  if (!courseData) {
+  if (courseError || !courseData) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -95,7 +110,10 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
             </Link>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-red-500">Course not found</p>
+            <div className="text-center">
+              <p className="text-red-500 text-lg font-medium mb-4">Course not found</p>
+              <p className="text-gray-600 dark:text-gray-400">The course you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+            </div>
           </div>
         </div>
       </div>

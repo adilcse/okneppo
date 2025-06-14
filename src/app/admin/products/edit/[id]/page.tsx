@@ -6,19 +6,34 @@ import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/axios';
 import ProductForm, { ProductFormData } from '@/components/admin/ProductForm';
+import axios from 'axios';
 
 // API functions
 const fetchProduct = async (id: string) => {
-  const response = await axiosClient.get(`/api/products/${id}`);
-  return response.data;
+  try{
+    const response = await axiosClient.get(`/api/products/${id}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch product');
+    }
+    throw error;
+  }
 };
 
 const updateProduct = async ({ id, data }: { id: string; data: ProductFormData }) => {
   if (data.createNew !== undefined) {
     delete data.createNew;
   }
-  const response = await axiosClient.put(`/api/products/${id}`, data);
-  return response.data;
+  try{
+    const response = await axiosClient.put(`/api/products/${id}`, data);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to update product');
+    }
+    throw error;
+  }
 };
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
@@ -28,7 +43,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const queryClient = useQueryClient();
 
   // Fetch product query
-  const { data: productData, isLoading: isLoadingProduct } = useQuery({
+  const { data: productData, isLoading: isLoadingProduct, isError } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProduct(id),
   });
@@ -48,6 +63,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
   const handleSubmit = async (data: ProductFormData) => {
     try {
+      setError(null);
       await updateMutation.mutateAsync({ id, data });
     } catch (err) {
       if (err instanceof Error) {
@@ -55,7 +71,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       } else {
         setError('An unexpected error occurred');
       }
-      throw err;
     }
   };
 
@@ -70,22 +85,11 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     );
   }
 
-  if (!productData) {
+  if (isError || !productData) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Edit Product</h1>
-            <Link
-              href="/admin/products"
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-            >
-              Back to Products
-            </Link>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-red-500">Product not found</p>
-          </div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="mt-4 text-red-500" role="alert">Product not found</p>
         </div>
       </div>
     );

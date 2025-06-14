@@ -37,7 +37,7 @@ export default function NewCourse() {
   const queryClient = useQueryClient();
 
   // Fetch subjects query
-  const { data: subjectsData, isLoading: isLoadingSubjects } = useQuery<SubjectsResponse>({
+  const { data: subjectsData, isLoading: isLoadingSubjects, error: subjectsError } = useQuery<SubjectsResponse>({
     queryKey: ['subjects', 1],
     queryFn: () => fetchSubjects(1),
   });
@@ -81,6 +81,12 @@ export default function NewCourse() {
             Back to Courses
           </Link>
         </div>
+
+        {subjectsError ? (
+          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+            Failed to load subjects. Please try again later.
+          </div>
+        ) : null}
 
         <CourseForm
           onSubmit={handleSubmit}

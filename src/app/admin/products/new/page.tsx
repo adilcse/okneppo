@@ -6,11 +6,19 @@ import Link from 'next/link';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axiosClient from '@/lib/axios';
 import ProductForm, { ProductFormData } from '@/components/admin/ProductForm';
+import axios from 'axios';
 
 // API functions
 const createProduct = async (data: ProductFormData) => {
-  const response = await axiosClient.post('/api/products', data);
-  return response.data;
+  try {
+    const response = await axiosClient.post('/api/products', data);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || error.response?.data?.error || 'Failed to create product');
+    }
+    throw error;
+  }
 };
 
 export default function NewProduct() {
@@ -50,13 +58,13 @@ export default function NewProduct() {
   const handleSubmit = async (data: ProductFormData) => {
     try {
       await createMutation.mutateAsync(data);
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
-      } else {
-        setError('An unexpected error occurred');
+      } else if (axios.isAxiosError(err)) {
+        console.error(err);
+        setError(err?.response?.data?.message || err?.response?.data?.error || 'An unexpected error occurred');
       }
-      throw err;
     }
   };
 
@@ -72,12 +80,6 @@ export default function NewProduct() {
             Back to Products
           </Link>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
 
         <ProductForm
           initialData={initialFormData}

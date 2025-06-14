@@ -154,6 +154,7 @@ export default function CoursesPage() {
             size="sm"
             onClick={() => router.push(`/admin/courses/edit/${course.id}`)}
             className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            data-testid={`edit-button-${course.id}`}
           >
             <FiEdit2 className="w-4 h-4" />
           </Button>
