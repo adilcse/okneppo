@@ -219,6 +219,11 @@ export default function Header() {
               </Link>
             </li>
             <li>
+              <Link href="/gallery" className="hover:text-[#E94FFF] font-medium">
+                Gallery
+              </Link>
+            </li>
+            <li>
               <Link href="/about" className="hover:text-[#E94FFF] font-medium">
                 About
               </Link>
@@ -432,6 +437,15 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Courses
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/gallery" 
+                  className="text-2xl font-medium hover:text-[#E94FFF]"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Gallery
                 </Link>
               </li>
               <li>

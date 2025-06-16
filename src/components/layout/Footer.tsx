@@ -15,6 +15,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-4 mb-8 md:mb-0 text-center md:text-left">
             <Link href="/" className="text-gray-300 hover:text-primary dark:hover:text-primary">Home</Link>
             <Link href="/products" className="text-gray-300 hover:text-primary dark:hover:text-primary">Collections</Link>
+            <Link href="/gallery" className="text-gray-300 hover:text-primary dark:hover:text-primary">Gallery</Link>
             <Link href="/about" className="text-gray-300 hover:text-primary dark:hover:text-primary">About</Link>
             <Link href="/contact" className="text-gray-300 hover:text-primary dark:hover:text-primary">Contact</Link>
             <Link href="/terms" className="text-gray-300 hover:text-primary dark:hover:text-primary">Terms</Link>

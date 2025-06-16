@@ -9,13 +9,30 @@ interface GalleryImage {
   updated_at: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const images = await db.find<GalleryImage>('gallery', {}, {
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get('cursor');
+    const limit = parseInt(searchParams.get('limit') || '12');
+
+    // Fetch images with pagination
+    const images = await db.find<GalleryImage>('gallery', {
+      ...(cursor ? { display_order: { '>=': parseInt(cursor) } } : {})
+    }, {
       orderBy: 'display_order',
-      order: 'ASC'
+      order: 'ASC',
+      limit: limit + 1, // Fetch one extra to determine if there are more
     });
-    return NextResponse.json(images);
+
+    // Check if there are more images
+    const hasMore = images.length > limit;
+    const imagesToReturn = hasMore ? images.slice(0, limit) : images;
+    const nextCursor = hasMore ? images[limit].display_order : null;
+
+    return NextResponse.json({
+      images: imagesToReturn,
+      nextCursor
+    });
   } catch (error) {
     console.error('Error fetching gallery images:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch gallery images' }, { status: 500 });

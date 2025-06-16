@@ -17,7 +17,7 @@
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
     "@neondatabase/serverless": "^1.0.0",
-    "@tanstack/react-query": "^5.75.7",
+    "@tanstack/react-query": "^5.80.7",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/lodash": "^4.17.17",
@@ -42,6 +42,7 @@
     "react-dropzone": "^14.3.8",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "react-intersection-observer": "^9.16.0",
     "server-only": "^0.0.1",
     "sharp": "^0.34.1",
     "tailwind-merge": "^3.3.0"
