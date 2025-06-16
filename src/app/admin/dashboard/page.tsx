@@ -174,6 +174,16 @@ export default function AdminDashboard() {
             <Button variant="primary">Manage Subjects</Button>
             </Link>
         </Card>
+
+        <Card variant="elevated" className="p-6 bg-white dark:bg-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gallery Management</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Manage your image gallery - upload new images, reorder them, or remove images from your gallery.
+            </p>
+          <Link href="/admin/gallery">
+            <Button variant="primary">Manage Gallery</Button>
+            </Link>
+        </Card>
       </div>
     </div>
   );

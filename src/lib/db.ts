@@ -502,6 +502,28 @@ export const db = {
         );
       `;
     }
+
+    const tableCheckGallery = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'gallery'
+      ) as exists
+    `);
+
+    const tableExistsGallery = tableCheckGallery.rows[0]?.exists;
+
+    if (!tableExistsGallery) {
+      // Create gallery table
+      await sql`
+        CREATE TABLE IF NOT EXISTS gallery (
+          id SERIAL PRIMARY KEY,
+          image_url TEXT NOT NULL,
+          display_order INTEGER NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+    }
     
     console.log('Database tables initialized');
   }
