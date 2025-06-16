@@ -17,7 +17,7 @@ interface GalleryResponse {
 }
 
 const fetchGalleryImages = async ({ pageParam = 0 }: { pageParam: number }): Promise<GalleryResponse> => {
-  const response = await fetch(`/api/gallery?cursor=${pageParam}&limit=1`);
+  const response = await fetch(`/api/gallery?cursor=${pageParam}&limit=5`);
   if (!response.ok) {
     throw new Error('Failed to fetch gallery images');
   }
@@ -35,8 +35,7 @@ export default function GalleryPage() {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    // @ts-expect-error - queryKey is not typed correctly
-    queryKey: ['gallery'] as const,
+    queryKey: ['gallery'],
     queryFn: fetchGalleryImages,
     getNextPageParam: (lastPage: GalleryResponse) => lastPage.nextCursor,
     initialPageParam: 0,

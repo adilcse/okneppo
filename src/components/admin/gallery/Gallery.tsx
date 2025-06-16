@@ -8,6 +8,7 @@ import update from 'immutability-helper';
 import { FaTrash } from 'react-icons/fa';
 import { uploadImage } from '@/lib/imageUpload';
 import { removeImageFromUrl } from '@/lib/clientUtils';
+import Image from 'next/image';
 
 interface Image {
   id: number;
@@ -229,7 +230,7 @@ const DraggableImage: React.FC<ImageProps> = ({ image, index, moveImage, deleteI
       style={{ opacity: isDragging ? 0.5 : 1 }}
       className="relative"
     >
-      <img src={image.image_url} alt="gallery" className="w-full h-auto" />
+      <Image src={image.image_url} alt="gallery" className="w-full h-auto" />
       <button
         onClick={() => deleteImage(index)}
         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
