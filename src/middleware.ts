@@ -9,8 +9,49 @@ const PROTECTED_API_ROUTES = [
   '/api/subjects',        // Subjects
   '/api/courses',         // Courses
   '/api/delete-image',    // Delete image
+  '/api/gallery',         // Gallery
 ];
 
+const checkAdminAuth = async (request: NextRequest) => {
+  console.log('Checking admin auth');
+  const origin = request.headers.get('origin');
+
+  const token = getTokenFromRequest(request);
+
+  if (!token) {
+    const response = NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+    response.headers.set('Access-Control-Allow-Origin', origin || '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    return response;
+  }
+
+  const { verified, error } = await verifyToken(token);
+  
+  if (!verified) {
+    const response = NextResponse.json(
+      { error: error || 'Invalid or expired token' },
+      { status: 401 }
+    );
+    response.headers.set('Access-Control-Allow-Origin', origin || '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    return response;
+  }
+    // If we get here, either authentication passed or wasn't required
+    const response = NextResponse.next();
+    response.headers.set('Access-Control-Allow-Origin', origin || '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    return response;
+  
+};
 // Middleware function
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -28,58 +69,20 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Allow-Credentials', 'true');
       return response;
     }
-    
+
     // Check if the path is a protected API route
     const isProtectedApiRoute = PROTECTED_API_ROUTES.some(route => 
       pathname.startsWith(route)
     );
     
-    // For product-specific endpoints (PUT, DELETE operations)
-    const isProductEndpoint = pathname.match(/^\/api\/products\/\d+$/);
-    const isAuthenticatedEndpoint = pathname.match(/^\/api\/isauthenticated$/);
+    const isAuthenticatedEndpoint = pathname.match(/^\/api\/admin\/isauthenticated$/);
     // Only apply authentication for protected API routes with specific methods
-    // or for product-specific endpoints with PUT/DELETE methods
     if (
       (isAuthenticatedEndpoint && method === 'GET') ||
-      (isProtectedApiRoute && method !== 'GET') || 
-      (isProductEndpoint && (method === 'PUT' || method === 'DELETE'))
+      (isProtectedApiRoute && method !== 'GET')
     ) {
-      const token = getTokenFromRequest(request);
-
-      if (!token) {
-        const response = NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
-        response.headers.set('Access-Control-Allow-Origin', origin || '*');
-        response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-        return response;
-      }
-
-      const { verified, error } = await verifyToken(token);
-      
-      if (!verified) {
-        const response = NextResponse.json(
-          { error: error || 'Invalid or expired token' },
-          { status: 401 }
-        );
-        response.headers.set('Access-Control-Allow-Origin', origin || '*');
-        response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-        return response;
-      }
+      return checkAdminAuth(request);
     }
-    
-    // If we get here, either authentication passed or wasn't required
-    const response = NextResponse.next();
-    response.headers.set('Access-Control-Allow-Origin', origin || '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    return response;
   }
 
   // Not an API route, proceed normally

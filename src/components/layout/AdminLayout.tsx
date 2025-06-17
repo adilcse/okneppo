@@ -1,27 +1,40 @@
 "use client";
 
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Container } from '@/components/common';
 import Cookies from 'js-cookie';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { toast } from 'react-hot-toast';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const { isAuthenticated, isLoading, error } = useAdminAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const handleLogout = useCallback(() => {
+    Cookies.remove('admin-token', { path: '/' });
+    router.push('/admin/login');
+  }, [router]);
+
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+        if (error) {
+            toast.error(error);
+        }
+      handleLogout();
+    }
+  }, [isAuthenticated, isLoading, handleLogout, error]);
 
   const isActive = (path: string) => {
     return pathname === path;
   };
 
-  const handleLogout = () => {
-    Cookies.remove('admin-token', { path: '/' });
-    router.push('/admin/login');
-  };
 
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard' },
