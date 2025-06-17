@@ -9,11 +9,18 @@ import { FaTrash } from 'react-icons/fa';
 import { uploadImage } from '@/lib/imageUpload';
 import { removeImageFromUrl } from '@/lib/clientUtils';
 import Image from 'next/image';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
 
 interface Image {
   id: number;
   image_url: string;
   display_order: number;
+}
+
+interface GalleryResponse {
+  images: Image[];
+  nextCursor: number | null;
 }
 
 interface ImageProps {
@@ -23,10 +30,39 @@ interface ImageProps {
   deleteImage: (index: number) => void;
 }
 
+const fetchGalleryImages = async ({ pageParam = 0 }: { pageParam: number }): Promise<GalleryResponse> => {
+  const response = await fetch(`/api/gallery?cursor=${pageParam}&limit=5`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch gallery images');
+  }
+  return response.json();
+};
+
 const Gallery: React.FC = () => {
-  const [images, setImages] = useState<Image[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const queryClient = useQueryClient();
+  const { ref, inView } = useInView();
+
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['gallery'],
+    queryFn: fetchGalleryImages,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: 0,
+  });
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const updateImageOrder = async (newImages: Image[]) => {
     try {
@@ -41,6 +77,8 @@ const Gallery: React.FC = () => {
       if (!response.ok) {
         throw new Error('Failed to update image order');
       }
+      // Invalidate the query to refetch the data
+      queryClient.invalidateQueries({ queryKey: ['gallery'] });
     } catch (error) {
       console.error('Error updating image order:', error);
     }
@@ -54,25 +92,7 @@ const Gallery: React.FC = () => {
     updateTimeoutRef.current = setTimeout(() => {
       updateImageOrder(newImages);
     }, 1500); // Wait for 1500ms of no movement before updating
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/gallery')
-      .then(res => res.json())
-      .then(data => {
-        setImages(data);
-      })
-      .catch(error => {
-        console.error('Error fetching gallery images:', error);
-      });
-
-    // Cleanup timeout on component unmount
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
+  }, [queryClient]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
@@ -88,22 +108,25 @@ const Gallery: React.FC = () => {
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ imageUrl: filePath }),
+              body: JSON.stringify({ 
+                imageUrl: filePath,
+                display_order: 0 
+              }),
             });
 
             if (!response.ok) {
               throw new Error('Failed to save image to gallery');
             }
 
-            const data = await response.json();
-            setImages(prevImages => [...prevImages, data.image]);
+            // Invalidate the query to refetch the data
+            queryClient.invalidateQueries({ queryKey: ['gallery'] });
           } catch (error) {
             console.error('Error saving image to gallery:', error);
           }
         }
       });
     }
-  }, []);
+  }, [queryClient, data]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -113,19 +136,24 @@ const Gallery: React.FC = () => {
   } as DropzoneOptions);
 
   const moveImage = (dragIndex: number, hoverIndex: number) => {
-    const draggedImage = images[dragIndex];
-    const newImages = update(images, {
+    if (!data) return;
+    
+    const allImages = data.pages.flatMap(page => page.images);
+    const draggedImage = allImages[dragIndex];
+    const newImages = update(allImages, {
       $splice: [
         [dragIndex, 1],
         [hoverIndex, 0, draggedImage],
       ],
     });
-    setImages(newImages);
     debouncedUpdateOrder(newImages);
   };
 
   const deleteImage = async (index: number) => {
-    const image = images[index];
+    if (!data) return;
+    
+    const allImages = data.pages.flatMap(page => page.images);
+    const image = allImages[index];
     
     try {
       const deleteUrl = await removeImageFromUrl(image.image_url);
@@ -140,9 +168,8 @@ const Gallery: React.FC = () => {
         throw new Error('Failed to delete image');
       }
 
-      const newImages = images.filter((_, i) => i !== index);
-      setImages(newImages);
-      updateImageOrder(newImages);
+      // Invalidate the query to refetch the data
+      queryClient.invalidateQueries({ queryKey: ['gallery'] });
     } catch (error) {
       console.error('Error deleting image:', error);
     }
@@ -157,6 +184,28 @@ const Gallery: React.FC = () => {
 
   const DndBackend = isTouchDevice() ? TouchBackend : HTML5Backend;
 
+  if (status === 'pending') {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center text-red-500">
+          <p>Error: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const allImages = data.pages.flatMap(page => page.images);
+
   return (
     <DndProvider backend={DndBackend}>
       <div className="container mx-auto p-4">
@@ -169,7 +218,7 @@ const Gallery: React.FC = () => {
           )}
         </div>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {images.map((image, index) => (
+          {allImages.map((image, index) => (
             <DraggableImage key={image.id} index={index} image={image} moveImage={moveImage} deleteImage={deleteImage} />
           ))}
           {Object.entries(uploadProgress).map(([fileId, progress]) => (
@@ -189,6 +238,16 @@ const Gallery: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Loading indicator */}
+        <div
+          ref={ref}
+          className="flex justify-center items-center h-20 mt-8"
+        >
+          {isFetchingNextPage && (
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+          )}
         </div>
       </div>
     </DndProvider>
@@ -230,7 +289,7 @@ const DraggableImage: React.FC<ImageProps> = ({ image, index, moveImage, deleteI
       style={{ opacity: isDragging ? 0.5 : 1 }}
       className="relative"
     >
-      <Image src={image.image_url} alt="gallery" className="w-full h-auto" />
+      <Image src={image.image_url} alt="gallery" className="w-full h-auto" width={100} height={100} />
       <button
         onClick={() => deleteImage(index)}
         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"

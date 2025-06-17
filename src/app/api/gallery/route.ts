@@ -17,17 +17,17 @@ export async function GET(request: Request) {
 
     // Fetch images with pagination
     const images = await db.find<GalleryImage>('gallery', {
-      ...(cursor ? { display_order: { '>=': parseInt(cursor) } } : {})
+      ...((cursor && cursor !== '0') ? { id: { '<=': parseInt(cursor) } } : {})
     }, {
-      orderBy: 'display_order',
-      order: 'ASC',
+      orderBy: 'id',
+      order: 'DESC',
       limit: limit + 1, // Fetch one extra to determine if there are more
     });
 
     // Check if there are more images
     const hasMore = images.length > limit;
     const imagesToReturn = hasMore ? images.slice(0, limit) : images;
-    const nextCursor = hasMore ? images[limit].display_order : null;
+    const nextCursor = hasMore ? images[limit].id : null;
 
     return NextResponse.json({
       images: imagesToReturn,
