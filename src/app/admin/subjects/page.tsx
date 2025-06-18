@@ -91,10 +91,12 @@ export default function SubjectsPage() {
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {subject.title}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {subject.description?.length > 50 
-                ? `${subject.description.substring(0, 50)}...` 
-                : subject.description}
+            <div className="text-sm text-gray-500 dark:text-gray-400 prose prose-sm dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ 
+                __html: subject.description?.length > 50 
+                  ? `${subject.description.substring(0, 50)}...` 
+                  : subject.description 
+              }} />
             </div>
           </div>
         </div>

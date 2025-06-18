@@ -4,6 +4,19 @@ import CourseForm, { CourseFormData } from '../../components/admin/CourseForm';
 import axiosClient from '@/lib/axios';
 import { handleMultipleImageUpload } from '@/lib/imageUpload';
 
+// Mock the TinyMCE editor
+jest.mock('@tinymce/tinymce-react', () => ({
+  Editor: ({ value, onEditorChange, id }: { value: string; onEditorChange: (content: string) => void; id: string }) => (
+    <textarea
+      id={id}
+      data-testid={`tinymce-${id}`}
+      value={value}
+      onChange={(e) => onEditorChange(e.target.value)}
+      style={{ visibility: 'hidden' }}
+    />
+  )
+}));
+
 // Mock axios client
 jest.mock('@/lib/axios', () => ({
   get: jest.fn(),
@@ -77,7 +90,7 @@ describe('CourseForm', () => {
     renderCourseForm();
 
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    expect(screen.getByTestId('tinymce-description')).toBeInTheDocument();
     expect(screen.getByLabelText(/maximum price/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/discounted price/i)).toBeInTheDocument();
     expect(screen.getByText(/click to upload/i)).toBeInTheDocument();

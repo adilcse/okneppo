@@ -5,6 +5,20 @@ import axiosClient from '@/lib/axios';
 // import { ProductFormData } from '@/components/admin/ProductForm';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
+
+// Mock the TinyMCE editor
+jest.mock('@tinymce/tinymce-react', () => ({
+  Editor: ({ value, onEditorChange, id }: { value: string; onEditorChange: (content: string) => void; id: string }) => (
+    <textarea
+      id={id}
+      data-testid={`tinymce-${id}`}
+      value={value}
+      onChange={(e) => onEditorChange(e.target.value)}
+      style={{ visibility: 'hidden' }}
+    />
+  )
+}));
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -16,6 +30,16 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/axios', () => ({
   get: jest.fn(),
   put: jest.fn()
+}));
+
+// Mock image upload
+jest.mock('@/lib/imageUpload', () => ({
+  handleMultipleImageUpload: jest.fn((files, { onSuccess }) => {
+    if (onSuccess) {
+      Array.from(files).forEach((_, i) => onSuccess(`test-image-${i}.jpg`));
+    }
+    return Promise.resolve();
+  }),
 }));
 
 const renderWithClient = (ui: React.ReactElement) => {
@@ -97,7 +121,10 @@ describe('EditProduct', () => {
     await user.type(screen.getByLabelText(/product name/i), 'Updated Product');
     await user.type(screen.getByLabelText(/price/i), '2000');
     await user.type(screen.getByLabelText(/category/i), 'Updated Category');
-    await user.type(screen.getByLabelText(/description/i), 'Updated Description');
+    
+    // Handle TinyMCE editor
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Updated Description');
 
     // Submit form
     await user.click(screen.getByText(/save changes/i));
@@ -128,7 +155,10 @@ describe('EditProduct', () => {
     await user.type(screen.getByLabelText(/product name/i), 'Updated Product');
     await user.type(screen.getByLabelText(/price/i), '2000');
     await user.type(screen.getByLabelText(/category/i), 'Updated Category');
-    await user.type(screen.getByLabelText(/description/i), 'Updated Description');
+    
+    // Handle TinyMCE editor
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Updated Description');
 
     // Submit form
     await user.click(screen.getByTestId('submit-button'));

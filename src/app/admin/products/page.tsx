@@ -94,10 +94,12 @@ export default function ProductsPage() {
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {product.name}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {product.description?.length > 50 
-                ? `${product.description.substring(0, 50)}...` 
-                : product.description}
+            <div className="text-sm text-gray-500 dark:text-gray-400 prose prose-sm dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ 
+                __html: product.description?.length > 50 
+                  ? `${product.description.substring(0, 50)}...` 
+                  : product.description || ''
+              }} />
             </div>
           </div>
         </div>

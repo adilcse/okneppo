@@ -81,7 +81,7 @@ export default function CourseDetailClient({ course }: { course: Course }) {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
                 <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Course Description</h2>
                 <div className="prose dark:prose-invert max-w-none">
-                  <p className="text-gray-700 dark:text-gray-300">{course.description}</p>
+                  <div dangerouslySetInnerHTML={{ __html: course.description }} />
                 </div>
               </div>
 
@@ -91,33 +91,33 @@ export default function CourseDetailClient({ course }: { course: Course }) {
                 <div className="grid gap-6">
                   {course.subjects && course.subjects.length > 0 ? (
                     course.subjects.map((subject) => (
-                        <>
+                      <div key={subject.id}>
                         <hr className="sm:hidden border-gray-200 dark:border-gray-700 my-4" />
-                      <div 
-                        key={subject.id} 
-                        className="border-none sm:border-double border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow p-2 sm:p-4"
-                      >
-                        <div className="flex flex-col md:flex-row gap-6">
-                          {subject.images && subject.images.length > 0 && (
-                            <div className="relative w-full md:w-1/2 aspect-video rounded-lg overflow-hidden">
-                              <Image
-                                src={subject.images[0]}
-                                alt={subject.title}
-                                fill
-                                priority={false}
-                                className="object-contain"
-                              />
+                        <div 
+                          key={subject.id} 
+                          className="border-none sm:border-double border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow p-2 sm:p-4"
+                        >
+                          <div className="flex flex-col md:flex-row gap-6">
+                            {subject.images && subject.images.length > 0 && (
+                              <div className="relative w-full md:w-1/2 aspect-video rounded-lg overflow-hidden">
+                                <Image
+                                  src={subject.images[0]}
+                                  alt={subject.title}
+                                  fill
+                                  priority={false}
+                                  className="object-contain"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
+                                {subject.title}
+                              </h3>
+                              <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: subject.description }} />
                             </div>
-                          )}
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
-                              {subject.title}
-                            </h3>
-                            <p className="text-gray-700 dark:text-gray-300">{subject.description}</p>
                           </div>
                         </div>
                       </div>
-                      </>
                     ))
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-4">

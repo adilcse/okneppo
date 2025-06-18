@@ -91,10 +91,12 @@ export default function CoursesPage() {
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {course.title}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {course.description?.length > 50 
-                ? `${course.description.substring(0, 50)}...` 
-                : course.description}
+            <div className="text-sm text-gray-500 dark:text-gray-400 prose prose-sm dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ 
+                __html: course.description?.length > 50 
+                  ? `${course.description.substring(0, 50)}...` 
+                  : course.description 
+              }} />
             </div>
           </div>
         </div>

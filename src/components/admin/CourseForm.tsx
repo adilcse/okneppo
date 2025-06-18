@@ -3,11 +3,12 @@
 import { useState, FormEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { FiUpload, FiX, FiArrowUp, FiArrowDown } from 'react-icons/fi';
-import { Button, Input, Textarea } from '@/components/common';
+import { Button, Input } from '@/components/common';
 import { removeImageFromUrl } from '@/lib/clientUtils';
 import { handleMultipleImageUpload } from '@/lib/imageUpload';
 import { Subject } from '@/types/course';
 import toast from 'react-hot-toast';
+import { Editor } from '@tinymce/tinymce-react';
 
 export interface CourseFormData {
   title: string;
@@ -222,16 +223,30 @@ export default function CourseForm({
         />
       </div>
 
+      {/* Description */}
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Description
         </label>
-        <Textarea
+        <Editor
           id="description"
+          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
           value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-          rows={4}
+          onEditorChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+          init={{
+            height: 300,
+            menubar: false,
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'table', 'code', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+              'bold italic forecolor | alignleft aligncenter ' +
+              'alignright alignjustify | bullist numlist outdent indent | ' +
+              'removeformat | help',
+            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+          }}
         />
       </div>
 

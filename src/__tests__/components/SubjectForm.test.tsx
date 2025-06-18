@@ -3,6 +3,19 @@ import userEvent from '@testing-library/user-event';
 import SubjectForm, { SubjectFormData } from '../../components/admin/SubjectForm';
 import { handleMultipleImageUpload } from '@/lib/imageUpload';
 
+// Mock the TinyMCE editor
+jest.mock('@tinymce/tinymce-react', () => ({
+  Editor: ({ value, onEditorChange, id }: { value: string; onEditorChange: (content: string) => void; id: string }) => (
+    <textarea
+      id={id}
+      data-testid={`tinymce-${id}`}
+      value={value}
+      onChange={(e) => onEditorChange(e.target.value)}
+      style={{ visibility: 'hidden' }}
+    />
+  )
+}));
+
 // Mock axios client
 jest.mock('@/lib/axios', () => ({
   get: jest.fn(),
@@ -50,7 +63,7 @@ describe('SubjectForm', () => {
     renderSubjectForm();
 
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    expect(screen.getByTestId('tinymce-description')).toBeInTheDocument();
     // Instead of label for images, check for upload button text
     expect(screen.getByText(/click to upload/i)).toBeInTheDocument();
   });
@@ -61,7 +74,7 @@ describe('SubjectForm', () => {
 
     // Fill in required fields
     await user.type(screen.getByLabelText(/title/i), 'Test Subject');
-    await user.type(screen.getByLabelText(/description/i), 'Test Description');
+    await user.type(screen.getByTestId('tinymce-description'), 'Test Description');
 
     // Submit form
     await user.click(screen.getByRole('button', { name: /submit/i }));

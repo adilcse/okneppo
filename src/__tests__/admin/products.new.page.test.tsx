@@ -1,8 +1,25 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import NewProduct from '../../app/admin/products/new/page';
-import axiosClient from '@/lib/axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import NewProduct from '@/app/admin/products/new/page';
+import axiosClient from '@/lib/axios';
+
+// Mock the TinyMCE editor
+jest.mock('@tinymce/tinymce-react', () => ({
+  Editor: ({ value, onEditorChange, id }: { value: string; onEditorChange: (content: string) => void; id: string }) => (
+    <textarea
+      id={id}
+      data-testid={`tinymce-${id}`}
+      value={value}
+      onChange={(e) => onEditorChange(e.target.value)}
+      style={{ visibility: 'hidden' }}
+    />
+  )
+}));
+
+// Mock axios
+jest.mock('@/lib/axios');
 
 // Mock next/navigation
 const mockPush = jest.fn();
@@ -12,30 +29,25 @@ jest.mock('next/navigation', () => ({
   })
 }));
 
-// Mock axios client
-jest.mock('@/lib/axios', () => ({
-  post: jest.fn(),
-  get: jest.fn()
+// Mock image upload
+jest.mock('@/lib/imageUpload', () => ({
+  handleMultipleImageUpload: jest.fn((files, { onSuccess }) => {
+    if (onSuccess) {
+      Array.from(files).forEach((_, i) => onSuccess(`test-image-${i}.jpg`));
+    }
+    return Promise.resolve();
+  }),
 }));
 
-// Mock image upload handler
-jest.mock('@/lib/imageUpload', () => ({
-  handleMultipleImageUpload: jest.fn().mockImplementation((files, { onSuccess }) => {
-    onSuccess('test-image.jpg');
-    return Promise.resolve();
-  })
-}));
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 const renderWithClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0
-      },
-    },
-  });
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
   );
@@ -75,8 +87,14 @@ describe('NewProduct', () => {
     await user.type(screen.getByLabelText(/name/i), 'Test Product');
     await user.type(screen.getByLabelText(/price/i), '1000');
     await user.selectOptions(screen.getByLabelText(/category/i), 'Test Category');
-    await user.type(screen.getByLabelText(/description/i), 'Test Description');
-    await user.type(screen.getByLabelText(/care instructions/i), 'Test Care');
+    
+    // Handle TinyMCE editors
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Test Description');
+    
+    const careInstructionsEditor = screen.getByTestId('tinymce-careInstructions');
+    await user.type(careInstructionsEditor, 'Test Care');
+    
     await user.type(screen.getByLabelText(/delivery time/i), '1-2 weeks');
 
     // Upload image
@@ -96,7 +114,7 @@ describe('NewProduct', () => {
         description: 'Test Description',
         careInstructions: 'Test Care',
         deliveryTime: '1-2 weeks',
-        images: ['test-image.jpg']
+        images: ['test-image-0.jpg']
       }));
     });
 
@@ -128,8 +146,14 @@ describe('NewProduct', () => {
     await user.type(screen.getByLabelText(/name/i), 'Test Product');
     await user.type(screen.getByLabelText(/price/i), '1000');
     await user.selectOptions(screen.getByLabelText(/category/i), 'Test Category');
-    await user.type(screen.getByLabelText(/description/i), 'Test Description');
-    await user.type(screen.getByLabelText(/care instructions/i), 'Test Care');
+    
+    // Handle TinyMCE editors
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Test Description');
+    
+    const careInstructionsEditor = screen.getByTestId('tinymce-careInstructions');
+    await user.type(careInstructionsEditor, 'Test Care');
+    
     await user.type(screen.getByLabelText(/delivery time/i), '1-2 weeks');
 
     // Upload image
@@ -173,8 +197,14 @@ describe('NewProduct', () => {
     await user.type(screen.getByLabelText(/name/i), 'Test Product');
     await user.type(screen.getByLabelText(/price/i), '1000');
     await user.selectOptions(screen.getByLabelText(/category/i), 'Test Category');
-    await user.type(screen.getByLabelText(/description/i), 'Test Description');
-    await user.type(screen.getByLabelText(/care instructions/i), 'Test Care');
+    
+    // Handle TinyMCE editors
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Test Description');
+    
+    const careInstructionsEditor = screen.getByTestId('tinymce-careInstructions');
+    await user.type(careInstructionsEditor, 'Test Care');
+    
     await user.type(screen.getByLabelText(/delivery time/i), '1-2 weeks');
 
     // Upload image
@@ -195,7 +225,7 @@ describe('NewProduct', () => {
         careInstructions: 'Test Care',
         deliveryTime: '1-2 weeks',
         createNew: true,
-        images: ['test-image.jpg']
+        images: ['test-image-0.jpg']
       }));
     });
 
@@ -218,8 +248,14 @@ describe('NewProduct', () => {
     await user.type(screen.getByLabelText(/name/i), 'Test Product');
     await user.type(screen.getByLabelText(/price/i), '1000');
     await user.selectOptions(screen.getByLabelText(/category/i), 'Test Category');
-    await user.type(screen.getByLabelText(/description/i), 'Test Description');
-    await user.type(screen.getByLabelText(/care instructions/i), 'Test Care');
+    
+    // Handle TinyMCE editors
+    const descriptionEditor = screen.getByTestId('tinymce-description');
+    await user.type(descriptionEditor, 'Test Description');
+    
+    const careInstructionsEditor = screen.getByTestId('tinymce-careInstructions');
+    await user.type(careInstructionsEditor, 'Test Care');
+    
     await user.type(screen.getByLabelText(/delivery time/i), '1-2 weeks');
 
     // Upload image

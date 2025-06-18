@@ -40,7 +40,9 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ courseId }) => {
           style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', borderRadius: '8px', marginBottom: '20px' }} 
         />
       )}
-      <p><strong>Description:</strong> {course.description}</p>
+      <div className="prose dark:prose-invert">
+        <div dangerouslySetInnerHTML={{ __html: course.description }} />
+      </div>
       <p style={{ textDecoration: 'line-through', color: 'gray' }}>Original Price: ₹{course.max_price}</p>
       <h3 style={{ color: 'green' }}>Discounted Price: ₹{course.discounted_price} ({course.discount_percentage}% off)</h3>
       
@@ -73,7 +75,9 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ courseId }) => {
                 style={{ width: '100%', maxWidth:'300px', height: 'auto', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} 
               />
             )}
-            <p>{subject.description}</p>
+            <div className="prose dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ __html: subject.description }} />
+            </div>
           </div>
         ))
       ) : (

@@ -35,9 +35,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             </span>
           </div>
         </div>
-        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-          {course.description}
-        </p>
+        <div className="text-gray-600 text-sm line-clamp-2 mb-4 prose prose-sm dark:prose-invert">
+          <div dangerouslySetInnerHTML={{ __html: course.description }} />
+        </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
             {course.subjects?.length || 0} subjects

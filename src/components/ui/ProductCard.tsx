@@ -1,26 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/types';
-
-// Helper function to format text with line breaks
-function formatText(text: string): React.ReactNode {
-  if (!text) return '';
-  
-  // Split text by newline character
-  const parts = text.split('\\n');
-  
-  // If there are no special newline characters, return plain text
-  if (parts.length === 1) return text;
-  
-  // Create an array of elements with line breaks
-  return parts.map((part, index) => (
-    <React.Fragment key={index}>
-      {part}
-      {index < parts.length - 1 && <br />}
-    </React.Fragment>
-  ));
-}
+import { formatPrice } from '@/lib/utils';
 
 interface ProductCardProps {
   id: number;
@@ -70,9 +51,9 @@ export default function ProductCard({
           )}
           
           {showDescription && description && (
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
-              {formatText(description)}
-            </p>
+            <div className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2 prose prose-sm dark:prose-invert">
+              <div dangerouslySetInnerHTML={{ __html: description }} />
+            </div>
           )}
           
           <p className="font-bold text-lg sm:text-xl text-gray-900 dark:text-white">{formatPrice(price)}</p>

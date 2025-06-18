@@ -11,24 +11,6 @@ import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
 import { useProduct, useRelatedProducts } from "@/hooks/useProduct";
 import { WHATSAPP_NUMBER } from "@/constant";
 
-// Helper function to format text with line breaks
-function formatText(text: string): React.ReactNode {
-  if (!text) return '';
-
-  // Split text by newline character
-  const parts = text.split(`\n`);
-  // If there are no special newline characters, return plain text
-  if (parts.length === 1) return text;
-  
-  // Create an array of elements with line breaks
-  return parts.map((part, index) => (
-    <React.Fragment key={index}>
-      {part}
-      {index < parts.length - 1 && <br />}
-    </React.Fragment>
-  ));
-}
-
 export default function ProductClientPage({ params }: { params: { id: string } }) {
   const [showStickyButton, setShowStickyButton] = useState(false);
   const buttonRef = useRef<HTMLAnchorElement>(null);
@@ -155,9 +137,9 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                       <p className="text-xl sm:text-2xl font-medium mb-6 text-gray-900 dark:text-white">{formatPrice(product.price)}</p>
                       
                       <div className="mb-8">
-                        <p className="text-gray-800 dark:text-gray-200 mb-8">
-                          {formatText(product.description)}
-                        </p>
+                        <div className="text-gray-800 dark:text-gray-200 mb-8 prose prose-sm dark:prose-invert">
+                          <div dangerouslySetInnerHTML={{ __html: product.description || '' }} />
+                        </div>
                         
                         <a 
                           ref={buttonRef}
@@ -175,7 +157,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Product Details</h2>
                         <ul className="list-disc list-inside space-y-1 text-sm sm:text-base text-gray-800 dark:text-gray-200">
                           {product.details.map((detail, index) => (
-                            <li key={index}>{formatText(detail)}</li>
+                            <li key={index}>{detail}</li>
                           ))}
                         </ul>
                       </div>
@@ -183,18 +165,18 @@ export default function ProductClientPage({ params }: { params: { id: string } }
                       {/* Care Instructions */}
                       <div className="mb-6">
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Care Instructions</h2>
-                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                          {formatText(product.careInstructions)}
-                        </p>
+                        <div className="text-sm sm:text-base text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert">
+                          <div dangerouslySetInnerHTML={{ __html: product.careInstructions || '' }} />
+                        </div>
                       </div>
                       
                       {/* Delivery Information */}
                       <div>
                         <h2 className="text-lg sm:text-xl font-medium mb-3 text-gray-900 dark:text-white">Delivery</h2>
-                        <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                        {formatText(product.deliveryTime)}
-                        </p>
-                    </div>
+                        <div className="text-sm sm:text-base text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert">
+                          <div dangerouslySetInnerHTML={{ __html: product.deliveryTime || '' }} />
+                        </div>
+                      </div>
                   </Card>
                 </div>
               </div>
