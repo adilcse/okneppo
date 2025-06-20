@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ProductCard from '@/components/ui/ProductCard';
-import { Product, mapProductFields } from '@/lib/types';
+import { Product } from '@/lib/types';
 import { Suspense } from 'react';
 import { useProductsPage, FilterData, PaginationInfo, InputParams } from '@/hooks/useProductsPage';
 import Input from '@/components/common/Input';
+import { mapProductFields } from '@/lib/utils';
 
 interface ClientProductsPageProps {
   initialProducts: Product[];

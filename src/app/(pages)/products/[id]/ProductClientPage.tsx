@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Container, Card } from "@/components/common";
 import ClientProductImageGallery from "./ClientProductImageGallery";
 import ProductCard from "@/components/ui/ProductCard";
-import { formatPrice } from "../../../../lib/types";
 import ProductJsonLd from '@/components/utils/ProductJsonLd';
 import BreadcrumbJsonLd from '@/components/utils/BreadcrumbJsonLd';
 import { useProduct, useRelatedProducts } from "@/hooks/useProduct";
 import { WHATSAPP_NUMBER } from "@/constant";
+import { formatPrice } from '@/lib/utils';
 
 export default function ProductClientPage({ params }: { params: { id: string } }) {
   const [showStickyButton, setShowStickyButton] = useState(false);

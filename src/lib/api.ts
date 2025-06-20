@@ -1,9 +1,10 @@
 // Use explicit server-only import pattern to prevent client-side usage
 import 'server-only';
 import { db } from './db';
-import { Designer, FeaturedProduct, mapProductFields, ModelData, Product } from './types';
+import { Designer, FeaturedProduct, ModelData, Product } from './types';
 import { Course } from '@/types/course';
 import axiosClient from './axios';
+import { mapProductFields } from './utils';
 
 /**
  * Pagination info interface

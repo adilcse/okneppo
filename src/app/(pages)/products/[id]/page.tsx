@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { generateSEOMetadata } from "../../../../components/utils/SEOMetaTags";
 import ProductClientPage from "./ProductClientPage";
-import { Product, formatPrice } from "../../../../lib/types";
+import { Product } from "../../../../lib/types";
 import axiosClient from '@/lib/axios';
+import { formatPrice } from '@/lib/utils';
 
 // Generate metadata for the product detail page dynamically
 export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {

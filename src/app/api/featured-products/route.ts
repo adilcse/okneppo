@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { mapProductFields } from '@/lib/types';
+import { mapProductFields } from '@/lib/utils';
 
 export async function GET() {
   try {

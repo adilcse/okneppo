@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { mapProductFields } from '@/lib/types';
+import { mapProductFields } from '@/lib/utils';
 import { withCors } from '@/lib/cors';
 import { snakeCase } from '@/lib/utils';
 

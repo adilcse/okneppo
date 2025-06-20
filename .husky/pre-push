@@ -7,13 +7,15 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
   echo "💡 Using Node.js v22.15.0 for the build..."
   nvm use 22.15.0 || (echo "⚠️ Failed to use Node.js v22.15.0, please install it using 'nvm install 22.15.0'" && exit 1)
   
+  npm i -g pnpm@10.12.1 || (echo "❌ Failed to install pnpm! Push aborted." && exit 1)
+
   # Install dependencies
   echo "📦 Installing dependencies..."
-  npm install || (echo "❌ Dependencies installation failed! Push aborted." && exit 1)
+  pnpm install || (echo "❌ Dependencies installation failed! Push aborted." && exit 1)
 
   # Run the build
   echo "🏗️  Running build before push..."
-  npm run build || (echo "❌ Build failed! Push aborted." && exit 1)
+  pnpm build || (echo "❌ Build failed! Push aborted." && exit 1)
   
   echo "✅ Build successful! Proceeding with push."
 else
