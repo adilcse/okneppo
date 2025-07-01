@@ -61,9 +61,6 @@ export const metadata: Metadata = {
     images: ['/images/og-image.jpg'],
     creator: '@okneppo',
   },
-  verification: {
-    google: 'your-google-site-verification',
-  },
 };
 
 export const viewport: Viewport = {

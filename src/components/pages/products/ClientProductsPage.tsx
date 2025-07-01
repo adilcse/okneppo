@@ -192,18 +192,15 @@ function ClientProductsPageContent({
     router.replace(newUrl, { scroll: false });
   }, [searchParams, router]);
 
-  // Update URL when page changes
-  useEffect(() => {
-    const currentPage = getCurrentPage();
-    updateUrlParams({ 
-      page: currentPage === 1 ? '' : currentPage.toString() 
-    });
-  }, [getCurrentPage, updateUrlParams]);
-  
+
   // Reset to page 1 when filters change
   useEffect(() => {
-    updateUrlParams({ page: '' }); // Reset page to 1
-  }, [selectedCategory, selectedPriceRange, sortOption, searchQuery, updateUrlParams]);
+    const currentPage = getCurrentPage();
+
+    if (currentPage > 1) {
+      updateUrlParams({ page: '' }); // Reset page to 1
+    }
+  }, [selectedCategory, selectedPriceRange, sortOption, searchQuery]);
 
   // Reset all filters including search
   const resetFilters = () => {
@@ -390,7 +387,9 @@ function ClientProductsPageContent({
                     className="rounded-r-none"
                   />
                   <button
-                    onClick={() => updateUrlParams({ search: searchQuery, page: '' })}
+                    onClick={() => {
+                      updateUrlParams({ search: searchQuery, page: '' });
+                    }}
                     className="bg-[#E94FFF] text-white px-3 py-2 rounded-r-md hover:bg-[#D13FE8]"
                     disabled={!searchQuery.trim()}
                   >
