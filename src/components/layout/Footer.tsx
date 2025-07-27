@@ -12,7 +12,7 @@ export default function Footer() {
             <p className="text-gray-300 text-center md:text-left">Premium fashion designs by Nishad Fatma</p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-4 mb-8 md:mb-0 text-center md:text-left">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 mb-8 md:mb-0 text-center md:text-left">
             <Link href="/" className="text-gray-300 hover:text-primary dark:hover:text-primary">Home</Link>
             <Link href="/products" className="text-gray-300 hover:text-primary dark:hover:text-primary">Collections</Link>
             <Link href="/gallery" className="text-gray-300 hover:text-primary dark:hover:text-primary">Gallery</Link>
@@ -20,6 +20,8 @@ export default function Footer() {
             <Link href="/contact" className="text-gray-300 hover:text-primary dark:hover:text-primary">Contact</Link>
             <Link href="/terms" className="text-gray-300 hover:text-primary dark:hover:text-primary">Terms</Link>
             <Link href="/privacy" className="text-gray-300 hover:text-primary dark:hover:text-primary">Privacy</Link>
+            <Link href="/cancellation-refund" className="text-gray-300 hover:text-primary dark:hover:text-primary">Cancellation & Refund</Link>
+            <Link href="/shipping-delivery" className="text-gray-300 hover:text-primary dark:hover:text-primary">Shipping & Delivery</Link>
             <Link href="/admin" className="text-gray-300 hover:text-primary dark:hover:text-primary">Admin</Link>
           </div>
           
