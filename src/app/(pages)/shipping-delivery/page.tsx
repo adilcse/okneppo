@@ -70,7 +70,7 @@ export default function ShippingDeliveryPage() {
           <ul className="list-disc ml-8 my-4">
             <li><strong>Standard International:</strong> Starting from ₹1,500</li>
             <li><strong>Express International:</strong> Starting from ₹3,000</li>
-            <li><strong>Duties & Taxes:</strong> Customer's responsibility</li>
+            <li><strong>Duties & Taxes:</strong> Customer&apos;s responsibility</li>
             <li><strong>Free shipping:</strong> For orders above ₹50,000</li>
           </ul>
           
@@ -147,7 +147,7 @@ export default function ShippingDeliveryPage() {
           
           <h3 className="text-xl font-semibold mt-6 mb-3">8.2 Resolution Process</h3>
           <ul className="list-disc ml-8 my-4">
-            <li><strong>Immediate contact:</strong> We'll reach out to reschedule delivery</li>
+            <li><strong>Immediate contact:</strong> We&apos;ll reach out to reschedule delivery</li>
             <li><strong>Warehouse hold:</strong> Packages held for 7 days maximum</li>
             <li><strong>Return to sender:</strong> After 7 days, package returns to OKNEPPO</li>
             <li><strong>Reshipment:</strong> Additional shipping charges apply for reshipment</li>
