@@ -524,6 +524,60 @@ export const db = {
         );
       `;
     }
+
+
+    const tableCheckRegistrations = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'course_registrations'
+      ) as exists
+    `);
+
+    const tableExistsRegistrations = tableCheckRegistrations.rows[0]?.exists;
+
+    if (!tableExistsRegistrations) {
+      await sql`
+        CREATE TABLE IF NOT EXISTS course_registrations (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          address TEXT NOT NULL,
+          phone VARCHAR(20) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          course_id INTEGER REFERENCES courses(id) ON DELETE SET NULL,
+          course_title VARCHAR(255) NOT NULL,
+          amount_due NUMERIC(10, 2) NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+    }
+
+    const tableCheckPayments = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'payments'
+      ) as exists
+    `);
+
+    const tableExistsPayments = tableCheckPayments.rows[0]?.exists;
+
+    if (!tableExistsPayments) {
+      await sql`
+        CREATE TABLE IF NOT EXISTS payments (
+          id SERIAL PRIMARY KEY,
+          registration_id INTEGER NOT NULL REFERENCES course_registrations(id) ON DELETE CASCADE,
+          razorpay_payment_id VARCHAR(255),
+          razorpay_order_id VARCHAR(255),
+          razorpay_signature VARCHAR(255),
+          amount NUMERIC(10, 2) NOT NULL,
+          currency VARCHAR(10) NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          coupon_code VARCHAR(50),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+    }
     
     console.log('Database tables initialized');
   }

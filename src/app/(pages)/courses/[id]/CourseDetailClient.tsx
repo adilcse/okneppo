@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Course } from '@/types/course';
 import { WHATSAPP_NUMBER } from '@/constant';
+import Link from 'next/link';
 
 function generateWhatsAppLink(course: Course) {
   const message = `Hello!
@@ -68,6 +69,12 @@ export default function CourseDetailClient({ course }: { course: Course }) {
                     </svg>
                     Enquire on WhatsApp
                   </a>
+                    <Link href="/register-course"
+                    >
+                      <button className="inline-flex items-center justify-center bg-[blue] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#000080] transition-colors">
+                        Register for Online Course
+                      </button>
+                    </Link>
                 </div>
               </div>
             </div>

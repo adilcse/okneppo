@@ -9,11 +9,11 @@ export interface Subject {
 }
 
 export interface Course {
-  id: string; // Unique identifier for the course
+  id: number; // Unique identifier for the course
   title: string;
-  max_price: number;
-  discounted_price: number;
-  discount_percentage: number;
+  max_price: string;
+  discounted_price: string;
+  discount_percentage: string;
   description: string;
   images: string[]; // Array of image URLs or paths
   created_at: string;

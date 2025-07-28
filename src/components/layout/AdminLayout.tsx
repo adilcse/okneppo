@@ -41,7 +41,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Products', path: '/admin/products' },
     { name: 'Courses', path: '/admin/courses' },
     { name: 'Subjects', path: '/admin/subjects' },
-    { name: 'Gallery', path: '/admin/gallery' }
+    { name: 'Gallery', path: '/admin/gallery' },
+    { name: 'Registrations', path: '/admin/registrations' }
   ];
 
   return (

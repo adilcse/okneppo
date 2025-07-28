@@ -92,7 +92,7 @@ const Gallery: React.FC = () => {
     updateTimeoutRef.current = setTimeout(() => {
       updateImageOrder(newImages);
     }, 1500); // Wait for 1500ms of no movement before updating
-  }, [queryClient]);
+  }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {

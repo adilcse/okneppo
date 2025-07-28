@@ -124,9 +124,9 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
   const initialFormData: CourseFormData = {
     title: courseData.title,
     description: courseData.description,
-    max_price: courseData.max_price,
-    discounted_price: courseData.discounted_price,
-    discount_percentage: courseData.discount_percentage,
+    max_price: Number(courseData.max_price),
+    discounted_price: Number(courseData.discounted_price),
+    discount_percentage: Number(courseData.discount_percentage),
     images: courseData.images,
     subjects: (courseData.subjects || []).map(subject => ({
       id: subject.id,

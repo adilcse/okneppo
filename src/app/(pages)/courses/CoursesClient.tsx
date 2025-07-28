@@ -15,6 +15,13 @@ export default function CoursesClient({ initialCourses }: { initialCourses: Cour
             Explore our comprehensive range of courses designed to help you master new skills. 
             Each course is carefully crafted with expert knowledge and practical experience.
           </p>
+          <div className="mt-6">
+            <Link href="/register-course">
+              <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300">
+                Register for Online Course
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 

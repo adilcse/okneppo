@@ -100,7 +100,7 @@ function ClientProductsPageContent({
         updateUrlParams({ search: debouncedSearchQuery, page: '' });
       }
     }
-  }, [debouncedSearchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedSearchQuery]);
   
   // Get the current page from URL params or use default
   const getCurrentPage = useCallback(() => {
