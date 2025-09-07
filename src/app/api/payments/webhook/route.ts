@@ -19,29 +19,69 @@ function verifyWebhookSignature(
   );
 }
 
+// Extract payment data from webhook payload
+function extractPaymentData(paymentEntity: Record<string, unknown>) {
+  return {
+    razorpay_payment_id: paymentEntity.id || null,
+    invoice_id: paymentEntity.invoice_id || null,
+    payment_method: paymentEntity.method || null,
+    amount_refunded: paymentEntity.amount_refunded || 0,
+    refund_status: paymentEntity.refund_status || null,
+    description: paymentEntity.description || null,
+    card_id: paymentEntity.card_id || null,
+    bank: paymentEntity.bank || null,
+    wallet: paymentEntity.wallet || null,
+    vpa: paymentEntity.vpa || null,
+    captured: paymentEntity.captured || false,
+    fee: paymentEntity.fee || 0,
+    tax: paymentEntity.tax || 0,
+    error_code: paymentEntity.error_code || null,
+    error_description: paymentEntity.error_description || null,
+    error_source: paymentEntity.error_source || null,
+    error_step: paymentEntity.error_step || null,
+    error_reason: paymentEntity.error_reason || null,
+    acquirer_data: paymentEntity.acquirer_data || null,
+  };
+}
+
 // Update payment status in database
 async function updatePaymentStatus(
   razorpayPaymentId: string,
   status: 'captured' | 'failed' | 'authorized',
   razorpayOrderId?: string,
-  razorpaySignature?: string
+  razorpaySignature?: string,
+  paymentEntity?: Record<string, unknown>
 ) {
   try {
     // Find payment by razorpay_payment_id
-    const payment = await db.findOne('payments', {
+    let payment = await db.findOne('payments', {
+        razorpay_order_id: razorpayOrderId, 
         $or: [
           { razorpay_payment_id: razorpayPaymentId },
-          { razorpay_order_id: razorpayOrderId }
+          { razorpay_payment_id: 'IS_NULL' }
         ]
-    });
+   });
+   let isNewPayment = false;
 
     if (!payment) {
       console.log(`Payment not found for razorpay_payment_id: ${razorpayPaymentId}`);
-      return false;
+      const newPayment = await db.findOne('payments', {
+        razorpay_order_id: razorpayOrderId,
+      });
+      if (newPayment) {
+        isNewPayment = true;
+        payment = newPayment;
+      } else {
+        return false;
+      }
     }
 
-    // Update payment status
-    const updateData: Record<string, unknown> = { status };
+
+    // Update payment status and additional data
+    const updateData: Record<string, unknown> = { 
+      status,
+      updated_at: new Date().toISOString()
+    };
     
     if (razorpayOrderId) {
       updateData.razorpay_order_id = razorpayOrderId;
@@ -51,15 +91,37 @@ async function updatePaymentStatus(
       updateData.razorpay_signature = razorpaySignature;
     }
 
+    // Add additional payment data if available
+    if (paymentEntity) {
+      const additionalData = extractPaymentData(paymentEntity);
+      Object.assign(updateData, additionalData);
+    }
 
-    await db.update(
-      'payments',
-      { $or: [
-        { razorpay_payment_id: razorpayPaymentId },
-        { razorpay_order_id: razorpayOrderId }
-      ] },
-      updateData
-    );
+    if (!isNewPayment) { 
+        await db.update(
+            'payments',
+            {
+              razorpay_order_id: razorpayOrderId, 
+              $or: [
+                  { razorpay_payment_id: razorpayPaymentId },
+                  { razorpay_payment_id: 'IS_NULL' }
+                ]
+         },
+            updateData
+          );
+    } else {
+        const newPaymentData = {
+                registration_id: payment.registration_id,
+                order_number: payment.order_number,
+                razorpay_order_id: payment.razorpay_order_id,
+                amount: payment.amount,
+                currency: payment.currency,
+                status: 'created',
+                coupon_code: payment.coupon_code,
+                ...updateData
+        };
+        await db.create('payments', newPaymentData);
+    }
 
 
     // If payment is captured, update registration status to completed
@@ -103,7 +165,9 @@ export async function POST(req: NextRequest) {
     }
 
     const event = JSON.parse(payload);
-    console.log('Received webhook:', event);
+
+    console.log('Webhook event :', event.payload?.payment?.entity);
+
 
     // Handle different payment events
     switch (event.event) {
@@ -113,7 +177,9 @@ export async function POST(req: NextRequest) {
         await updatePaymentStatus(
           event.payload.payment.entity.id,
           'authorized',
-          event.payload.payment.entity.order_id
+          event.payload.payment.entity.order_id,
+          signature,
+          event.payload.payment.entity
         );
         break;
 
@@ -124,17 +190,19 @@ export async function POST(req: NextRequest) {
           event.payload.payment.entity.id,
           'captured',
           event.payload.payment.entity.order_id,
-          event.payload.payment.entity.signature
+          signature,
+          event.payload.payment.entity
         );
         break;
 
       case 'payment.failed':
         // Handle failed payments
-        console.log('Payment failed:', event.payload.payment.entity);
         await updatePaymentStatus(
           event.payload.payment.entity.id,
           'failed',
-          event.payload.payment.entity.order_id
+          event.payload.payment.entity.order_id,
+          signature,
+          event.payload.payment.entity
         );
         break;
 
@@ -146,7 +214,9 @@ export async function POST(req: NextRequest) {
           await updatePaymentStatus(
             paymentId,
             'captured',
-            event.payload.order.entity.id
+            event.payload.order.entity.id,
+            signature,
+            event.payload.payment?.entity
           );
         }
         break;

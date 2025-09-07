@@ -1,3 +1,5 @@
+import { Payment } from "./Payment";
+
 export enum RegistrationStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
@@ -22,7 +24,7 @@ export interface CourseRegistration {
   status: RegistrationStatus;
   orderNumber?: string; // 6-digit alphanumeric order number from payment
   createdAt: Date;
-  updatedAt: Date;
+  payment?: Payment[];
 }
 
 export interface CourseRegistrationCreationAttributes {

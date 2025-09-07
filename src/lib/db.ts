@@ -23,7 +23,10 @@ export interface FilterCriteria {
     '<': number | string;
     '>': number | string;
     '!=': unknown;
+    '$is': unknown;
+    '$isnot': unknown;
     '$like': string;
+    '$in': unknown[];
     [key: string]: unknown; 
   } | FilterCriteria[];
   $or?: FilterCriteria[];
@@ -97,6 +100,10 @@ function buildWhereConditions(criteria: FilterCriteria, startParamIndex = 1): {
       if (operatorConditions.length > 0) {
         conditions.push(`(${operatorConditions.join(' AND ')})`); 
       }
+    } else if (value === 'IS_NULL') {
+      conditions.push(`"${key}" IS NULL`);
+    } else if (value === 'IS_NOT_NULL') {
+      conditions.push(`"${key}" IS NOT NULL`);
     } else {
       // Regular equality comparison
       values.push(value);
@@ -610,7 +617,27 @@ export const db = {
           currency VARCHAR(10) NOT NULL,
           status VARCHAR(50) NOT NULL,
           coupon_code VARCHAR(50),
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          -- Additional payment data from webhook
+          invoice_id VARCHAR(255),
+          payment_method VARCHAR(50),
+          amount_refunded NUMERIC(10, 2) DEFAULT 0,
+          refund_status VARCHAR(50),
+          description TEXT,
+          card_id VARCHAR(255),
+          bank VARCHAR(50),
+          wallet VARCHAR(50),
+          vpa VARCHAR(255),
+          captured BOOLEAN DEFAULT false,
+          fee NUMERIC(10, 2) DEFAULT 0,
+          tax NUMERIC(10, 2) DEFAULT 0,
+          error_code VARCHAR(100),
+          error_description TEXT,
+          error_source VARCHAR(50),
+          error_step VARCHAR(50),
+          error_reason VARCHAR(50),
+          acquirer_data JSONB,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `;
     } else {
@@ -628,14 +655,33 @@ export const db = {
           SET order_number = UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', ''), 1, 6))
           WHERE order_number IS NULL
         `;
-        
-        // Make order_number NOT NULL and UNIQUE
+
+        // Add additional payment data columns
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(255)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount_refunded NUMERIC(10, 2) DEFAULT 0`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_status VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS description TEXT`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS card_id VARCHAR(255)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS bank VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS wallet VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS vpa VARCHAR(255)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS captured BOOLEAN DEFAULT false`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS fee NUMERIC(10, 2) DEFAULT 0`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS tax NUMERIC(10, 2) DEFAULT 0`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_code VARCHAR(100)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_description TEXT`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_source VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_step VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_reason VARCHAR(50)`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS acquirer_data JSONB`;
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`;
+                // Make order_number NOT NULL and UNIQUE
         await sql`ALTER TABLE payments ALTER COLUMN order_number SET NOT NULL`;
-        await sql`ALTER TABLE payments ADD CONSTRAINT payments_order_number_unique UNIQUE (order_number)`;
-        
-        console.log('Updated payments table with UUID and order_number');
-      } catch {
-        console.log('Payments table migration failed:');
+
+        console.log('Updated payments table with UUID, order_number, and additional payment data fields');
+      } catch (error) {
+        console.log('Payments table migration failed:', error);
       }
     }
     

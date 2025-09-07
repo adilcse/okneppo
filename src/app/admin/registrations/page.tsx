@@ -1,7 +1,8 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { CourseRegistration, RegistrationStatus } from '@/models/CourseRegistration';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 
 async function getRegistrations() {
   const res = await fetch('/api/course-registrations', { cache: 'no-store' });
@@ -12,44 +13,14 @@ async function getRegistrations() {
 }
 
 export default function AdminRegistrationsPage() {
-  const [registrations, setRegistrations] = useState<CourseRegistration[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getRegistrations()
-      .then(data => {
-        setRegistrations(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  const { data: registrations, isLoading: loading } = useQuery<CourseRegistration[]>({
+    queryKey: ['registrations'],
+    queryFn: getRegistrations,
+  });
 
-  // const handleStatusChange = async (id: string, status: RegistrationStatus) => {
-  //   try {
-  //     const res = await fetch(`/api/course-registrations/${id}`, {
-  //       method: 'PATCH',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ status }),
-  //     });
 
-  //     if (!res.ok) {
-  //       throw new Error('Failed to update status');
-  //     }
-
-  //     setRegistrations(prev =>
-  //       prev.map(reg => (reg.id === parseInt(id, 10) ? { ...reg, status } : reg))
-  //     );
-  //   } catch (error) {
-  //     console.error('Error updating status:', error);
-  //   }
-  // };
-
-  if (loading) {
+  if (loading || !registrations) {
     return <div>Loading...</div>;
   }
 

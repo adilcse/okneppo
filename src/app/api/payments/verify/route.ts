@@ -22,7 +22,13 @@ export async function POST(req: NextRequest) {
 
     const [updatedPaymentCount, updatedPayments] = await db.update(
       'payments',
-      { razorpay_order_id },
+      {
+        razorpay_order_id: razorpay_order_id, 
+        $or: [
+          { razorpay_payment_id: razorpay_payment_id },
+          { razorpay_payment_id: 'IS_NULL' }
+        ]
+   },
       {
         razorpay_payment_id,
         razorpay_signature,

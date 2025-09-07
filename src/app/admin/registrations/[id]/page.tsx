@@ -1,48 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { CourseRegistration } from '@/models/CourseRegistration';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Payment } from '@/models/Payment';
+import { useQuery } from '@tanstack/react-query';
 
 async function getRegistration(id: string) {
-  const res = await fetch(`/api/course-registrations/${id}`);
+  const res = await fetch(`/api/course-registrations/${id}?payment=true`);
   if (!res.ok) {
     throw new Error('Failed to fetch registration');
   }
   return res.json();
 }
 
-async function getPayments(registrationId: string) {
-    const res = await fetch(`/api/registrations/${registrationId}/payments`);
-    if (!res.ok) {
-      throw new Error('Failed to fetch payments');
-    }
-    return res.json();
-}
 
 export default function RegistrationDetailPage() {
-  const [registration, setRegistration] = useState<CourseRegistration | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
   const params = useParams();
   const id = params?.id as string;
+  const { data: registration, isLoading: loading } = useQuery<CourseRegistration>({
+    queryKey: ['registration', id],
+    queryFn: () => getRegistration(id),
+  });
 
-  useEffect(() => {
-    if (id) {
-      Promise.all([getRegistration(id), getPayments(id)])
-        .then(([regData, paymentData]) => {
-          setRegistration(regData);
-          setPayments(paymentData);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setLoading(false);
-        });
-    }
-  }, [id]);
+  const payments = registration?.payment || [];
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -133,7 +114,7 @@ export default function RegistrationDetailPage() {
             {payments.map(payment => (
               <tr key={payment.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white font-mono">
-                  {payment.order_number}
+                  {payment.razorpay_payment_id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">₹{payment.amount}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">

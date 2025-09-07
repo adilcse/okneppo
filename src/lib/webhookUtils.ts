@@ -30,6 +30,12 @@ export const SAMPLE_WEBHOOK_PAYLOADS = {
           status: 'authorized',
           method: 'card',
           description: 'Course Registration',
+          amount_refunded: 0,
+          refund_status: null,
+          card_id: 'card_test_123456789',
+          captured: false,
+          fee: 0,
+          tax: 0,
           created_at: new Date().toISOString(),
         }
       }
@@ -47,9 +53,16 @@ export const SAMPLE_WEBHOOK_PAYLOADS = {
           amount: 10000,
           currency: 'INR',
           status: 'captured',
-          method: 'card',
+          method: 'netbanking',
           description: 'Course Registration',
           signature: 'test_signature_123',
+          amount_refunded: 0,
+          refund_status: null,
+          bank: 'BARB_R',
+          captured: true,
+          fee: 9440,
+          tax: 1440,
+          acquirer_data: { bank_transaction_id: '2250457' },
           created_at: new Date().toISOString(),
         }
       }
@@ -67,10 +80,18 @@ export const SAMPLE_WEBHOOK_PAYLOADS = {
           amount: 10000,
           currency: 'INR',
           status: 'failed',
-          method: 'card',
+          method: 'netbanking',
           description: 'Course Registration',
+          bank: 'BARB_R',
+          captured: false,
+          fee: 0,
+          tax: 0,
           error_code: 'BAD_REQUEST_ERROR',
-          error_description: 'Payment failed due to insufficient funds',
+          error_description: "Your payment didn't go through as it was declined by the bank. Try another payment method or contact your bank.",
+          error_source: 'bank',
+          error_step: 'payment_authorization',
+          error_reason: 'payment_failed',
+          acquirer_data: { bank_transaction_id: null },
           created_at: new Date().toISOString(),
         }
       }
@@ -98,6 +119,10 @@ export const SAMPLE_WEBHOOK_PAYLOADS = {
           currency: 'INR',
           status: 'captured',
           method: 'card',
+          description: 'Course Registration',
+          captured: true,
+          fee: 9440,
+          tax: 1440,
           created_at: new Date().toISOString(),
         }
       }

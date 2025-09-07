@@ -11,7 +11,6 @@ export async function GET(
     const { searchParams } = req.nextUrl;
     const orderNumber = searchParams?.get('order_number');
     const getPayments = searchParams?.get('payment') === 'true';
-    console.log(orderNumber);
     let registration, payment, payments;
     if (orderNumber) {
       payment = await db.findOne('payments', { order_number: orderNumber });
@@ -26,6 +25,10 @@ export async function GET(
     if (!registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
+    if (!payment) {
+      payment = await db.findOne('payments', { registration_id: registration.id });
+    }
+
 
     if (getPayments) {
       payments = await db.find('payments', { registration_id: registration.id });
@@ -48,6 +51,12 @@ export async function GET(
       createdAt: registration.created_at,
       updatedAt: registration.updated_at,
       payment: getPayments ? payments : null,
+      couponCode: payment?.coupon_code || null,
+      aadharNumber: registration.aadhar_number || null,
+      dateOfBirth: registration.date_of_birth || null,
+      profession: registration.profession || null,
+      highestQualification: registration.highest_qualification || null,
+      termsAccepted: registration.terms_accepted,
     };
 
     return NextResponse.json(formattedRegistration, { status: 200 });
