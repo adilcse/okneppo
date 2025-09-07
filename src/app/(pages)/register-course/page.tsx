@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '@/lib/axios';
 import { Course } from '@/types/course';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface FormData {
   course_id: number;
@@ -55,6 +56,7 @@ export default function RegisterCoursePage() {
     queryKey: ['online-courses'],
     queryFn: fetchCourses,
   });
+  const router = useRouter();
 
 
   const [formData, setFormData] = useState<FormData>({
@@ -295,7 +297,11 @@ export default function RegisterCoursePage() {
             await verificationRes.json();
             setPaymentStatus('success');
             setCurrentOrder(null); // Clear order on success
-            window.open(`/receipt/${orderNumber}`, '_blank');
+            if (window){
+              window.open(`/receipt/${orderNumber}`, '_blank');
+            } else {
+              router.push(`/receipt/${orderNumber}`);
+            }
           } catch (error) {
             console.error('Verification failed:', error);
             setPaymentStatus('error');
