@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { CourseRegistrationCreationAttributes, RegistrationStatus } from '@/models/CourseRegistration';
+import Razorpay from 'razorpay';
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const body: CourseRegistrationCreationAttributes = await req.json();
+    const body: CourseRegistrationCreationAttributes & { amount: number; coupon_code?: string } = await req.json();
 
     // Check for existing registrations with the same phone or email
     const existingPhone = await db.findOne('course_registrations', { phone: body.phone });
@@ -32,6 +39,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Create new registration
     const newRegistration = await db.create('course_registrations', {
       status: RegistrationStatus.PENDING,
       amount_due: body.amountDue,
@@ -46,11 +54,52 @@ export async function POST(req: NextRequest) {
       date_of_birth: body.dateOfBirth || null,
       profession: body.profession || null,
       terms_accepted: body.termsAccepted,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any;
 
-    return NextResponse.json(newRegistration, { status: 201 });
+    // Create Razorpay order
+    const orderOptions = {
+      amount: Math.round(body.amount * 100), // Convert to paise
+      currency: 'INR',
+      receipt: `reg_${newRegistration.id}`,
+      notes: {
+        registration_id: newRegistration.id,
+        course_title: body.courseTitle,
+        student_name: body.name,
+        coupon_code: body.coupon_code || null,
+      },
+    };
+
+    const order = await razorpay.orders.create(orderOptions);
+
+    // Create payment record
+    const paymentRecord = await db.create('payments', {
+      registration_id: newRegistration.id,
+      razorpay_order_id: order.id,
+      amount: body.amount,
+      currency: 'INR',
+      status: 'created',
+      coupon_code: body.coupon_code || null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any;
+
+    return NextResponse.json({
+      success: true,
+      registration: newRegistration,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        receipt: order.receipt,
+      },
+      payment_id: paymentRecord.id,
+    }, { status: 201 });
+
   } catch (error) {
-    console.error('Error creating registration:', error);
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+    console.error('Error creating registration with order:', error);
+    return NextResponse.json(
+      { error: 'Something went wrong' },
+      { status: 500 }
+    );
   }
-} 
+}

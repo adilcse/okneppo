@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "import-products": "ts-node --esm src/scripts/import-products.ts",
-    "import-products:force": "ts-node --esm src/scripts/import-products.ts --force",
     "prepare": "node -e \"try{require('husky')}catch(e){}\"",
     "test": "jest",
     "test:watch": "jest --watch",

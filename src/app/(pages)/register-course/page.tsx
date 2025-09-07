@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '@/lib/axios';
 import { Course } from '@/types/course';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 
 interface FormData {
   course_id: number;
@@ -12,6 +11,11 @@ interface FormData {
   email: string;
   phone: string;
   address: string;
+  highest_qualification: string;
+  aadhar_number: string;
+  date_of_birth: string;
+  profession: string;
+  terms_accepted: boolean;
   coupon?: string;
 }
 
@@ -21,6 +25,12 @@ interface FormErrors {
   email?: string;
   phone?: string;
   address?: string;
+  highest_qualification?: string;
+  aadhar_number?: string;
+  date_of_birth?: string;
+  profession?: string;
+  terms_accepted?: string;
+  general?: string;
 }
 
 declare global {
@@ -34,17 +44,18 @@ declare global {
 }
 
 const fetchCourses = async () => {
-  const response = await axiosClient.get('/api/courses');
-  return response.data.courses as Course[];
+  const response = await axiosClient.get('/api/courses?is_online_course=true&limit=100');
+  const allCourses = response.data.courses as Course[];
+  // Filter to show only online courses
+  return allCourses.filter(course => course.is_online_course);
 };
 
 export default function RegisterCoursePage() {
   const { data: courses = [], isLoading: coursesLoading } = useQuery<Course[]>({
-    queryKey: ['courses'],
+    queryKey: ['online-courses'],
     queryFn: fetchCourses,
   });
 
-  const router = useRouter();
 
   const [formData, setFormData] = useState<FormData>({
     course_id: 0,
@@ -52,11 +63,21 @@ export default function RegisterCoursePage() {
     email: '',
     phone: '',
     address: '',
+    highest_qualification: '',
+    aadhar_number: '',
+    date_of_birth: '',
+    profession: '',
+    terms_accepted: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
 
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [currentOrder, setCurrentOrder] = useState<{
+    registration_id: number;
+    order_id: string;
+    payment_id: number;
+  } | null>(null);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -89,23 +110,58 @@ export default function RegisterCoursePage() {
     if (!formData.address.trim()) {
       tempErrors.address = 'Address is required';
     }
+    if (!formData.highest_qualification.trim()) {
+      tempErrors.highest_qualification = 'Highest qualification is required';
+    }
+    if (!formData.aadhar_number.trim()) {
+      tempErrors.aadhar_number = 'Aadhar number is required';
+    } else if (!/^\d{12}$/.test(formData.aadhar_number.replace(/\s/g, ''))) {
+      tempErrors.aadhar_number = 'Aadhar number must be 12 digits';
+    }
+    if (!formData.date_of_birth.trim()) {
+      tempErrors.date_of_birth = 'Date of birth is required';
+    }
+    if (!formData.profession.trim()) {
+      tempErrors.profession = 'Profession is required';
+    }
+    if (!formData.terms_accepted) {
+      tempErrors.terms_accepted = 'You must accept the terms and conditions';
+    }
     
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
 
+  useEffect(() => {
+    if (courses.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        course_id: courses[0].id,
+      }));
+    }
+  }, [courses]);
+
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    
+    // Clear general error when user starts typing
+    if (errors.general) {
+      setErrors(prev => ({ ...prev, general: undefined }));
+    }
+    
     if (name === 'course') {
         const selectedCourse = courses.find(c => c.id === parseInt(value, 10));
         setFormData(prev => ({
             ...prev,
             course_id: selectedCourse?.id ?? 0,
         }));
+    } else if (type === 'checkbox') {
+        const checked = (e.target as HTMLInputElement).checked;
+        setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
         setFormData((prev) => ({ ...prev, [name]: value }));
     }
-  }, [courses]);
+  }, [courses, errors.general]);
 
   const { selectedCourse } = useMemo(() => {
     const selectedCourse = courses.find((c) => c.id === formData.course_id);
@@ -149,49 +205,72 @@ export default function RegisterCoursePage() {
     setPaymentStatus('processing');
 
     try {
-      // Step 1: Create a pending registration
-      const registrationData = {
-        name: formData.name,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        courseId: formData.course_id,
-        courseTitle: selectedCourse?.title,
-        amountDue: finalFee,
-      };
-             const response = await axiosClient.post('/api/registrations', registrationData);
+      let registrationData, orderData, paymentId;
 
-       if (response.status !== 200 && response.status !== 201) {
-         throw new Error('Failed to create registration');
-       }
-      const registration = response.data;
+      // Check if we have an existing order to retry
+      if (currentOrder) {
+        console.log('Retrying payment with existing order:', currentOrder.order_id);
+        
+        // Use existing order for retry
+        const retryResponse = await axiosClient.post('/api/registrations/retry-payment', {
+          registration_id: currentOrder.registration_id,
+        });
 
-      // Step 2: Create a payment order
-      const orderRes = await fetch('/api/payments/order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          registration_id: registration.id,
+        if (retryResponse.status !== 200) {
+          throw new Error('Failed to retrieve existing order');
+        }
+
+        registrationData = retryResponse.data.registration;
+        orderData = retryResponse.data.order;
+        paymentId = retryResponse.data.payment_id;
+      } else {
+        console.log('Creating new registration and order');
+        
+        // Create new registration and order in one call
+        const registrationPayload = {
+          name: formData.name,
+          address: formData.address,
+          phone: formData.phone,
+          email: formData.email,
+          highestQualification: formData.highest_qualification,
+          aadharNumber: formData.aadhar_number,
+          dateOfBirth: formData.date_of_birth,
+          profession: formData.profession,
+          termsAccepted: formData.terms_accepted,
+          courseId: formData.course_id,
+          courseTitle: selectedCourse?.title,
+          amountDue: finalFee,
           amount: finalFee,
           coupon_code: formData.coupon,
-        }),
-      });
+        };
+        
+        const response = await axiosClient.post('/api/registrations/create-with-order', registrationPayload);
+        console.log('Registration and order created:', response?.status);
+        
+        if (response.status !== 200 && response.status !== 201) {
+          throw new Error('Failed to create registration and order');
+        }
 
-      if (!orderRes.ok) {
-        throw new Error('Failed to create order');
+        registrationData = response.data.registration;
+        orderData = response.data.order;
+        paymentId = response.data.payment_id;
+
+        // Store the order details for potential retry
+        setCurrentOrder({
+          registration_id: registrationData.id,
+          order_id: orderData.id,
+          payment_id: paymentId,
+        });
       }
-      const order = await orderRes.json();
 
-      // Step 3: Open Razorpay Checkout
+      // Open Razorpay Checkout
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
-        amount: order.amount,
-        currency: order.currency,
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: 'Okneppo',
         description: 'Course Registration',
-        order_id: order.id,
+        order_id: orderData.id,
         handler: async function (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) {
           try {
             const verificationRes = await fetch('/api/payments/verify', {
@@ -213,7 +292,8 @@ export default function RegisterCoursePage() {
             const verificationData = await verificationRes.json();
             
             setPaymentStatus('success');
-            router.push(`/receipt/${verificationData.registration_id}`);
+            setCurrentOrder(null); // Clear order on success
+            window.open(`/receipt/${verificationData.registration_id}`, '_blank');
           } catch (error) {
             console.error('Verification failed:', error);
             setPaymentStatus('error');
@@ -236,8 +316,25 @@ export default function RegisterCoursePage() {
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-    } catch (error) {
-      console.error('Payment failed:', error);
+    } catch (error: unknown) {
+      console.error('Payment process failed:', error);
+      
+      // Handle validation errors from the API
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number; data?: { error?: string } } };
+        console.log(axiosError.response?.status);
+        console.log(axiosError.response?.data?.error);
+        if (axiosError.response?.status === 400 && axiosError.response?.data?.error) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setErrors({ 
+            ...errors, 
+            general: axiosError.response.data.error 
+          });
+          setPaymentStatus('idle');
+          return;
+        }
+      }
+      
       setPaymentStatus('error');
     }
   };
@@ -266,6 +363,13 @@ export default function RegisterCoursePage() {
             noValidate
           >
             <div className="grid grid-cols-1 gap-6">
+              {/* General Error Display */}
+              {errors.general && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                  <span className="block sm:inline">{errors.general}</span>
+                </div>
+              )}
+              
               {/* Form Fields */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
@@ -292,6 +396,78 @@ export default function RegisterCoursePage() {
               </div>
 
               <div>
+                <label htmlFor="highest_qualification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Highest Qualification</label>
+                <select 
+                  name="highest_qualification" 
+                  id="highest_qualification" 
+                  value={formData.highest_qualification} 
+                  onChange={handleInputChange} 
+                  className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.highest_qualification ? 'border-red-500' : ''}`} 
+                  required 
+                  disabled={paymentStatus === 'processing'}
+                >
+                  <option value="" disabled>Select your highest qualification</option>
+                  <option value="below_10th">Below 10th Standard</option>
+                  <option value="10th">10th Standard</option>
+                  <option value="12th">12th Standard</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="Bachelor">Bachelor&apos;s Degree</option>
+                  <option value="Master">Master&apos;s Degree</option>
+                  <option value="PhD">PhD</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors.highest_qualification && <p className="text-red-500 text-xs mt-1">{errors.highest_qualification}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="aadhar_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aadhar Number</label>
+                <input 
+                  type="text" 
+                  name="aadhar_number" 
+                  id="aadhar_number" 
+                  value={formData.aadhar_number} 
+                  onChange={handleInputChange} 
+                  placeholder="Enter 12-digit Aadhar number"
+                  maxLength={12}
+                  className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.aadhar_number ? 'border-red-500' : ''}`} 
+                  required 
+                  disabled={paymentStatus === 'processing'} 
+                />
+                {errors.aadhar_number && <p className="text-red-500 text-xs mt-1">{errors.aadhar_number}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+                <input 
+                  type="date" 
+                  name="date_of_birth" 
+                  id="date_of_birth" 
+                  value={formData.date_of_birth} 
+                  onChange={handleInputChange} 
+                  className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.date_of_birth ? 'border-red-500' : ''}`} 
+                  required 
+                  disabled={paymentStatus === 'processing'} 
+                />
+                {errors.date_of_birth && <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="profession" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profession</label>
+                <input 
+                  type="text" 
+                  name="profession" 
+                  id="profession" 
+                  value={formData.profession} 
+                  onChange={handleInputChange} 
+                  placeholder="e.g., Student, Engineer, Teacher, etc."
+                  className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.profession ? 'border-red-500' : ''}`} 
+                  required 
+                  disabled={paymentStatus === 'processing'} 
+                />
+                {errors.profession && <p className="text-red-500 text-xs mt-1">{errors.profession}</p>}
+              </div>
+
+              <div>
                 <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
                 <select 
                   name="course" 
@@ -302,12 +478,16 @@ export default function RegisterCoursePage() {
                   required 
                   disabled={paymentStatus === 'processing' || coursesLoading}
                 >
-                  <option value="" disabled>{coursesLoading ? 'Loading courses...' : 'Select a course'}</option>
-                  {courseOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="" disabled>{coursesLoading ? 'Loading online courses...' : 'Select an online course'}</option>
+                  {courseOptions.length === 0 && !coursesLoading ? (
+                    <option value="" disabled>No online courses available</option>
+                  ) : (
+                    courseOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))
+                  )}
                 </select>
                 {errors.course_id && <p className="text-red-500 text-xs mt-1">{errors.course_id}</p>}
               </div>
@@ -338,9 +518,46 @@ export default function RegisterCoursePage() {
                 </div>
               </div>
 
+              {/* Terms and Conditions */}
+              <div>
+                <label className="flex items-start space-x-2">
+                  <input
+                    type="checkbox"
+                    name="terms_accepted"
+                    checked={formData.terms_accepted}
+                    onChange={handleInputChange}
+                    className="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    required
+                    disabled={paymentStatus === 'processing'}
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                      Terms and Conditions
+                    </a>{' '}
+                    and{' '}
+                    <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  <ul className="list-disc pl-5">
+                    <li>
+                      <span className="font-semibold">Note:</span> Once a payment is made, it <span className="font-bold text-red-600">cannot be refunded or canceled</span> under any circumstances.
+                    </li>
+                  </ul>
+                </div>
+                {errors.terms_accepted && <p className="text-red-500 text-xs mt-1">{errors.terms_accepted}</p>}
+              </div>
+
               {/* Payment Button */}
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 duration-300 disabled:bg-gray-400" disabled={paymentStatus === 'processing' || coursesLoading}>
-                {paymentStatus === 'processing' ? 'Processing...' : 'Pay Now'}
+              <button type="submit"
+              disabled={paymentStatus === 'processing' || coursesLoading || formData.terms_accepted === false}
+               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 duration-300 disabled:bg-gray-400"
+               >
+                {paymentStatus === 'processing' ? 'Processing...' : 
+                 currentOrder ? 'Retry Payment' : 'Pay Now'}
               </button>
               {paymentStatus === 'error' && <p className="text-red-500 text-sm mt-2 text-center">Payment failed. Please try again.</p>}
             </div>

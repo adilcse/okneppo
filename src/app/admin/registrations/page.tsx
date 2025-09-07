@@ -27,27 +27,27 @@ export default function AdminRegistrationsPage() {
       });
   }, []);
 
-  const handleStatusChange = async (id: string, status: RegistrationStatus) => {
-    try {
-      const res = await fetch(`/api/course-registrations/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
+  // const handleStatusChange = async (id: string, status: RegistrationStatus) => {
+  //   try {
+  //     const res = await fetch(`/api/course-registrations/${id}`, {
+  //       method: 'PATCH',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ status }),
+  //     });
 
-      if (!res.ok) {
-        throw new Error('Failed to update status');
-      }
+  //     if (!res.ok) {
+  //       throw new Error('Failed to update status');
+  //     }
 
-      setRegistrations(prev =>
-        prev.map(reg => (reg.id === parseInt(id, 10) ? { ...reg, status } : reg))
-      );
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
+  //     setRegistrations(prev =>
+  //       prev.map(reg => (reg.id === parseInt(id, 10) ? { ...reg, status } : reg))
+  //     );
+  //   } catch (error) {
+  //     console.error('Error updating status:', error);
+  //   }
+  // };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -62,6 +62,7 @@ export default function AdminRegistrationsPage() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Final Fee</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
@@ -73,6 +74,7 @@ export default function AdminRegistrationsPage() {
               <tr key={reg.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{reg.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{reg.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{reg.phone}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{reg.courseTitle}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">₹{reg.amountDue}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -85,7 +87,7 @@ export default function AdminRegistrationsPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <select
+                  {/* <select
                     value={reg.status}
                     onChange={(e) => handleStatusChange(reg.id.toString(), e.target.value as RegistrationStatus)}
                     className="p-1 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 mr-2"
@@ -93,7 +95,7 @@ export default function AdminRegistrationsPage() {
                     {Object.values(RegistrationStatus).map(status => (
                       <option key={status} value={status}>{status}</option>
                     ))}
-                  </select>
+                  </select> */}
                   <Link href={`/admin/registrations/${reg.id}`} className="text-blue-600 hover:text-blue-900">
                     View
                   </Link>

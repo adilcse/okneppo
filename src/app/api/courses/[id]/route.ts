@@ -93,6 +93,7 @@ export const PUT = withCors(async (request: NextRequest) => {
       discounted_price: courseData.discounted_price || 0,
       discount_percentage: courseData.discount_percentage || 0,
       images: courseData.images || [],
+      is_online_course: courseData.is_online_course || false,
     };
 
     // Update course

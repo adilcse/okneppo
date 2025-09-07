@@ -464,10 +464,19 @@ export const db = {
         discount_percentage DECIMAL NOT NULL,
         description TEXT NOT NULL,
         images TEXT[] NOT NULL,
+        is_online_course BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+    } else {
+      // Add is_online_course column if it doesn't exist (migration for existing tables)
+      try {
+        await sql`ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_online_course BOOLEAN NOT NULL DEFAULT false`;
+        console.log('Added is_online_course column to existing courses table');
+      } catch (error) {
+        console.log('is_online_course column already exists or migration failed:', error);
+      }
     }
 
     const tableCheckSubjects = await pool.query(`
@@ -541,8 +550,13 @@ export const db = {
           id SERIAL PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
           address TEXT NOT NULL,
-          phone VARCHAR(20) NOT NULL,
-          email VARCHAR(255) NOT NULL,
+          phone VARCHAR(20) NOT NULL UNIQUE,
+          email VARCHAR(255) NOT NULL UNIQUE,
+          highest_qualification VARCHAR(255),
+          aadhar_number VARCHAR(12),
+          date_of_birth DATE,
+          profession VARCHAR(255),
+          terms_accepted BOOLEAN NOT NULL DEFAULT false,
           course_id INTEGER REFERENCES courses(id) ON DELETE SET NULL,
           course_title VARCHAR(255) NOT NULL,
           amount_due NUMERIC(10, 2) NOT NULL,
@@ -551,6 +565,27 @@ export const db = {
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `;
+    } else {
+      // Add unique constraints if they don't exist (migration for existing tables)
+      try {
+        await sql`ALTER TABLE course_registrations ADD CONSTRAINT IF NOT EXISTS course_registrations_phone_unique UNIQUE (phone)`;
+        await sql`ALTER TABLE course_registrations ADD CONSTRAINT IF NOT EXISTS course_registrations_email_unique UNIQUE (email)`;
+        console.log('Added unique constraints to existing course_registrations table');
+      } catch {
+        console.log('Unique constraints already exist or migration failed');
+      }
+      
+      // Add new columns if they don't exist (migration for existing tables)
+      try {
+        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS highest_qualification VARCHAR(255)`;
+        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS aadhar_number VARCHAR(12)`;
+        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS date_of_birth DATE`;
+        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS profession VARCHAR(255)`;
+        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS terms_accepted BOOLEAN NOT NULL DEFAULT false`;
+        console.log('Added new columns to existing course_registrations table');
+      } catch {
+        console.log('New columns already exist or migration failed');
+      }
     }
 
     const tableCheckPayments = await pool.query(`

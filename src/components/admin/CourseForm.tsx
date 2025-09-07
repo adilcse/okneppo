@@ -17,6 +17,7 @@ export interface CourseFormData {
   discounted_price: number;
   discount_percentage: number;
   images: string[];
+  is_online_course: boolean;
   subjects: {
     id: string;
     order: number;
@@ -53,6 +54,7 @@ export default function CourseForm({
       discounted_price: 0,
       discount_percentage: 0,
       images: [],
+      is_online_course: false,
       subjects: []
     }
   );
@@ -106,6 +108,7 @@ export default function CourseForm({
           discounted_price: 0,
           discount_percentage: 0,
           images: [],
+          is_online_course: false,
           subjects: []
         });
         setSelectedSubjects([]);
@@ -295,6 +298,23 @@ export default function CourseForm({
             className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm bg-gray-50 dark:bg-gray-600"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={formData.is_online_course}
+            onChange={(e) => setFormData(prev => ({ ...prev, is_online_course: e.target.checked }))}
+            className="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+          />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            This is an online course
+          </span>
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Check this box if students can register for this course online
+        </p>
       </div>
 
       <div>

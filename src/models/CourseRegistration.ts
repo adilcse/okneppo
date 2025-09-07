@@ -11,6 +11,11 @@ export interface CourseRegistration {
   address: string;
   phone: string;
   email: string;
+  highestQualification?: string;
+  aadharNumber?: string;
+  dateOfBirth?: string;
+  profession?: string;
+  termsAccepted: boolean;
   courseId: number;
   courseTitle: string;
   amountDue: number;
@@ -24,6 +29,11 @@ export interface CourseRegistrationCreationAttributes {
   address: string;
   phone: string;
   email: string;
+  highestQualification?: string;
+  aadharNumber?: string;
+  dateOfBirth?: string;
+  profession?: string;
+  termsAccepted: boolean;
   courseId: number;
   courseTitle: string;
   amountDue: number;

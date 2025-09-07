@@ -16,6 +16,7 @@ export interface Course {
   discount_percentage: string;
   description: string;
   images: string[]; // Array of image URLs or paths
+  is_online_course: boolean; // Flag to indicate if this is an online course
   created_at: string;
   updated_at: string;
   subjects?: Subject[]; // Optional array of associated subjects

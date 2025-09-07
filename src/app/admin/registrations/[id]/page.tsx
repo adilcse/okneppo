@@ -60,22 +60,49 @@ export default function RegistrationDetailPage() {
       <h1 className="text-2xl font-bold mb-6">Registration Details</h1>
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Personal Information</h2>
-              <p><strong>Name:</strong> {registration.name}</p>
-              <p><strong>Email:</strong> {registration.email}</p>
-              <p><strong>Phone:</strong> {registration.phone}</p>
-              <p><strong>Address:</strong> {registration.address}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Basic Information</h2>
+              <div className="space-y-2">
+                <p><strong>Name:</strong> {registration.name}</p>
+                <p><strong>Email:</strong> {registration.email}</p>
+                <p><strong>Phone:</strong> {registration.phone}</p>
+                <p><strong>Address:</strong> {registration.address}</p>
+              </div>
             </div>
+            
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Course Information</h2>
-              <p><strong>Course:</strong> {registration.courseTitle}</p>
-              <p><strong>Amount Due:</strong> ₹{registration.amountDue}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Educational & Professional Details</h2>
+              <div className="space-y-2">
+                <p><strong>Highest Qualification:</strong> {registration.highestQualification || 'Not provided'}</p>
+                <p><strong>Profession:</strong> {registration.profession || 'Not provided'}</p>
+                <p><strong>Date of Birth:</strong> {registration.dateOfBirth ? new Date(registration.dateOfBirth).toLocaleDateString() : 'Not provided'}</p>
+                <p><strong>Aadhar Number:</strong> {registration.aadharNumber || 'Not provided'}</p>
+              </div>
             </div>
+            
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Status</h2>
-              <p><strong>Status:</strong> {registration.status}</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Course & Status</h2>
+              <div className="space-y-2">
+                <p><strong>Course:</strong> {registration.courseTitle}</p>
+                <p><strong>Amount Due:</strong> ₹{registration.amountDue}</p>
+                <p><strong>Status:</strong> 
+                  <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
+                    registration.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    registration.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {registration.status}
+                  </span>
+                </p>
+                <p><strong>Terms Accepted:</strong> 
+                  <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
+                    registration.termsAccepted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {registration.termsAccepted ? 'Yes' : 'No'}
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ export const GET = withCors(async (request: NextRequest) => {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
+    const isOnlineCourse = searchParams.get('is_online_course');
     
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
@@ -18,6 +19,9 @@ export const GET = withCors(async (request: NextRequest) => {
     const criteria: FilterCriteria = {};
     if (search) {
       criteria.title = { $like: `%${search}%` };
+    }
+    if (isOnlineCourse === 'true') {
+      criteria.is_online_course = true;
     }
     
     // Get total count for pagination
@@ -101,6 +105,7 @@ export const POST = withCors(async (request: NextRequest) => {
       discounted_price: courseData.discounted_price || 0,
       discount_percentage: courseData.discount_percentage || 0,
       images: courseData.images || [],
+      is_online_course: courseData.is_online_course || false,
     });
 
     if (courseData.subjects) {

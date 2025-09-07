@@ -128,6 +128,7 @@ export default function EditCourse({ params }: { params: Promise<{ id: string }>
     discounted_price: Number(courseData.discounted_price),
     discount_percentage: Number(courseData.discount_percentage),
     images: courseData.images,
+    is_online_course: courseData.is_online_course || false,
     subjects: (courseData.subjects || []).map(subject => ({
       id: subject.id,
       order: 0 // Default order if not specified
