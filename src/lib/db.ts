@@ -634,8 +634,8 @@ export const db = {
         await sql`ALTER TABLE payments ADD CONSTRAINT payments_order_number_unique UNIQUE (order_number)`;
         
         console.log('Updated payments table with UUID and order_number');
-      } catch (error) {
-        console.log('Payments table migration failed:', error);
+      } catch {
+        console.log('Payments table migration failed:');
       }
     }
     

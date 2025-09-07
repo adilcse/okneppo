@@ -5,6 +5,10 @@ import axiosClient from '@/lib/axios';
 import { Course } from '@/types/course';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { WHATSAPP_GROUP_INVITE_CODE } from '@/constant';
+
+
+const WHATSAPP_GROUP_URL = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}?mode=ems_copy_c`;
 
 interface FormData {
   course_id: number;
@@ -353,6 +357,17 @@ export default function RegisterCoursePage() {
         <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
           <h1 className="text-2xl sm:text-3xl font-bold text-green-600 mb-4">Payment Successful!</h1>
           <p className="text-gray-700 dark:text-gray-300">Thank you for your registration. We will be in touch with you shortly.</p>
+          <p>
+                    Join our WhatsApp group for updates:&nbsp;
+                    <a
+                      href={WHATSAPP_GROUP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 underline hover:text-green-800"
+                    >
+                      Join Ok Neppo WhatsApp Group
+                    </a>
+                  </p>
         </div>
       </div>
     );
