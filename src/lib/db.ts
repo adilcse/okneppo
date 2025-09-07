@@ -600,8 +600,9 @@ export const db = {
     if (!tableExistsPayments) {
       await sql`
         CREATE TABLE IF NOT EXISTS payments (
-          id SERIAL PRIMARY KEY,
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           registration_id INTEGER NOT NULL REFERENCES course_registrations(id) ON DELETE CASCADE,
+          order_number VARCHAR(6) NOT NULL UNIQUE,
           razorpay_payment_id VARCHAR(255),
           razorpay_order_id VARCHAR(255),
           razorpay_signature VARCHAR(255),
@@ -612,6 +613,30 @@ export const db = {
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `;
+    } else {
+      // Add UUID extension and migrate existing payments table
+      try {
+        // Enable UUID extension
+        await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+        
+        // Add order_number column if it doesn't exist
+        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(6)`;
+        
+        // Generate order numbers for existing records that don't have them
+        await sql`
+          UPDATE payments 
+          SET order_number = UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', ''), 1, 6))
+          WHERE order_number IS NULL
+        `;
+        
+        // Make order_number NOT NULL and UNIQUE
+        await sql`ALTER TABLE payments ALTER COLUMN order_number SET NOT NULL`;
+        await sql`ALTER TABLE payments ADD CONSTRAINT payments_order_number_unique UNIQUE (order_number)`;
+        
+        console.log('Updated payments table with UUID and order_number');
+      } catch (error) {
+        console.log('Payments table migration failed:', error);
+      }
     }
     
     console.log('Database tables initialized');

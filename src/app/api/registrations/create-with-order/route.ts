@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { CourseRegistrationCreationAttributes, RegistrationStatus } from '@/models/CourseRegistration';
+import { generateUniqueOrderNumber } from '@/lib/orderUtils';
 import Razorpay from 'razorpay';
 
 // Initialize Razorpay
@@ -72,9 +73,16 @@ export async function POST(req: NextRequest) {
 
     const order = await razorpay.orders.create(orderOptions);
 
+    // Generate unique order number
+    const orderNumber = await generateUniqueOrderNumber(async (orderNum) => {
+      const existing = await db.findOne('payments', { order_number: orderNum });
+      return !!existing;
+    });
+
     // Create payment record
     const paymentRecord = await db.create('payments', {
       registration_id: newRegistration.id,
+      order_number: orderNumber,
       razorpay_order_id: order.id,
       amount: body.amount,
       currency: 'INR',
@@ -92,7 +100,10 @@ export async function POST(req: NextRequest) {
         currency: order.currency,
         receipt: order.receipt,
       },
-      payment_id: paymentRecord.id,
+      payment: {
+        id: paymentRecord.id,
+        order_number: paymentRecord.order_number,
+      },
     }, { status: 201 });
 
   } catch (error) {

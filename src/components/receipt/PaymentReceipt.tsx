@@ -9,12 +9,20 @@ interface PaymentReceiptProps {
 }
 
 export default function PaymentReceipt({ registration, payment }: PaymentReceiptProps) {
+  if (payment.status === 'failed') {
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-800">Payment Failed</h1>
+        <p className="text-gray-600">Please try again later.</p>
+      </div>
+    );
+  }
   return (
     <div id="receipt" className="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Payment Receipt</h1>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Receipt #: {payment.id}</p>
+          <p className="text-sm text-gray-500">Order #: {payment.order_number}</p>
           <p className="text-sm text-gray-500">Date: {new Date(payment.created_at).toLocaleDateString()}</p>
         </div>
       </div>

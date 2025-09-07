@@ -8,14 +8,18 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const registration = await db.findById('course_registrations', parseInt(id, 10));
-    if (!registration) {
-      return new NextResponse('Registration not found', { status: 404 });
-    }
-    const payments = await db.find('payments', { registration_id: parseInt(id, 10) });
-    const payment = payments.find((p: unknown) => (p as { status: string }).status === 'captured') || payments[0];
+    // const registration = await db.findById('course_registrations', parseInt(id, 10));
+    // if (!registration) {
+    //   return new NextResponse('Registration not found', { status: 404 });
+    // }
+    const payments = await db.find('payments', { order_number: id });
+    const payment= payments.find((p: unknown) => (p as { status: string }).status === 'captured') || payments[0];
     if (!payment) {
       return new NextResponse('Payment not found', { status: 404 });
+    }
+    const registration = await db.findById('course_registrations', payment.registration_id as number);
+    if (!registration) {
+      return new NextResponse('Registration not found', { status: 404 });
     }
 
     // Create PDF with better styling
@@ -62,7 +66,7 @@ export async function GET(
     doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Receipt #: ${payment.id}`, margin + 5, yPos + 10);
+    doc.text(`Order #: ${payment.order_number}`, margin + 5, yPos + 10);
     doc.text(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`, margin + 5, yPos + 20);
 
     // Status badge
@@ -215,7 +219,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=receipt-${registration.id}.pdf`,
+        'Content-Disposition': `attachment; filename=receipt-${payment.order_number}.pdf`,
       },
     });
   } catch (error) {

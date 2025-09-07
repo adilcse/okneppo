@@ -4,41 +4,50 @@ import { RegistrationStatus } from '@/models/CourseRegistration';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const registration = await db.findById('course_registrations', parseInt(id, 10));
+    const { searchParams } = req.nextUrl;
+    const orderNumber = searchParams?.get('order_number');
+    const getPayments = searchParams?.get('payment') === 'true';
+    console.log(orderNumber);
+    let registration, payment, payments;
+    if (orderNumber) {
+      payment = await db.findOne('payments', { order_number: orderNumber });
+      if (!payment) {
+        return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+      }
+      registration = await db.findOne('course_registrations', { id: payment.registration_id });
+    } else {
+      registration = await db.findById('course_registrations', parseInt(id, 10));
+    }
 
     if (!registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
 
-    const {
-      name,
-      address,
-      phone,
-      email,
-      course_id,
-      course_title,
-      amount_due,
-      status,
-      created_at,
-      updated_at,
-    } = registration;
+    if (getPayments) {
+      payments = await db.find('payments', { registration_id: registration.id });
+    }
+
+
+    // Get the order number from the payments table
 
     const formattedRegistration = {
-      id,
-      name,
-      address,
-      phone,
-      email,
-      courseId: course_id,
-      courseTitle: course_title,
-      amountDue: amount_due,
-      status,
-      createdAt: created_at,
-      updatedAt: updated_at,
+      id: payment?.registration_id || id,
+      name: registration.name,
+      address: registration.address,
+      phone: registration.phone,
+      email: registration.email,
+      courseId: registration.course_id,
+      courseTitle: registration.course_title,
+      amountDue: registration.amount_due,
+      status: registration.status,
+      orderNumber: payment?.order_number || null,
+      createdAt: registration.created_at,
+      updatedAt: registration.updated_at,
+      payment: getPayments ? payments : null,
     };
 
     return NextResponse.json(formattedRegistration, { status: 200 });

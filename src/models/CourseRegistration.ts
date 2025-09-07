@@ -20,6 +20,7 @@ export interface CourseRegistration {
   courseTitle: string;
   amountDue: number;
   status: RegistrationStatus;
+  orderNumber?: string; // 6-digit alphanumeric order number from payment
   createdAt: Date;
   updatedAt: Date;
 }

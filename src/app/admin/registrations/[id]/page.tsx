@@ -85,6 +85,11 @@ export default function RegistrationDetailPage() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Course & Status</h2>
               <div className="space-y-2">
                 <p><strong>Course:</strong> {registration.courseTitle}</p>
+                <p><strong>Order Number:</strong> 
+                  <span className="ml-2 font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {registration.orderNumber || 'N/A'}
+                  </span>
+                </p>
                 <p><strong>Amount Due:</strong> ₹{registration.amountDue}</p>
                 <p><strong>Status:</strong> 
                   <span className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
@@ -118,7 +123,7 @@ export default function RegistrationDetailPage() {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order Number</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
@@ -127,7 +132,9 @@ export default function RegistrationDetailPage() {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {payments.map(payment => (
               <tr key={payment.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{payment.razorpay_payment_id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white font-mono">
+                  {payment.order_number}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">₹{payment.amount}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

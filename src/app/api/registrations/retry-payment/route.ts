@@ -44,7 +44,10 @@ export async function POST(req: NextRequest) {
         currency: existingPayment.currency,
         receipt: `reg_${registration.id}`,
       },
-      payment_id: existingPayment.id,
+      payment: {
+        id: existingPayment.id,
+        order_number: existingPayment.order_number,
+      },
     });
 
   } catch (error) {

@@ -7,7 +7,17 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const payments = await db.find('payments', { registration_id: parseInt(id, 10) });
+    const { searchParams } = req.nextUrl;
+    const orderNumber = searchParams?.get('order_number');
+    let payments;
+    if (orderNumber) {
+      payments = await db.find('payments', { order_number: orderNumber });
+    } else {
+      payments = await db.find('payments', { registration_id: parseInt(id, 10) });
+    }
+    if (!payments) {
+      return NextResponse.json({ error: 'Payments not found' }, { status: 404 });
+    }
 
     return NextResponse.json(payments, { status: 200 });
   } catch (error) {

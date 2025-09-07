@@ -5,8 +5,9 @@ export enum PaymentStatus {
 }
 
 export interface Payment {
-  id: number;
+  id: string; // UUID
   registration_id: number;
+  order_number?: string; // 6-digit alphanumeric order number
   razorpay_payment_id?: string;
   razorpay_order_id?: string;
   razorpay_signature?: string;
@@ -19,6 +20,7 @@ export interface Payment {
 
 export interface PaymentCreationAttributes {
   registration_id: number;
+  order_number?: string; // 6-digit alphanumeric order number
   razorpay_payment_id?: string;
   razorpay_order_id?: string;
   razorpay_signature?: string;

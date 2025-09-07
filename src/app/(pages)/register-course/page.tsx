@@ -76,7 +76,8 @@ export default function RegisterCoursePage() {
   const [currentOrder, setCurrentOrder] = useState<{
     registration_id: number;
     order_id: string;
-    payment_id: number;
+    payment_id: string; // UUID
+    order_number: string; // 6-digit alphanumeric
   } | null>(null);
 
   useEffect(() => {
@@ -205,7 +206,7 @@ export default function RegisterCoursePage() {
     setPaymentStatus('processing');
 
     try {
-      let registrationData, orderData, paymentId;
+      let registrationData, orderData, paymentId, orderNumber;
 
       // Check if we have an existing order to retry
       if (currentOrder) {
@@ -222,7 +223,8 @@ export default function RegisterCoursePage() {
 
         registrationData = retryResponse.data.registration;
         orderData = retryResponse.data.order;
-        paymentId = retryResponse.data.payment_id;
+        paymentId = retryResponse.data.payment.id;
+        orderNumber = retryResponse.data.payment.order_number;
       } else {
         console.log('Creating new registration and order');
         
@@ -253,13 +255,15 @@ export default function RegisterCoursePage() {
 
         registrationData = response.data.registration;
         orderData = response.data.order;
-        paymentId = response.data.payment_id;
+        paymentId = response.data.payment.id;
+        orderNumber = response.data.payment.order_number;
 
         // Store the order details for potential retry
         setCurrentOrder({
           registration_id: registrationData.id,
           order_id: orderData.id,
           payment_id: paymentId,
+          order_number: orderNumber,
         });
       }
 
@@ -288,12 +292,10 @@ export default function RegisterCoursePage() {
             if (!verificationRes.ok) {
               throw new Error('Payment verification failed');
             }
-            
-            const verificationData = await verificationRes.json();
-            
+            await verificationRes.json();
             setPaymentStatus('success');
             setCurrentOrder(null); // Clear order on success
-            window.open(`/receipt/${verificationData.registration_id}`, '_blank');
+            window.open(`/receipt/${orderNumber}`, '_blank');
           } catch (error) {
             console.error('Verification failed:', error);
             setPaymentStatus('error');
@@ -550,6 +552,24 @@ export default function RegisterCoursePage() {
                 </div>
                 {errors.terms_accepted && <p className="text-red-500 text-xs mt-1">{errors.terms_accepted}</p>}
               </div>
+
+              {/* Order Number Display */}
+              {currentOrder && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Order Number</p>
+                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 font-mono">
+                        {currentOrder.order_number}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-blue-600 dark:text-blue-400">Payment Status</p>
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Pending</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Payment Button */}
               <button type="submit"
