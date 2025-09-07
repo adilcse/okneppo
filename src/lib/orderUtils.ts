@@ -31,3 +31,23 @@ export async function generateUniqueOrderNumber(checkExists: (orderNumber: strin
   
   return orderNumber!;
 }
+
+/**
+ * Webhook event types for Razorpay
+ */
+export const WEBHOOK_EVENTS = {
+  PAYMENT_AUTHORIZED: 'payment.authorized',
+  PAYMENT_CAPTURED: 'payment.captured',
+  PAYMENT_FAILED: 'payment.failed',
+  ORDER_PAID: 'order.paid',
+} as const;
+
+/**
+ * Payment status mapping for webhook events
+ */
+export const PAYMENT_STATUS_MAP = {
+  [WEBHOOK_EVENTS.PAYMENT_AUTHORIZED]: 'authorized',
+  [WEBHOOK_EVENTS.PAYMENT_CAPTURED]: 'captured',
+  [WEBHOOK_EVENTS.PAYMENT_FAILED]: 'failed',
+  [WEBHOOK_EVENTS.ORDER_PAID]: 'captured',
+} as const;
