@@ -164,14 +164,20 @@ export const db = {
         on: string;
         type: 'LEFT' | 'INNER' | 'RIGHT';
       };
+      distinct?: boolean;
       select?: string[];
       groupBy?: string;
     } = {}
   ): Promise<T[]> {
-    const { limit, offset, orderBy, order, join, select, groupBy } = options;
+    const { limit, offset, orderBy, order, join, select, groupBy, distinct } = options;
     
     // Build the base query
     let queryStr = 'SELECT ';
+    
+    // Add DISTINCT if specified
+    if (distinct) {
+      queryStr += 'DISTINCT ';
+    }
     
     // Add select fields
     if (select && select.length > 0) {
