@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
     // Get the existing payment record for this registration
     const existingPayment = await db.findOne('payments', { 
       registration_id: body.registration_id,
-      status: 'created'
     });
 
     if (!existingPayment) {
