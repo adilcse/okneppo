@@ -70,7 +70,7 @@ export default function CourseDetailClient({ course }: { course: Course }) {
                     Enquire on WhatsApp
                   </a>
                   {course.is_online_course && (
-                    <Link href="/register-course">
+                    <Link href="/register">
                       <button className="inline-flex items-center justify-center bg-[blue] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#000080] transition-colors">
                         Register for Online Course
                       </button>
