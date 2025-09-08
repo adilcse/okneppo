@@ -12,6 +12,10 @@ const PROTECTED_API_ROUTES = [
   '/api/gallery',         // Gallery
 ];
 
+const GET_PROTECTED_API_ROUTES = [
+  '/api/course-registrations',         // Course registrations
+];
+
 const checkAdminAuth = async (request: NextRequest) => {
   console.log('Checking admin auth');
   const origin = request.headers.get('origin');
@@ -81,6 +85,15 @@ export async function middleware(request: NextRequest) {
       (isAuthenticatedEndpoint && method === 'GET') ||
       (isProtectedApiRoute && method !== 'GET')
     ) {
+      return checkAdminAuth(request);
+    }
+
+    const isGetProtectedApiRoute = GET_PROTECTED_API_ROUTES.some(route => 
+          {
+            return pathname.endsWith(route);
+          }
+    );
+    if (isGetProtectedApiRoute && method === 'GET') {
       return checkAdminAuth(request);
     }
   }
