@@ -57,3 +57,7 @@ export function mapProductFields(data: Partial<Product> & {
     createdAt: data.created_at || '',
   };
 }
+
+export function formatPercentage(percentage: number | string): string {
+  return `${Math.round(Number(percentage || 0))}%`;
+}

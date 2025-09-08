@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Course } from '@/types/course';
 import { WHATSAPP_NUMBER } from '@/constant';
 import Link from 'next/link';
+import { formatPercentage } from '@/lib/utils';
 
 function generateWhatsAppLink(course: Course) {
   const message = `Hello!
@@ -54,7 +55,7 @@ export default function CourseDetailClient({ course }: { course: Course }) {
                         ₹{course.discounted_price}
                       </p>
                       <span className="bg-[#E94FFF] bg-opacity-10 text-[white] text-sm font-medium px-3 py-1 rounded-full">
-                        {course.discount_percentage}% OFF
+                        {formatPercentage(course.discount_percentage)} OFF
                       </span>
                     </div>
                   </div>

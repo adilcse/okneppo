@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Course } from '@/types/course';
+import { formatPercentage } from '@/lib/utils';
 
 interface CourseCardProps {
   course: Course;
@@ -31,7 +32,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
               ₹{course.discounted_price}
             </p>
             <span className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">
-              {course.discount_percentage}% OFF
+              {formatPercentage(course.discount_percentage)} OFF
             </span>
           </div>
         </div>
