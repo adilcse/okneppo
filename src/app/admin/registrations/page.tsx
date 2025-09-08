@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { CourseRegistration, RegistrationStatus } from '@/models/CourseRegistration';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useDebouncedState } from '@/lib/clientUtils';
 
 interface PaginationInfo {
   page: number;
@@ -35,11 +36,11 @@ async function getRegistrations(page: number = 1, limit: number = 10, search: st
 export default function AdminRegistrationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm, debouncedSearchTerm] = useDebouncedState('', 1000);
   const router = useRouter();
   const { data: response, isLoading: loading, error } = useQuery<RegistrationsResponse>({
-    queryKey: ['registrations', currentPage, pageSize, searchTerm],
-    queryFn: () => getRegistrations(currentPage, pageSize, searchTerm),
+    queryKey: ['registrations', currentPage, pageSize, debouncedSearchTerm],
+    queryFn: () => getRegistrations(currentPage, pageSize, debouncedSearchTerm),
   });
 
   const registrations = response?.data || [];
@@ -85,15 +86,6 @@ export default function AdminRegistrationsPage() {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -142,7 +134,9 @@ export default function AdminRegistrationsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
+      {loading ? <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading...</div>
+      </div> : <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -191,10 +185,10 @@ export default function AdminRegistrationsPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
+      {!loading &&pagination && pagination.totalPages > 1 && (
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 mt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

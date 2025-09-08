@@ -25,8 +25,7 @@ export async function GET(req: NextRequest) {
     const totalCount = await db.count('course_registrations', searchConditions);
     
     // Get paginated registrations (simple query for better performance)
-    const registrations = await db.findAll('course_registrations', {
-      ...searchConditions,
+    const registrations = await db.find('course_registrations', searchConditions, {
       orderBy: 'created_at',
       order: 'DESC',
       limit,
