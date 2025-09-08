@@ -1,8 +1,8 @@
 "use client"
 import React, { useState } from 'react';
 import { CourseRegistration, RegistrationStatus } from '@/models/CourseRegistration';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface PaginationInfo {
   page: number;
@@ -36,7 +36,7 @@ export default function AdminRegistrationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const router = useRouter();
   const { data: response, isLoading: loading, error } = useQuery<RegistrationsResponse>({
     queryKey: ['registrations', currentPage, pageSize, searchTerm],
     queryFn: () => getRegistrations(currentPage, pageSize, searchTerm),
@@ -153,19 +153,22 @@ export default function AdminRegistrationsPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Final Fee</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {registrations.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   {searchTerm ? 'No registrations found matching your search.' : 'No registrations found.'}
                 </td>
               </tr>
             ) : (
               registrations.map(reg => (
-                <tr key={reg.id}>
+                <tr 
+                  key={reg.id}
+                  onClick={() => router.push(`/admin/registrations/${reg.id}`)}
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{reg.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{reg.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{reg.phone}</td>
@@ -182,11 +185,6 @@ export default function AdminRegistrationsPage() {
                     }`}>
                       {reg.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link href={`/admin/registrations/${reg.id}`} className="text-blue-600 hover:text-blue-900">
-                      View
-                    </Link>
                   </td>
                 </tr>
               ))
