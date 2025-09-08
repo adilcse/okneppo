@@ -13,6 +13,14 @@ const nextConfig = {
     minimumCacheTTL: 60, // 1 minute minimum cache
   },
   
+  
+  // Configure API routes to handle larger request bodies
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+  
   // Optimize performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

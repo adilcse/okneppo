@@ -6,6 +6,8 @@ import { bucketName, storage } from '@/lib/gcpStorage';
 const WEBP_QUALITY = 95;
 // Maximum width for resized images (maintain aspect ratio)
 const MAX_WIDTH = 1200;
+// Maximum file size in bytes (10MB)
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Optimizes an image by:
@@ -73,6 +75,14 @@ export async function POST(request: NextRequest) {
     if (!file.type.startsWith('image/')) {
       return NextResponse.json(
         { error: 'File must be an image' },
+        { status: 400 }
+      );
+    }
+
+    // Check file size (10MB limit)
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
         { status: 400 }
       );
     }
