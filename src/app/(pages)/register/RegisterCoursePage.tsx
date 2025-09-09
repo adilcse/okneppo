@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { WHATSAPP_GROUP_INVITE_CODE } from '@/constant';
 import posthog from 'posthog-js';
+import { formatPercentage } from '@/lib/utils';
 
 const WHATSAPP_GROUP_URL = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}?mode=ems_copy_c`;
 
@@ -624,7 +625,7 @@ export default function RegisterCoursePage() {
                   <span>₹{Number(courseFee).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Basic Discount ({selectedCourse ? selectedCourse.discount_percentage : 10}%):</span>
+                  <span>Basic Discount ({selectedCourse ? formatPercentage(selectedCourse.discount_percentage) : formatPercentage(10)}):</span>
                   <span className="text-green-600">-₹{Number(basicDiscount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-semibold">
