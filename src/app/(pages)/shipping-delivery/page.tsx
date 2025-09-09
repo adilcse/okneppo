@@ -14,7 +14,7 @@ export default function ShippingDeliveryPage() {
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center dark:text-white">Shipping and Delivery Policy</h1>
         
         <div className="prose dark:prose-invert max-w-none">
-          <p className="mb-6">Last updated: {new Date().toLocaleDateString()}</p>
+          <p className="mb-6">Last updated: August 15, 2025</p>
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">1. Overview</h2>
           <p>At OKNEPPO, we are committed to delivering your handcrafted luxury textiles safely and promptly. Each piece is carefully packaged to ensure it reaches you in perfect condition, reflecting the artisanal care that went into its creation.</p>

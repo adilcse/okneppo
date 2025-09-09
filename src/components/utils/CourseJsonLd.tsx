@@ -52,7 +52,7 @@ export default function CourseJsonLd({ course }: CourseJsonLdProps) {
       "price": course.discounted_price || course.max_price,
       "priceCurrency": "INR",
       "availability": "https://schema.org/InStock",
-      "validFrom": new Date().toISOString(),
+      "validFrom": "2025-01-01T00:00:00.000Z",
       "url": `https://okneppo.in/courses/${course.id}`
     },
     "image": course.images && course.images.length > 0 ? course.images[0] : "https://okneppo.in/images/og-image.jpg",

@@ -14,7 +14,7 @@ export default function TermsPage() {
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center dark:text-white">Terms and Conditions</h1>
         
         <div className="prose dark:prose-invert max-w-none">
-          <p className="mb-6">Last updated: {new Date().toLocaleDateString()}</p>
+          <p className="mb-6">Last updated: August 15, 2025</p>
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">1. Introduction</h2>
           <p>Welcome to OKNEPPO. These terms and conditions outline the rules and regulations for the use of our website and services.</p>

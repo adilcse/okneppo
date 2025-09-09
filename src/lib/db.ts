@@ -483,13 +483,7 @@ export const db = {
       );
     `;
     } else {
-      // Add is_online_course column if it doesn't exist (migration for existing tables)
-      try {
-        await sql`ALTER TABLE courses ADD COLUMN IF NOT EXISTS is_online_course BOOLEAN NOT NULL DEFAULT false`;
-        console.log('Added is_online_course column to existing courses table');
-      } catch (error) {
-        console.log('is_online_course column already exists or migration failed:', error);
-      }
+      console.log('courses table already exists');
     }
 
     const tableCheckSubjects = await pool.query(`
@@ -579,26 +573,7 @@ export const db = {
         );
       `;
     } else {
-      // Add unique constraints if they don't exist (migration for existing tables)
-      try {
-        await sql`ALTER TABLE course_registrations ADD CONSTRAINT IF NOT EXISTS course_registrations_phone_unique UNIQUE (phone)`;
-        await sql`ALTER TABLE course_registrations ADD CONSTRAINT IF NOT EXISTS course_registrations_email_unique UNIQUE (email)`;
-        console.log('Added unique constraints to existing course_registrations table');
-      } catch {
-        console.log('Unique constraints already exist or migration failed');
-      }
-      
-      // Add new columns if they don't exist (migration for existing tables)
-      try {
-        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS highest_qualification VARCHAR(255)`;
-        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS aadhar_number VARCHAR(12)`;
-        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS date_of_birth DATE`;
-        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS profession VARCHAR(255)`;
-        await sql`ALTER TABLE course_registrations ADD COLUMN IF NOT EXISTS terms_accepted BOOLEAN NOT NULL DEFAULT false`;
-        console.log('Added new columns to existing course_registrations table');
-      } catch {
-        console.log('New columns already exist or migration failed');
-      }
+      console.log('course_registrations table already exists');
     }
 
     const tableCheckPayments = await pool.query(`
@@ -651,41 +626,7 @@ export const db = {
       try {
         // Enable UUID extension
         await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-        
-        // Add order_number column if it doesn't exist
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS order_number VARCHAR(6)`;
-        
-        // Generate order numbers for existing records that don't have them
-        await sql`
-          UPDATE payments 
-          SET order_number = UPPER(SUBSTRING(REPLACE(gen_random_uuid()::text, '-', ''), 1, 6))
-          WHERE order_number IS NULL
-        `;
 
-        // Add additional payment data columns
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS invoice_id VARCHAR(255)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount_refunded NUMERIC(10, 2) DEFAULT 0`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_status VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS description TEXT`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS card_id VARCHAR(255)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS bank VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS wallet VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS vpa VARCHAR(255)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS captured BOOLEAN DEFAULT false`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS fee NUMERIC(10, 2) DEFAULT 0`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS tax NUMERIC(10, 2) DEFAULT 0`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_code VARCHAR(100)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_description TEXT`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_source VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_step VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS error_reason VARCHAR(50)`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS acquirer_data JSONB`;
-        await sql`ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`;
-                // Make order_number NOT NULL and UNIQUE
-        await sql`ALTER TABLE payments ALTER COLUMN order_number SET NOT NULL`;
-
-        console.log('Updated payments table with UUID, order_number, and additional payment data fields');
       } catch (error) {
         console.log('Payments table migration failed:', error);
       }

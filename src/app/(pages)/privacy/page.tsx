@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center dark:text-white">Privacy Policy</h1>
         
         <div className="prose dark:prose-invert max-w-none">
-          <p className="mb-6">Last updated: {new Date().toLocaleDateString()}</p>
+          <p className="mb-6">Last updated: August 15, 2025</p>
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">1. Introduction</h2>
           <p>At OKNEPPO, we respect your privacy and are committed to protecting it through our compliance with this policy.</p>

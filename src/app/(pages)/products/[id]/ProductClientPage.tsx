@@ -54,7 +54,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
 
   // Function to create WhatsApp link with product details
   const getWhatsAppLink = (name: string, price: number) => {
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(name)}%20(Price%3A%20${encodeURIComponent(formatPrice(price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}.%20Could%20you%20provide%20more%20information%3F`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=Hello%2C%20I'm%20interested%20in%20the%20${encodeURIComponent(name)}%20(Price%3A%20${encodeURIComponent(formatPrice(price))})%20from%20Ok%20Neppo.%20Product%20URL%3A%20${encodeURIComponent(`https://okneppo.in/products/${params.id}`)}.%20Could%20you%20provide%20more%20information%3F`;
   };
 
   if (isLoading) {
@@ -90,7 +90,7 @@ export default function ProductClientPage({ params }: { params: { id: string } }
         <>
           <ProductJsonLd 
             product={product} 
-            url={typeof window !== 'undefined' ? window.location.href : `https://okneppo.in/products/${product.id}`} 
+            url={`https://okneppo.in/products/${product.id}`} 
           />
           
           <BreadcrumbJsonLd 

@@ -3,6 +3,7 @@ import { Montserrat } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import QueryProvider from '@/providers/QueryProvider';
+import PostHogProvider from '@/providers/PostHogProvider';
 import OrganizationJsonLd from '@/components/utils/OrganizationJsonLd';
 import PageTransition from '@/components/ui/PageTransition';
 import { Analytics } from "@vercel/analytics/next"
@@ -78,12 +79,14 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <QueryProvider>
-            <Analytics />
-            <SpeedInsights />
-            {children}
-            <OrganizationJsonLd />
-            <PageTransition />
-            <Toaster position="top-right" />
+            <PostHogProvider>
+              <Analytics />
+              <SpeedInsights />
+              {children}
+              <OrganizationJsonLd />
+              <PageTransition />
+              <Toaster position="top-right" />
+            </PostHogProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

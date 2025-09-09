@@ -35,11 +35,28 @@ const nextConfig = {
     // Uncomment the following when you're ready to use it
     // serverActions: true,
   },
+
+  // PostHog rewrites
+  async rewrites() {
+    return [
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://us-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://us.i.posthog.com/:path*',
+      },
+    ];
+  },
+
+  // This is required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
   
   // Set output to export static files if needed
   // output: 'export',
   
-
+  
   // Optional: Add i18n and content security policies as needed
   // i18n: {
   //   locales: ['en'],
@@ -47,4 +64,4 @@ const nextConfig = {
   // },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

@@ -42,7 +42,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-gray-800 dark:border-gray-700 pt-4 text-center text-gray-400">
-          <p>© {new Date().getFullYear()} Ok Neppo by Nishad Fatma. All rights reserved.</p>
+          <p>© 2025 Ok Neppo by Nishad Fatma. All rights reserved.</p>
         </div>
         <div className="border-t border-gray-800 dark:border-gray-700 pt-4 text-center text-gray-400">
           <p>Developed by <a href="https://www.linkedin.com/in/adil-hussain-cse/" className="text-gray-300 hover:text-primary dark:hover:text-primary">Adil Hussain</a></p>

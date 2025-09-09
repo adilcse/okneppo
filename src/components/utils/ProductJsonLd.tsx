@@ -44,7 +44,7 @@ export default function ProductJsonLd({ product, url }: ProductJsonLdProps) {
       '@type': 'Offer',
       price: rawPrice,
       priceCurrency: 'INR',
-      priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      priceValidUntil: "2025-12-31",
       availability: 'https://schema.org/InStock',
       url: url,
       seller: {
