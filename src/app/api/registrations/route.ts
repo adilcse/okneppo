@@ -8,7 +8,12 @@ export async function POST(req: NextRequest) {
 
     // Check for existing registrations with the same phone or email
     const existingPhone = await db.findOne('course_registrations', { phone: body.phone });
-    const existingEmail = await db.findOne('course_registrations', { email: body.email });
+    
+    // Only check for existing email if email is provided and not empty
+    let existingEmail = null;
+    if (body.email && body.email.trim()) {
+      existingEmail = await db.findOne('course_registrations', { email: body.email });
+    }
 
     if (existingPhone) {
       return NextResponse.json(
@@ -40,7 +45,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       address: body.address,
       phone: body.phone,
-      email: body.email,
+      email: body.email && body.email.trim() ? body.email : null,
       highest_qualification: body.highestQualification || null,
       aadhar_number: body.aadharNumber || null,
       date_of_birth: body.dateOfBirth || null,

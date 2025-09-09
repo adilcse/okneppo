@@ -10,6 +10,9 @@ import posthog from 'posthog-js';
 
 const WHATSAPP_GROUP_URL = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}?mode=ems_copy_c`;
 
+// Helper component for required field indicator
+const RequiredField = () => <span className="text-red-500 ml-1">*</span>;
+
 interface FormData {
   course_id: number;
   name: string;
@@ -106,16 +109,12 @@ export default function RegisterCoursePage() {
   const validate = () => {
     const tempErrors: FormErrors = {};
 
+    // Required fields
     if (!formData.course_id) {
       tempErrors.course_id = 'Please select a course';
     }
     if (!formData.name.trim()) {
       tempErrors.name = 'Name is required';
-    }
-    if (!formData.email.trim()) {
-      tempErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      tempErrors.email = 'Email is invalid';
     }
     if (!formData.phone.trim()) {
       tempErrors.phone = 'Phone is required';
@@ -126,19 +125,16 @@ export default function RegisterCoursePage() {
     if (!formData.highest_qualification.trim()) {
       tempErrors.highest_qualification = 'Highest qualification is required';
     }
-    if (!formData.aadhar_number.trim()) {
-      tempErrors.aadhar_number = 'Aadhar number is required';
-    } else if (!/^\d{12}$/.test(formData.aadhar_number.replace(/\s/g, ''))) {
-      tempErrors.aadhar_number = 'Aadhar number must be 12 digits';
-    }
-    if (!formData.date_of_birth.trim()) {
-      tempErrors.date_of_birth = 'Date of birth is required';
-    }
-    if (!formData.profession.trim()) {
-      tempErrors.profession = 'Profession is required';
-    }
     if (!formData.terms_accepted) {
       tempErrors.terms_accepted = 'You must accept the terms and conditions';
+    }
+
+    // Optional fields with validation (only if provided)
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      tempErrors.email = 'Email is invalid';
+    }
+    if (formData.aadhar_number.trim() && !/^\d{12}$/.test(formData.aadhar_number.replace(/\s/g, ''))) {
+      tempErrors.aadhar_number = 'Aadhar number must be 12 digits';
     }
     
     setErrors(tempErrors);
@@ -476,19 +472,25 @@ export default function RegisterCoursePage() {
               
               {/* Form Fields */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Name <RequiredField />
+                </label>
                 <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange} className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.name ? 'border-red-500' : ''}`} required disabled={paymentStatus === 'processing'} />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
 
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Address <RequiredField />
+                </label>
                 <textarea name="address" id="address" value={formData.address} onChange={handleInputChange} className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600" rows={3} required disabled={paymentStatus === 'processing'} />
                 {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Phone Number <RequiredField />
+                </label>
                 <input 
                   type="tel" 
                   name="phone" 
@@ -504,13 +506,17 @@ export default function RegisterCoursePage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email ID</label>
-                <input type="email" name="email" id="email" value={formData.email} onChange={handleInputChange} className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.email ? 'border-red-500' : ''}`} required disabled={paymentStatus === 'processing'} />
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email ID <span className="text-gray-500 text-sm">(Optional)</span>
+                </label>
+                <input type="email" name="email" id="email" value={formData.email} onChange={handleInputChange} className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.email ? 'border-red-500' : ''}`} disabled={paymentStatus === 'processing'} />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
               <div>
-                <label htmlFor="highest_qualification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Highest Qualification</label>
+                <label htmlFor="highest_qualification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Highest Qualification <RequiredField />
+                </label>
                 <select 
                   name="highest_qualification" 
                   id="highest_qualification" 
@@ -534,7 +540,9 @@ export default function RegisterCoursePage() {
               </div>
 
               <div>
-                <label htmlFor="aadhar_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aadhar Number</label>
+                <label htmlFor="aadhar_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Aadhar Number <span className="text-gray-500 text-sm">(Optional)</span>
+                </label>
                 <input 
                   type="text" 
                   name="aadhar_number" 
@@ -544,14 +552,15 @@ export default function RegisterCoursePage() {
                   placeholder="Enter 12-digit Aadhar number"
                   maxLength={12}
                   className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.aadhar_number ? 'border-red-500' : ''}`} 
-                  required 
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.aadhar_number && <p className="text-red-500 text-xs mt-1">{errors.aadhar_number}</p>}
               </div>
 
               <div>
-                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Date of Birth <span className="text-gray-500 text-sm">(Optional)</span>
+                </label>
                 <input 
                   type="date" 
                   name="date_of_birth" 
@@ -559,14 +568,15 @@ export default function RegisterCoursePage() {
                   value={formData.date_of_birth} 
                   onChange={handleInputChange} 
                   className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.date_of_birth ? 'border-red-500' : ''}`} 
-                  required 
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.date_of_birth && <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>}
               </div>
 
               <div>
-                <label htmlFor="profession" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profession</label>
+                <label htmlFor="profession" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Profession <span className="text-gray-500 text-sm">(Optional)</span>
+                </label>
                 <input 
                   type="text" 
                   name="profession" 
@@ -575,14 +585,15 @@ export default function RegisterCoursePage() {
                   onChange={handleInputChange} 
                   placeholder="e.g., Student, Engineer, Teacher, etc."
                   className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.profession ? 'border-red-500' : ''}`} 
-                  required 
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.profession && <p className="text-red-500 text-xs mt-1">{errors.profession}</p>}
               </div>
 
               <div>
-                <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
+                <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Course <RequiredField />
+                </label>
                 <select 
                   name="course" 
                   id="course" 
@@ -647,6 +658,7 @@ export default function RegisterCoursePage() {
                     <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-800 underline">
                       Privacy Policy
                     </a>
+                    <RequiredField />
                   </span>
                 </label>
                 <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">

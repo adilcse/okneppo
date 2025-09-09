@@ -14,13 +14,6 @@ const nextConfig = {
   },
   
   
-  // Configure API routes to handle larger request bodies
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-  
   // Optimize performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
