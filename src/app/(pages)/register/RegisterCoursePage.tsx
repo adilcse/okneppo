@@ -79,7 +79,7 @@ export default function RegisterCoursePage() {
     email: '',
     phone: '',
     address: '',
-    highest_qualification: '',
+    highest_qualification: 'Other',
     aadhar_number: '',
     date_of_birth: '',
     profession: '',
@@ -107,9 +107,13 @@ export default function RegisterCoursePage() {
     };
   }, []);
 
+  const clearAllErrors = useCallback(() => {
+    setErrors({});
+  }, []);
+
   const validate = () => {
     const tempErrors: FormErrors = {};
-
+    
     // Required fields
     if (!formData.course_id) {
       tempErrors.course_id = 'Please select a course';
@@ -129,7 +133,7 @@ export default function RegisterCoursePage() {
     if (!formData.terms_accepted) {
       tempErrors.terms_accepted = 'You must accept the terms and conditions';
     }
-
+    
     // Optional fields with validation (only if provided)
     if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       tempErrors.email = 'Email is invalid';
@@ -159,19 +163,52 @@ export default function RegisterCoursePage() {
       setErrors(prev => ({ ...prev, general: undefined }));
     }
     
+    // Clear specific field error when user provides a value
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+    
     if (name === 'course') {
         const selectedCourse = courses.find(c => c.id === parseInt(value, 10));
         setFormData(prev => ({
             ...prev,
             course_id: selectedCourse?.id ?? 0,
         }));
+        // Clear course_id error when course is selected
+        if (errors.course_id) {
+          setErrors(prev => ({ ...prev, course_id: undefined }));
+        }
     } else if (type === 'checkbox') {
         const checked = (e.target as HTMLInputElement).checked;
         setFormData((prev) => ({ ...prev, [name]: checked }));
+        // Clear terms_accepted error when checkbox is checked
+        if (name === 'terms_accepted' && checked && errors.terms_accepted) {
+          setErrors(prev => ({ ...prev, terms_accepted: undefined }));
+        }
     } else {
         setFormData((prev) => ({ ...prev, [name]: value }));
+        
+        // Clear specific validation errors when user provides correct values
+        if (name === 'email' && value.trim() && /\S+@\S+\.\S+/.test(value) && errors.email) {
+          setErrors(prev => ({ ...prev, email: undefined }));
+        }
+        if (name === 'aadhar_number' && value.trim() && /^\d{12}$/.test(value.replace(/\s/g, '')) && errors.aadhar_number) {
+          setErrors(prev => ({ ...prev, aadhar_number: undefined }));
+        }
+        if (name === 'phone' && value.trim().length >= 10 && errors.phone) {
+          setErrors(prev => ({ ...prev, phone: undefined }));
+        }
+        if (name === 'name' && value.trim() && errors.name) {
+          setErrors(prev => ({ ...prev, name: undefined }));
+        }
+        if (name === 'address' && value.trim() && errors.address) {
+          setErrors(prev => ({ ...prev, address: undefined }));
+        }
+        if (name === 'highest_qualification' && value.trim() && errors.highest_qualification) {
+          setErrors(prev => ({ ...prev, highest_qualification: undefined }));
+        }
     }
-  }, [courses, errors.general]);
+  }, [courses, errors]);
 
   // Handle PostHog identity setting when phone number is entered
   const handlePhoneBlur = useCallback(() => {
@@ -243,6 +280,7 @@ export default function RegisterCoursePage() {
       return;
     }
     setPaymentStatus('processing');
+    clearAllErrors(); // Clear any previous errors when starting payment
 
     try {
       let registrationData, orderData, paymentId, orderNumber;
@@ -334,6 +372,7 @@ export default function RegisterCoursePage() {
             await verificationRes.json();
             setPaymentStatus('success');
             setCurrentOrder(null); // Clear order on success
+            clearAllErrors(); // Clear all form errors on success
             
             // Track successful registration in PostHog
             try {
