@@ -5,32 +5,60 @@ import axiosClient from '@/lib/axios';
 
 // Generate metadata for SEO
 export const metadata: Metadata = {
-  title: 'Fashion Design Courses | Ok Neppo',
-  description: 'Learn fashion design from expert Nishad Fatma. Explore our comprehensive range of courses covering design techniques, sustainable practices, and industry insights. Start your fashion journey today.',
-  keywords: ['fashion design courses', 'fashion education', 'design techniques', 'sustainable fashion', 'Nishad Fatma', 'fashion training', 'design skills'],
+  title: 'Fashion Design Courses - Learn from Expert Nishad Fatma | Ok Neppo',
+  description: 'Master fashion design with professional courses by Nishad Fatma. Comprehensive training in design techniques, sustainable fashion, pattern making, and industry insights. Online and offline classes available. Enroll now!',
+  keywords: [
+    'fashion design courses',
+    'fashion education',
+    'design techniques',
+    'sustainable fashion',
+    'Nishad Fatma',
+    'fashion training',
+    'design skills',
+    'online fashion course',
+    'fashion design certification',
+    'pattern making',
+    'fashion illustration',
+    'textile design',
+    'fashion industry',
+    'creative design',
+    'fashion career'
+  ],
   openGraph: {
-    title: 'Fashion Design Courses | Ok Neppo',
-    description: 'Learn fashion design from expert Nishad Fatma. Explore our comprehensive range of courses covering design techniques, sustainable practices, and industry insights.',
+    title: 'Fashion Design Courses - Learn from Expert Nishad Fatma | Ok Neppo',
+    description: 'Master fashion design with professional courses by Nishad Fatma. Comprehensive training in design techniques, sustainable fashion, and industry insights.',
     images: [
       {
-        url: 'https://storage.googleapis.com/okneppo/images/products/f3f3f6b8c810a2c509037b7e1ec1fce6.webp',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Ok Neppo Fashion Design Courses',
+        alt: 'Ok Neppo Fashion Design Courses - Learn from Expert Nishad Fatma',
       }
     ],
     type: 'website',
     locale: 'en_US',
     siteName: 'Ok Neppo',
+    url: 'https://okneppo.in/courses',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Fashion Design Courses | Ok Neppo',
-    description: 'Learn fashion design from expert Nishad Fatma. Explore our comprehensive range of courses.',
-    images: ['https://storage.googleapis.com/okneppo/images/products/f3f3f6b8c810a2c509037b7e1ec1fce6.webp'],
+    title: 'Fashion Design Courses - Learn from Expert Nishad Fatma | Ok Neppo',
+    description: 'Master fashion design with professional courses by Nishad Fatma. Comprehensive training in design techniques and industry insights.',
+    images: ['/images/og-image.jpg'],
   },
   alternates: {
     canonical: 'https://okneppo.in/courses',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

@@ -5,6 +5,7 @@ import { Course } from '@/types/course';
 import { WHATSAPP_NUMBER } from '@/constant';
 import Link from 'next/link';
 import { formatPercentage } from '@/lib/utils';
+import Breadcrumb from '@/components/utils/Breadcrumb';
 
 function generateWhatsAppLink(course: Course) {
   const message = `Hello!
@@ -27,6 +28,13 @@ export default function CourseDetailClient({ course }: { course: Course }) {
         <section className="bg-gray-50 dark:bg-gray-900">
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl mx-auto">
+              <Breadcrumb
+                items={[
+                  { label: 'Home', href: '/' },
+                  { label: 'Courses', href: '/courses' },
+                  { label: course.title }
+                ]}
+              />
               <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
                 {course.title}
               </h1>

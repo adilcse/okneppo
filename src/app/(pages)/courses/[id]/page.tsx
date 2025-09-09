@@ -3,6 +3,7 @@ import CourseDetailClient from './CourseDetailClient';
 import { Course } from '@/types/course';
 import axiosClient from '@/lib/axios';
 import { AxiosError } from 'axios';
+import CourseJsonLd from '@/components/utils/CourseJsonLd';
 
 async function fetchCourse(id: string) {
   try {
@@ -30,39 +31,64 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     return {
-      title: `${course.title} | Ok Neppo Courses`,
-      description: course.description,
+      title: `${course.title} - Fashion Design Course | Ok Neppo`,
+      description: `Learn ${course.title} with Nishad Fatma. Professional fashion design course with hands-on training, expert guidance, and industry insights. Enroll now for ${course.discounted_price ? `₹${course.discounted_price}` : 'competitive pricing'}!`,
       keywords: [
         'fashion design course',
         course.title.toLowerCase(),
         'fashion education',
         'design techniques',
         'Nishad Fatma',
-        'fashion training'
+        'fashion training',
+        'online fashion course',
+        'fashion design certification',
+        'design skills',
+        'fashion industry',
+        'creative design',
+        'fashion career'
       ],
       openGraph: {
-        title: `${course.title} | Ok Neppo Courses`,
-        description: course.description,
+        title: `${course.title} - Fashion Design Course | Ok Neppo`,
+        description: `Learn ${course.title} with Nishad Fatma. Professional fashion design course with hands-on training and expert guidance.`,
         images: course.images && course.images.length > 0 ? [
           {
             url: course.images[0],
             width: 1200,
             height: 630,
-            alt: course.title,
+            alt: `${course.title} - Fashion Design Course`,
           }
-        ] : [],
+        ] : [
+          {
+            url: '/images/og-image.jpg',
+            width: 1200,
+            height: 630,
+            alt: 'Ok Neppo Fashion Design Course',
+          }
+        ],
         type: 'article',
         locale: 'en_US',
         siteName: 'Ok Neppo',
+        url: `https://okneppo.in/courses/${id}`,
       },
       twitter: {
         card: 'summary_large_image',
-        title: `${course.title} | Ok Neppo Courses`,
-        description: course.description,
-        images: course.images && course.images.length > 0 ? [course.images[0]] : [],
+        title: `${course.title} - Fashion Design Course | Ok Neppo`,
+        description: `Learn ${course.title} with Nishad Fatma. Professional fashion design course with hands-on training.`,
+        images: course.images && course.images.length > 0 ? [course.images[0]] : ['/images/og-image.jpg'],
       },
       alternates: {
         canonical: `https://okneppo.in/courses/${id}`,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-video-preview': -1,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+        },
       },
     };
   } catch {
@@ -91,5 +117,10 @@ export default async function CourseDetailPage({
     );
   }
 
-  return <CourseDetailClient course={course} />;
+  return (
+    <>
+      <CourseJsonLd course={course} />
+      <CourseDetailClient course={course} />
+    </>
+  );
 } 
