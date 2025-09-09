@@ -558,7 +558,7 @@ export const db = {
           name VARCHAR(255) NOT NULL,
           address TEXT NOT NULL,
           phone VARCHAR(20) NOT NULL UNIQUE,
-          email VARCHAR(255) NOT NULL UNIQUE,
+          email VARCHAR(255) NULL,
           highest_qualification VARCHAR(255),
           aadhar_number VARCHAR(12),
           date_of_birth DATE,
@@ -573,6 +573,30 @@ export const db = {
         );
       `;
     } else {
+      await sql`
+        ALTER TABLE course_registrations
+        ALTER COLUMN email DROP NOT NULL;
+      `;
+
+      // Drop unique constraint on email if it exists
+      await sql`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conrelid = 'course_registrations'::regclass
+              AND contype = 'u'
+              AND conkey = ARRAY[
+                (SELECT attnum FROM pg_attribute WHERE attrelid = 'course_registrations'::regclass AND attname = 'email')
+              ]
+          ) THEN
+            ALTER TABLE course_registrations DROP CONSTRAINT IF EXISTS course_registrations_email_key;
+          END IF;
+        END
+        $$;
+      `;
+
       console.log('course_registrations table already exists');
     }
 
