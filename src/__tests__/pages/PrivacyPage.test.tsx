@@ -48,7 +48,7 @@ describe('Privacy Page', () => {
     
     // Check that the last updated date is present
     expect(screen.getByText(/last updated:/i)).toBeInTheDocument();
-    expect(screen.getByText(/4\/29\/2025/)).toBeInTheDocument();
+    expect(screen.getByText(/August 15, 2025/)).toBeInTheDocument();
     
     // Restore the original function
     dateSpy.mockRestore();
