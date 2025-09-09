@@ -571,6 +571,8 @@ export default function RegisterCoursePage() {
                     </li>
                   </ul>
                 </div>
+                <h3 className=" mt-3 text-sm text-gray-600 dark:text-gray-400">For any queries, please contact us at <a href="tel:+916370826619" className="text-blue-600 hover:text-blue-800 underline">+91 6370826619</a>
+               {' '} / {' '}<a href="tel:+918249517832" className="text-blue-600 hover:text-blue-800 underline">+91 8249517832</a></h3>
                 {errors.terms_accepted && <p className="text-red-500 text-xs mt-1">{errors.terms_accepted}</p>}
               </div>
 
