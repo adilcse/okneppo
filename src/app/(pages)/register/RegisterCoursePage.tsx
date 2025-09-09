@@ -6,6 +6,7 @@ import { Course } from '@/types/course';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { WHATSAPP_GROUP_INVITE_CODE } from '@/constant';
+import posthog from 'posthog-js';
 
 const WHATSAPP_GROUP_URL = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}?mode=ems_copy_c`;
 
@@ -42,6 +43,13 @@ declare global {
     Razorpay: {
       new(options: unknown): {
         open(): void;
+      };
+    };
+    posthog?: {
+      identify: (distinctId: string, properties?: Record<string, unknown>) => void;
+      capture: (event: string, properties?: Record<string, unknown>) => void;
+      people: {
+        set: (properties: Record<string, unknown>) => void;
       };
     };
   }
@@ -167,6 +175,36 @@ export default function RegisterCoursePage() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     }
   }, [courses, errors.general]);
+
+  // Handle PostHog identity setting when phone number is entered
+  const handlePhoneBlur = useCallback(() => {
+    if (formData.phone && formData.phone.trim().length >= 10) {
+      try {
+        // Check if PostHog is available
+        if (typeof window !== 'undefined' && window.posthog) {
+          // Set PostHog identity with phone number
+          posthog?.identify?. (formData.phone, {
+            phone: formData.phone,
+            registration_started: true,
+            timestamp: new Date().toISOString()
+          });
+          posthog?.people?.set({
+             registration_completed: false,
+             last_registration_date: new Date().toISOString()
+            });
+          // Track the event
+          posthog?.capture('phone_number_entered', {
+            phone: formData.phone,
+            form_step: 'phone_entered'
+          });
+          
+          console.log('PostHog identity set for phone:', formData.phone);
+        }
+      } catch (error) {
+        console.error('Error setting PostHog identity:', error);
+      }
+    }
+  }, [formData.phone]);
 
   const { selectedCourse } = useMemo(() => {
     const selectedCourse = courses.find((c) => c.id === formData.course_id);
@@ -299,6 +337,32 @@ export default function RegisterCoursePage() {
             await verificationRes.json();
             setPaymentStatus('success');
             setCurrentOrder(null); // Clear order on success
+            
+            // Track successful registration in PostHog
+            try {
+              if (typeof window !== 'undefined' && window.posthog) {
+                posthog?.capture?.('course_registration_completed', {
+                  phone: formData.phone,
+                  email: formData.email,
+                  course_id: formData.course_id,
+                  course_title: selectedCourse?.title,
+                  amount_paid: finalFee,
+                  order_number: orderNumber,
+                  registration_completed: true
+                });
+
+                posthog?.people?.set?.({
+                  register_application_status: 'completed',
+                  payment_status: 'success',
+                  registration_completed: true,
+                  last_registration_date: new Date().toISOString()
+                 });
+                
+                console.log('PostHog: Course registration completed tracked');
+              }
+            } catch (error) {
+              console.error('Error tracking registration completion:', error);
+            }
             if (window){
               window.open(`/receipt/${orderNumber}`, '_blank');
             } else {
@@ -306,6 +370,7 @@ export default function RegisterCoursePage() {
             }
           } catch (error) {
             console.error('Verification failed:', error);
+
             setPaymentStatus('error');
           }
         },
@@ -323,12 +388,20 @@ export default function RegisterCoursePage() {
           }
         }
       };
+      // Update user properties
+       posthog?.people?.set({
+          email: formData.email,
+          name: formData.name,
+           phone: formData.phone,
+           course_registered: selectedCourse?.title,
+           registration_completed: false,
+           last_registration_date: new Date().toISOString()
+          });
 
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error: unknown) {
       console.error('Payment process failed:', error);
-      
       // Handle validation errors from the API
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { status?: number; data?: { error?: string } } };
@@ -340,10 +413,20 @@ export default function RegisterCoursePage() {
             ...errors, 
             general: axiosError.response.data.error 
           });
+          posthog?.people?.set({
+            register_application_status: 'failed',
+            registration_completed: false,
+            last_registration_date: new Date().toISOString()
+           });
           setPaymentStatus('idle');
           return;
         }
       }
+      posthog?.people?.set({
+        payment_status: 'failed',
+        registration_completed: false,
+        last_registration_date: new Date().toISOString()
+       });
       
       setPaymentStatus('error');
     }
@@ -406,7 +489,17 @@ export default function RegisterCoursePage() {
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                <input type="tel" name="phone" id="phone" value={formData.phone} onChange={handleInputChange} className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.phone ? 'border-red-500' : ''}`} required disabled={paymentStatus === 'processing'} />
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  id="phone" 
+                  value={formData.phone} 
+                  onChange={handleInputChange} 
+                  onBlur={handlePhoneBlur}
+                  className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.phone ? 'border-red-500' : ''}`} 
+                  required 
+                  disabled={paymentStatus === 'processing'} 
+                />
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
