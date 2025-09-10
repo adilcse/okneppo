@@ -12,20 +12,29 @@ This guide explains how to deploy your Next.js app with Socket.IO long polling s
 
 ### 1. Deploy Socket.IO Server
 
+The Socket.IO server is now in a separate repository: `../okneppo-socket-server/`
+
 #### Option A: Railway (Recommended)
 1. Create a new project on [Railway](https://railway.app)
-2. Connect your GitHub repository
-3. Create a new service with the `socket-server.js` file
+2. Connect the `okneppo-socket-server` repository
+3. Deploy automatically (Railway will detect the package.json)
 4. Add environment variables:
    - `NEXT_PUBLIC_APP_URL`: Your Vercel app URL
-   - `PORT`: 3001 (or let Railway assign one)
+   - `PORT`: Auto-assigned by Railway
 
 #### Option B: Render
 1. Create a new Web Service on [Render](https://render.com)
-2. Connect your GitHub repository
+2. Connect the `okneppo-socket-server` repository
 3. Set build command: `npm install`
-4. Set start command: `node socket-server.js`
+4. Set start command: `npm start`
 5. Add environment variables as above
+
+#### Option C: Manual Deployment
+```bash
+cd ../okneppo-socket-server
+npm install
+npm start
+```
 
 ### 2. Update Environment Variables
 

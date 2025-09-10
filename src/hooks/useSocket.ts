@@ -30,11 +30,23 @@ export const useSocket = (handlers: SocketEventHandlers = {}) => {
     socketInstance.on('connect', () => {
       console.log('Socket connected:', socketInstance.id);
       setIsConnected(true);
+      
+      // Auto-join WhatsApp admin room for backward compatibility
+      socketInstance.emit('join-room', 'whatsapp-admin');
     });
 
     socketInstance.on('disconnect', () => {
       console.log('Socket disconnected');
       setIsConnected(false);
+    });
+
+    // Room management events
+    socketInstance.on('room-joined', (data) => {
+      console.log('Joined room:', data.room);
+    });
+
+    socketInstance.on('room-left', (data) => {
+      console.log('Left room:', data.room);
     });
 
     // WhatsApp event handlers
@@ -255,6 +267,16 @@ export const useSocket = (handlers: SocketEventHandlers = {}) => {
     emit: (event: string, data: any) => {
       if (socket) {
         socket.emit(event, data);
+      }
+    },
+    joinRoom: (room: string) => {
+      if (socket) {
+        socket.emit('join-room', room);
+      }
+    },
+    leaveRoom: (room: string) => {
+      if (socket) {
+        socket.emit('leave-room', room);
       }
     }
   };
