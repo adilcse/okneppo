@@ -26,6 +26,7 @@ interface Conversation {
   last_message_direction: 'inbound' | 'outbound';
   inbound_count: number;
   outbound_count: number;
+  unread_outbound_count: number;
 }
 
 interface ConversationsResponse {

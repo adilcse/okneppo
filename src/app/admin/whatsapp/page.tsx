@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { Container, Button, Input, Textarea, Card } from '@/components/common';
 import { format } from 'date-fns';
 import { useConversations, useMessages, useSendMessage, useRefreshWhatsApp, useRetryMessage } from '@/hooks/useWhatsApp';
@@ -13,6 +13,10 @@ export default function WhatsAppAdminPage() {
   const [newMessage, setNewMessage] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [conversationMessage, setConversationMessage] = useState('');
+  
+  // Ref for messages container to enable auto-scroll
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [activeTab, setActiveTab] = useState<'conversations' | 'send-message'>('conversations');
 
   // React Query hooks
@@ -32,6 +36,13 @@ export default function WhatsAppAdminPage() {
   const { refreshAll } = useRefreshWhatsApp();
   const { retryMessage } = useRetryMessage();
 
+  // Function to scroll to bottom of messages
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
 
     // Derived state from React Query
     const conversations = conversationsData?.conversations || [];
@@ -46,11 +57,50 @@ export default function WhatsAppAdminPage() {
       isOptimistic: msg.isOptimistic 
     })));
   }, [selectedConversation, messages]);
+
+  // Scroll to bottom when messages change or conversation is selected
+  useEffect(() => {
+    if (selectedConversation && messages.length > 0) {
+      scrollToBottom();
+      // Show scroll button initially when messages load
+      setShowScrollButton(true);
+    } else if (selectedConversation && messages.length === 0) {
+      // Hide scroll button when no messages
+      setShowScrollButton(false);
+    }
+  }, [selectedConversation, messages, scrollToBottom]);
+
+  // Intersection Observer to detect when messagesEndRef is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        // Hide button when the bottom element is in view
+        setShowScrollButton(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.1, // Trigger when 10% of the element is visible
+        rootMargin: '0px 0px -50px 0px' // Add some margin to trigger earlier
+      }
+    );
+
+    if (messagesEndRef.current) {
+      observer.observe(messagesEndRef.current);
+    }
+
+    return () => {
+      if (messagesEndRef.current) {
+        observer.unobserve(messagesEndRef.current);
+      }
+    };
+  }, [messages]); // Re-run when messages change
  
  
     const { isConnected } = useSocket({
     onNewMessage: (data) => {
       console.log('New message received via socket:', data);
+      // Scroll to bottom when new message arrives
+      setTimeout(scrollToBottom, 100);
     },
     onMessageStatusUpdate,
   });
@@ -73,6 +123,9 @@ export default function WhatsAppAdminPage() {
       message: messageToSend,
       type: 'text'
     });
+
+    // Scroll to bottom after sending message
+    setTimeout(scrollToBottom, 100);
   };
 
   const sendConversationMessage = () => {
@@ -89,6 +142,9 @@ export default function WhatsAppAdminPage() {
       message: messageToSend,
       type: 'text'
     });
+
+    // Scroll to bottom after sending message
+    setTimeout(scrollToBottom, 100);
   };
 
   const formatPhoneNumber = (phone: string) => {
@@ -192,14 +248,16 @@ export default function WhatsAppAdminPage() {
                             {formatPhoneNumber(conversation.phone_number)}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs">
-                              {conversation.message_count}
-                            </span>
-                            {conversation.last_message_direction === 'inbound' && conversation.inbound_count > 0 && (
-                              <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs">
-                                {conversation.inbound_count} received
+                            {/* Only show unread outbound messages count */}
+                            {conversation.unread_outbound_count > 0 && (
+                              <span 
+                                className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-xs font-medium animate-pulse"
+                                title={`${conversation.unread_outbound_count} unread message${conversation.unread_outbound_count > 1 ? 's' : ''} from you`}
+                              >
+                                {conversation.unread_outbound_count} unread
                               </span>
                             )}
+                            {/* Show indicator for inbound messages */}
                             {conversation.last_message_direction === 'inbound' && (
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             )}
@@ -241,7 +299,8 @@ export default function WhatsAppAdminPage() {
                   )}
                 </div>
                 {selectedConversation ? (
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                  <div className="relative">
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
                     {messagesLoading ? (
                       <div className="text-center py-4 text-gray-500 dark:text-gray-400">Loading messages...</div>
                     ) : messagesError ? (
@@ -253,7 +312,8 @@ export default function WhatsAppAdminPage() {
                         No messages found
                       </div>
                     ) : (
-                      messages.map((message) => (
+                      <>
+                        {messages.map((message) => (
                         <div
                           key={message.id}
                           className={`flex ${
@@ -314,7 +374,23 @@ export default function WhatsAppAdminPage() {
                             </div>
                           </div>
                         </div>
-                      ))
+                        ))}
+                        {/* Scroll target element */}
+                        <div ref={messagesEndRef} />
+                      </>
+                    )}
+                    </div>
+                    {/* Scroll to bottom button - only show when not at bottom */}
+                    {showScrollButton && (
+                      <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 shadow-lg transition-all duration-300 ease-in-out"
+                        title="Scroll to bottom"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </button>
                     )}
                   </div>
                 ) : (

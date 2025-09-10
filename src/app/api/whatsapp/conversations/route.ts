@@ -35,7 +35,13 @@ export async function GET(req: NextRequest) {
           MAX(CASE WHEN wm.direction = 'inbound' THEN wm.timestamp END) as last_inbound_time,
           MAX(CASE WHEN wm.direction = 'outbound' THEN wm.timestamp END) as last_outbound_time,
           COUNT(CASE WHEN wm.direction = 'inbound' THEN 1 END) as inbound_count,
-          COUNT(CASE WHEN wm.direction = 'outbound' THEN 1 END) as outbound_count
+          COUNT(CASE WHEN wm.direction = 'outbound' THEN 1 END) as outbound_count,
+          -- Count unread outbound messages (sent by us but not read by recipient)
+          COUNT(CASE 
+            WHEN wm.direction = 'outbound' 
+              AND wm.status IN ('sent', 'delivered') 
+            THEN 1 
+          END) as unread_outbound_count
         FROM conversation_partners cp
         LEFT JOIN whatsapp_messages wm ON (
           (wm.from_number = cp.phone_number AND wm.to_number = $2) OR
@@ -65,7 +71,8 @@ export async function GET(req: NextRequest) {
         lm.last_message_content,
         lm.last_message_direction,
         cs.inbound_count,
-        cs.outbound_count
+        cs.outbound_count,
+        cs.unread_outbound_count
       FROM conversation_stats cs
       LEFT JOIN last_messages lm ON cs.phone_number = lm.phone_number
       WHERE cs.phone_number IS NOT NULL
