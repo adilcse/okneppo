@@ -17,13 +17,13 @@ export const useSocket = (handlers: SocketEventHandlers = {}) => {
   useEffect(() => {
     // Initialize socket connection with long polling only (Vercel compatible)
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
-    const socketPath = socketUrl.includes('localhost:3001') ? '/socket.io' : '/api/socket.io';
+    const socketPath =  '/socket.io';
     
     const socketInstance = io(socketUrl, {
       path: socketPath,
-      transports: ['polling'], // Force long polling only, no WebSockets
-      upgrade: false, // Disable transport upgrades
-      rememberUpgrade: false
+      transports: ['websocket', 'polling'], // Force long polling only, no WebSockets
+      upgrade: true, // Disable transport upgrades
+      rememberUpgrade: true
     });
 
     // Connection event handlers

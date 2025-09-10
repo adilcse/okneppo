@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
+import { emitNewMessage, emitMessageStatusUpdate } from '@/lib/socketClient';
 
 /**
  * WhatsApp Webhook endpoint for receiving messages and status updates
@@ -175,20 +176,13 @@ async function processIncomingMessage(message: Record<string, unknown>, metadata
 
     // Emit socket event for new message
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((global as any).io) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (global as any).io.to('whatsapp-admin').emit('whatsapp:new-message', {
-          message: savedMessage,
-          conversation: {
-            phone_number: from,
-            last_message_time: new Date(parseInt(timestamp as string) * 1000).toISOString(),
-            last_message_content: content,
-            last_message_direction: 'inbound'
-          }
-        });
-        console.log('Socket event emitted for new message:', id);
-      }
+      emitNewMessage(savedMessage, {
+        phone_number: from,
+        last_message_time: new Date(parseInt(timestamp as string) * 1000).toISOString(),
+        last_message_content: content,
+        last_message_direction: 'inbound'
+      });
+      console.log('Socket event emitted for new message:', id);
     } catch (socketError) {
       console.error('Error emitting socket event:', socketError);
     }
@@ -223,26 +217,22 @@ async function processMessageStatus(status: Record<string, unknown>, metadata: R
         
         // Emit socket event for status update
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if ((global as any).io) {
-            // For outbound messages, recipient_id is the customer's phone number
-            // For inbound messages, we need to use the from_number from the existing message
-            const phoneNumber = existingMessage.direction === 'outbound' 
-              ? existingMessage.to_number 
-              : existingMessage.from_number;
-              
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (global as any).io.to('whatsapp-admin').emit('whatsapp:message-status-update', {
-              messageId: id,
-              status: messageStatus,
-              phoneNumber: phoneNumber,
-              timestamp: new Date(parseInt(timestamp as string) * 1000).toISOString(),
-              direction: existingMessage.direction,
-              content: existingMessage.content, // Add content for matching
-              messageType: existingMessage.message_type
-            });
-            console.log('Socket event emitted for status update:', id, messageStatus, 'for conversation:', phoneNumber);
-          }
+          // For outbound messages, recipient_id is the customer's phone number
+          // For inbound messages, we need to use the from_number from the existing message
+          const phoneNumber = existingMessage.direction === 'outbound' 
+            ? existingMessage.to_number 
+            : existingMessage.from_number;
+            
+          emitMessageStatusUpdate(
+            id as string,
+            messageStatus as string,
+            phoneNumber as string,
+            new Date(parseInt(timestamp as string) * 1000).toISOString(),
+            existingMessage.direction as string,
+            existingMessage.content as string,
+            existingMessage.message_type as string
+          );
+          console.log('Socket event emitted for status update:', id, messageStatus, 'for conversation:', phoneNumber);
         } catch (socketError) {
           console.error('Error emitting socket event for status update:', socketError);
         }

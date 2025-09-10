@@ -3,6 +3,7 @@
 // This works with Vercel's serverless environment
 
 const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
+const SOCKET_SECRET_KEY = process.env.SOCKET_SECRET_KEY || 'secret';
 
 // Function to emit events to external Socket.IO server
 async function emitToSocketServer(event: string, data: any, room?: string, rooms?: string[]) {
@@ -19,6 +20,10 @@ async function emitToSocketServer(event: string, data: any, room?: string, rooms
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Authorization': SOCKET_SECRET_KEY,
       },
       body: JSON.stringify(payload),
     });

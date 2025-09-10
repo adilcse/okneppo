@@ -43,14 +43,20 @@ export async function POST(req: NextRequest) {
 
     const registration_id = updatedPayments[0].registration_id;
 
+    const registration = await db.findOne('course_registrations', { id: registration_id });
+
     // update the registration status to completed
+    console.log('Updating registration status to completed:', registration_id);
+    if(registration && registration.status !== RegistrationStatus.COMPLETED) {
     await db.update(
       'course_registrations',
       { id: registration_id },
       { status: RegistrationStatus.COMPLETED }
     );
+    
 
     sendWhatsAppWelcomeMessageAfterPayment(registration_id as number);
+}
 
     return NextResponse.json({ success: true, registration_id }, { status: 200 });
   } catch (error) {
