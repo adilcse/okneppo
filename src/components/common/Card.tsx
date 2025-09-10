@@ -11,9 +11,9 @@ export default function Card({ children, className, variant = 'default' }: CardP
   const baseStyles = 'rounded-lg p-4';
   
   const variants = {
-    default: 'bg-white',
-    bordered: 'bg-white border border-gray-200',
-    elevated: 'bg-white shadow-md dark:bg-gray-800',
+    default: 'bg-white dark:bg-gray-800',
+    bordered: 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
+    elevated: 'bg-white dark:bg-gray-800 shadow-md',
   };
 
   return (

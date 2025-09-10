@@ -21,11 +21,13 @@ interface WhatsAppResponse {
 export class WhatsAppService {
   private accessToken: string;
   private phoneNumberId: string;
+  private businessAccountId: string;
   private apiVersion: string;
 
   constructor() {
     this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN || '';
     this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    this.businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '';
     this.apiVersion = process.env.WHATSAPP_API_VERSION || 'v21.0';
   }
 
@@ -92,9 +94,38 @@ export class WhatsAppService {
         };
       }
 
+      const messageId = data.messages?.[0]?.id;
+
+      // Store the sent message in database
+      if (messageId) {
+        try {
+          const messageData = {
+            message_id: messageId,
+            from_number: this.phoneNumberId,
+            to_number: formattedPhone,
+            business_account_id: this.businessAccountId,
+            message_type: type,
+            content: message,
+            direction: 'outbound' as const,
+            status: 'sent',
+            timestamp: new Date(),
+            metadata: {
+              sent_via: 'whatsapp_service',
+              original_response: data
+            }
+          };
+
+          await db.upsert('whatsapp_messages', messageData, ['message_id'], ['status', 'timestamp', 'updated_at']);
+          console.log('Sent WhatsApp message stored in database:', messageId);
+        } catch (dbError) {
+          console.error('Error storing sent message in database:', dbError);
+          // Don't fail the send operation if database storage fails
+        }
+      }
+
       return {
         success: true,
-        messageId: data.messages?.[0]?.id
+        messageId: messageId
       };
 
     } catch (error) {

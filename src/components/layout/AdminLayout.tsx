@@ -42,7 +42,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Courses', path: '/admin/courses' },
     { name: 'Subjects', path: '/admin/subjects' },
     { name: 'Gallery', path: '/admin/gallery' },
-    { name: 'Registrations', path: '/admin/registrations' }
+    { name: 'Registrations', path: '/admin/registrations' },
+    { name: 'WhatsApp', path: '/admin/whatsapp' }
   ];
 
   return (

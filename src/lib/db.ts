@@ -287,6 +287,65 @@ export const db = {
     return result.rows[0];
   },
 
+  // Upsert a record (insert or update on conflict)
+  async upsert<T = Record>(
+    tableName: string, 
+    data: Partial<T>, 
+    conflictColumns: string[],
+    updateColumns?: string[]
+  ): Promise<T> {
+    const keys = Object.keys(data);
+    const values = keys.map(key => data[key as keyof T]);
+    
+    const columns = keys.join(', ');
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+    
+    // Build conflict clause
+    const conflictClause = conflictColumns.join(', ');
+    
+    // Build update clause
+    let updateClause = '';
+    if (updateColumns && updateColumns.length > 0) {
+      const updateParts = updateColumns
+        .filter(col => keys.includes(col))
+        .map(col => `"${col}" = EXCLUDED."${col}"`)
+        .join(', ');
+      if (updateParts) {
+        updateClause = `UPDATE SET ${updateParts}`;
+      }
+    } else {
+      // Update all columns except the conflict ones
+      const updateParts = keys
+        .filter(key => !conflictColumns.includes(key))
+        .map(key => `"${key}" = EXCLUDED."${key}"`)
+        .join(', ');
+      if (updateParts) {
+        updateClause = `UPDATE SET ${updateParts}`;
+      }
+    }
+    
+    // Build the final query
+    let query = `
+      INSERT INTO "${tableName}" (${columns})
+      VALUES (${placeholders})
+      ON CONFLICT (${conflictClause})
+    `;
+    
+    if (updateClause) {
+      query += ` DO ${updateClause}`;
+    } else {
+      query += ` DO NOTHING`;
+    }
+    
+    query += ` RETURNING *`;
+    
+    console.log('Upsert Query:', query);
+    console.log('Upsert Values:', values);
+    
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  },
+
   async createMany<T = Record>(tableName: string, data: Partial<T>[]): Promise<T[]> {
     if (!data.length) {
       return [];
@@ -419,6 +478,8 @@ export const db = {
   
   // Execute raw query
   async query<T = Record[]>(queryText: string, values: unknown[] = []): Promise<T> {
+    console.log('Query:', queryText);
+    console.log('Values:', values);
     const result = await pool.query(queryText, values);
     return result.rows as unknown as T;
   },
@@ -653,6 +714,69 @@ export const db = {
 
       } catch (error) {
         console.log('Payments table migration failed:', error);
+      }
+    }
+
+    const tableCheckWhatsAppMessages = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'whatsapp_messages'
+      ) as exists
+    `);
+
+    const tableExistsWhatsAppMessages = tableCheckWhatsAppMessages.rows[0]?.exists;
+
+    if (!tableExistsWhatsAppMessages) {
+      await sql`
+        CREATE TABLE IF NOT EXISTS whatsapp_messages (
+          id SERIAL PRIMARY KEY,
+          message_id VARCHAR(255) UNIQUE,
+          from_number VARCHAR(20) NOT NULL,
+          to_number VARCHAR(20) NOT NULL,
+          business_account_id VARCHAR(50) NOT NULL,
+          message_type VARCHAR(50) NOT NULL DEFAULT 'text',
+          content TEXT NOT NULL,
+          direction VARCHAR(10) NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+          status VARCHAR(50) DEFAULT 'sent',
+          timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          metadata JSONB DEFAULT '{}',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+
+      // Create indexes for better performance
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_from_number ON whatsapp_messages(from_number);
+      `;
+      
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_to_number ON whatsapp_messages(to_number);
+      `;
+      
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_business_account_id ON whatsapp_messages(business_account_id);
+      `;
+      
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_direction ON whatsapp_messages(direction);
+      `;
+      
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_timestamp ON whatsapp_messages(timestamp);
+      `;
+    } else {
+      try{
+        console.log('whatsapp_messages table already exists');
+        await sql`
+          ALTER TABLE whatsapp_messages
+          ADD COLUMN IF NOT EXISTS business_account_id VARCHAR(50) NULL;
+        `;
+        await sql`
+          CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_business_account_id ON whatsapp_messages(business_account_id);
+        `;
+      } catch (error) {
+        console.log('whatsapp_messages table migration failed:', error);
       }
     }
     

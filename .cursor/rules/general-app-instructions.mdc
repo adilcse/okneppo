@@ -1,0 +1,511 @@
+---
+alwaysApply: true
+---
+
+# General App Instructions
+
+This document contains general development guidelines and instructions for the Okneppo application.
+
+## Development Environment
+
+### Node.js Version
+- **Always use Node.js version 22.15** when running terminal commands
+- Use `nvm use 22.15` before executing any npm/pnpm commands
+- This ensures consistency across development environments
+
+### Package Manager
+- **Use pnpm for all package installations** [[memory:4448758]]
+- Prefer `pnpm install` over `npm install`
+- Use `pnpm add <package>` for adding new dependencies
+- Use `pnpm remove <package>` for removing dependencies
+
+## API and Data Fetching
+
+### Client-Side API Calls
+- **Use React Query for all API calls from client-side** [[memory:4448756]]
+- Implement proper loading states, error handling, and caching
+- Use React Query hooks like `useQuery`, `useMutation`, `useInfiniteQuery`
+- Configure proper query keys for cache invalidation
+
+### Server-Side Rendering
+- **Prefer generating HTML in Node.js server routes using string replace for templating** [[memory:4509286]]
+- Avoid React components for server-side HTML generation when possible
+- Use template strings and string replacement for dynamic content
+
+## Database Operations
+
+### Database Utility
+- Use the custom `db` utility from `@/lib/db.ts` for all database operations
+- Available methods: `findOne`, `find`, `count`, `create`, `upsert`, `update`, `destroy`, `query`
+- Use `db.upsert` for handling conflicts (INSERT ... ON CONFLICT UPDATE)
+- Always use parameterized queries to prevent SQL injection
+
+### Database Schema
+- Use PostgreSQL with Neon Database
+- Tables are automatically created via `initializeTables()` function
+- Include proper indexes for performance optimization
+- Use `business_account_id` for multi-tenant data isolation
+
+## Code Quality and Standards
+
+### TypeScript
+- Use TypeScript for all new code
+- Define proper interfaces and types
+- Avoid `any` types - use specific types or `unknown`
+- Use proper type assertions when necessary
+
+### Error Handling
+- Implement proper error handling in all API routes
+- Use try-catch blocks for async operations
+- Return consistent error response formats
+- Log errors with appropriate context
+
+### Environment Variables
+- Never hardcode API keys or sensitive data
+- Use environment variables from `.env.local` file
+- Never hallucinate API keys - always use populated values from `.env.local`
+- Document required environment variables in setup guides
+
+## UI/UX Guidelines
+
+### Dark Mode Support
+- Ensure all components work in both light and dark modes
+- Use Tailwind CSS dark mode classes (`dark:bg-gray-800`, `dark:text-white`, etc.)
+- Test components in both themes
+- Use consistent color schemes across the application
+
+### Component Structure
+- Use reusable components from `@/components/common`
+- Follow the existing component patterns
+- Implement proper loading states and error boundaries
+- Use consistent spacing and typography
+
+## Security Best Practices
+
+### Webhook Security
+- Implement proper signature verification for webhooks
+- Use HMAC verification for incoming webhook requests
+- Validate all incoming data before processing
+- Use environment variables for webhook secrets and tokens
+
+### Data Validation
+- Validate all user inputs on both client and server side
+- Sanitize data before database operations
+- Use proper authentication and authorization
+- Implement rate limiting where appropriate
+
+## File Organization
+
+### Project Structure
+- Follow the existing Next.js 13+ app directory structure
+- Place API routes in `src/app/api/`
+- Place page components in `src/app/(pages)/`
+- Place reusable components in `src/components/`
+- Place utilities and libraries in `src/lib/`
+
+### Naming Conventions
+- Use kebab-case for file names
+- Use PascalCase for component names
+- Use camelCase for function and variable names
+- Use UPPERCASE for constants and environment variables
+
+## Testing
+
+### Test Structure
+- Write tests for critical functionality
+- Use Jest for unit testing
+- Test both success and error scenarios
+- Mock external API calls in tests
+
+### Test Files
+- Place test files in `src/__tests__/` directory
+- Use `.test.tsx` or `.test.ts` extensions
+- Follow the existing test patterns in the codebase
+
+## Performance Optimization
+
+### Database Queries
+- Use proper indexing for frequently queried columns
+- Optimize complex queries with CTEs (Common Table Expressions)
+- Use pagination for large datasets
+- Implement proper caching strategies
+
+### Client-Side Performance
+- Use React Query for efficient data fetching and caching
+- Implement proper loading states to improve perceived performance
+- Use lazy loading for heavy components
+- Optimize images and assets
+
+## Documentation
+
+### Code Documentation
+- Document complex business logic
+- Use JSDoc comments for functions and classes
+- Keep README files updated
+- Document API endpoints and their usage
+
+### Setup Documentation
+- Create detailed setup guides for new features
+- Document environment variable requirements
+- Provide clear instructions for deployment
+- Include troubleshooting sections
+
+## Feature Development
+
+### Feature Flags
+- Use feature flags for new features when possible
+- Store flag names in enums or const objects
+- Use UPPERCASE_WITH_UNDERSCORE naming convention
+- Gate flag-dependent code with proper validation
+
+### Custom Properties
+- Use enums or const objects for properties referenced in multiple files
+- Maintain consistency in naming conventions
+- Document any changes to existing property names
+
+## Integration Guidelines
+
+### WhatsApp Integration
+- Use `business_account_id` for proper data isolation
+- Implement proper webhook verification
+- Handle message status updates correctly
+- Use upsert operations for message storage
+
+### Payment Integration
+- Implement proper webhook handling for payment events
+- Use secure payment processing
+- Handle payment failures gracefully
+- Maintain audit trails for transactions
+
+## Deployment and Monitoring
+
+### Environment Management
+- Use different environment variables for different stages
+- Implement proper logging for production
+- Monitor application performance and errors
+- Use proper error tracking and alerting
+
+### Database Migrations
+- Handle database schema changes carefully
+- Use proper migration scripts when needed
+- Test migrations on staging environment first
+- Backup data before major schema changes
+
+## Common Patterns
+
+### API Response Format
+```typescript
+// Success response
+{
+  success: true,
+  data: T,
+  pagination?: {
+    page: number,
+    limit: number,
+    total: number,
+    totalPages: number
+  }
+}
+
+// Error response
+{
+  success: false,
+  error: string
+}
+```
+
+### Error Handling Pattern
+```typescript
+try {
+  // Operation
+  const result = await someOperation();
+  return NextResponse.json({ success: true, data: result });
+} catch (error) {
+  console.error('Operation failed:', error);
+  return NextResponse.json(
+    { success: false, error: 'Operation failed' },
+    { status: 500 }
+  );
+}
+```
+
+### React Query Pattern
+```typescript
+const { data, isLoading, error } = useQuery({
+  queryKey: ['resource', id],
+  queryFn: () => fetchResource(id),
+  enabled: !!id
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+- Ensure Node.js version 22.15 is being used
+- Check environment variables are properly set
+- Verify database connections and permissions
+- Check webhook endpoints are accessible
+
+### Debugging
+- Use console.log for debugging (remove in production)
+- Check browser developer tools for client-side issues
+- Monitor server logs for backend issues
+- Use database query logging for SQL debugging
+
+---
+
+**Last Updated**: January 2025
+**Version**: 1.0# General App Instructions
+
+This document contains general development guidelines and instructions for the Okneppo application.
+
+## Development Environment
+
+### Node.js Version
+- **Always use Node.js version 22.15** when running terminal commands
+- Use `nvm use 22.15` before executing any npm/pnpm commands
+- This ensures consistency across development environments
+
+### Package Manager
+- **Use pnpm for all package installations** [[memory:4448758]]
+- Prefer `pnpm install` over `npm install`
+- Use `pnpm add <package>` for adding new dependencies
+- Use `pnpm remove <package>` for removing dependencies
+
+## API and Data Fetching
+
+### Client-Side API Calls
+- **Use React Query for all API calls from client-side** [[memory:4448756]]
+- Implement proper loading states, error handling, and caching
+- Use React Query hooks like `useQuery`, `useMutation`, `useInfiniteQuery`
+- Configure proper query keys for cache invalidation
+
+### Server-Side Rendering
+- **Prefer generating HTML in Node.js server routes using string replace for templating** [[memory:4509286]]
+- Avoid React components for server-side HTML generation when possible
+- Use template strings and string replacement for dynamic content
+
+## Database Operations
+
+### Database Utility
+- Use the custom `db` utility from `@/lib/db.ts` for all database operations
+- Available methods: `findOne`, `find`, `count`, `create`, `upsert`, `update`, `destroy`, `query`
+- Use `db.upsert` for handling conflicts (INSERT ... ON CONFLICT UPDATE)
+- Always use parameterized queries to prevent SQL injection
+
+### Database Schema
+- Use PostgreSQL with Neon Database
+- Tables are automatically created via `initializeTables()` function
+- Include proper indexes for performance optimization
+- Use `business_account_id` for multi-tenant data isolation
+
+## Code Quality and Standards
+
+### TypeScript
+- Use TypeScript for all new code
+- Define proper interfaces and types
+- Avoid `any` types - use specific types or `unknown`
+- Use proper type assertions when necessary
+
+### Error Handling
+- Implement proper error handling in all API routes
+- Use try-catch blocks for async operations
+- Return consistent error response formats
+- Log errors with appropriate context
+
+### Environment Variables
+- Never hardcode API keys or sensitive data
+- Use environment variables from `.env.local` file
+- Never hallucinate API keys - always use populated values from `.env.local`
+- Document required environment variables in setup guides
+
+## UI/UX Guidelines
+
+### Dark Mode Support
+- Ensure all components work in both light and dark modes
+- Use Tailwind CSS dark mode classes (`dark:bg-gray-800`, `dark:text-white`, etc.)
+- Test components in both themes
+- Use consistent color schemes across the application
+
+### Component Structure
+- Use reusable components from `@/components/common`
+- Follow the existing component patterns
+- Implement proper loading states and error boundaries
+- Use consistent spacing and typography
+
+## Security Best Practices
+
+### Webhook Security
+- Implement proper signature verification for webhooks
+- Use HMAC verification for incoming webhook requests
+- Validate all incoming data before processing
+- Use environment variables for webhook secrets and tokens
+
+### Data Validation
+- Validate all user inputs on both client and server side
+- Sanitize data before database operations
+- Use proper authentication and authorization
+- Implement rate limiting where appropriate
+
+## File Organization
+
+### Project Structure
+- Follow the existing Next.js 13+ app directory structure
+- Place API routes in `src/app/api/`
+- Place page components in `src/app/(pages)/`
+- Place reusable components in `src/components/`
+- Place utilities and libraries in `src/lib/`
+
+### Naming Conventions
+- Use kebab-case for file names
+- Use PascalCase for component names
+- Use camelCase for function and variable names
+- Use UPPERCASE for constants and environment variables
+
+## Testing
+
+### Test Structure
+- Write tests for critical functionality
+- Use Jest for unit testing
+- Test both success and error scenarios
+- Mock external API calls in tests
+
+### Test Files
+- Place test files in `src/__tests__/` directory
+- Use `.test.tsx` or `.test.ts` extensions
+- Follow the existing test patterns in the codebase
+
+## Performance Optimization
+
+### Database Queries
+- Use proper indexing for frequently queried columns
+- Optimize complex queries with CTEs (Common Table Expressions)
+- Use pagination for large datasets
+- Implement proper caching strategies
+
+### Client-Side Performance
+- Use React Query for efficient data fetching and caching
+- Implement proper loading states to improve perceived performance
+- Use lazy loading for heavy components
+- Optimize images and assets
+
+## Documentation
+
+### Code Documentation
+- Document complex business logic
+- Use JSDoc comments for functions and classes
+- Keep README files updated
+- Document API endpoints and their usage
+
+### Setup Documentation
+- Create detailed setup guides for new features
+- Document environment variable requirements
+- Provide clear instructions for deployment
+- Include troubleshooting sections
+
+## Feature Development
+
+### Feature Flags
+- Use feature flags for new features when possible
+- Store flag names in enums or const objects
+- Use UPPERCASE_WITH_UNDERSCORE naming convention
+- Gate flag-dependent code with proper validation
+
+### Custom Properties
+- Use enums or const objects for properties referenced in multiple files
+- Maintain consistency in naming conventions
+- Document any changes to existing property names
+
+## Integration Guidelines
+
+### WhatsApp Integration
+- Use `business_account_id` for proper data isolation
+- Implement proper webhook verification
+- Handle message status updates correctly
+- Use upsert operations for message storage
+
+### Payment Integration
+- Implement proper webhook handling for payment events
+- Use secure payment processing
+- Handle payment failures gracefully
+- Maintain audit trails for transactions
+
+## Deployment and Monitoring
+
+### Environment Management
+- Use different environment variables for different stages
+- Implement proper logging for production
+- Monitor application performance and errors
+- Use proper error tracking and alerting
+
+### Database Migrations
+- Handle database schema changes carefully
+- Use proper migration scripts when needed
+- Test migrations on staging environment first
+- Backup data before major schema changes
+
+## Common Patterns
+
+### API Response Format
+```typescript
+// Success response
+{
+  success: true,
+  data: T,
+  pagination?: {
+    page: number,
+    limit: number,
+    total: number,
+    totalPages: number
+  }
+}
+
+// Error response
+{
+  success: false,
+  error: string
+}
+```
+
+### Error Handling Pattern
+```typescript
+try {
+  // Operation
+  const result = await someOperation();
+  return NextResponse.json({ success: true, data: result });
+} catch (error) {
+  console.error('Operation failed:', error);
+  return NextResponse.json(
+    { success: false, error: 'Operation failed' },
+    { status: 500 }
+  );
+}
+```
+
+### React Query Pattern
+```typescript
+const { data, isLoading, error } = useQuery({
+  queryKey: ['resource', id],
+  queryFn: () => fetchResource(id),
+  enabled: !!id
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+- Ensure Node.js version 22.15 is being used
+- Check environment variables are properly set
+- Verify database connections and permissions
+- Check webhook endpoints are accessible
+
+### Debugging
+- Use console.log for debugging (remove in production)
+- Check browser developer tools for client-side issues
+- Monitor server logs for backend issues
+- Use database query logging for SQL debugging
+
+---
+
+**Last Updated**: January 2025
+**Version**: 1.0
