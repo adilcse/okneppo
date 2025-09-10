@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
+import { sendWhatsAppWelcomeMessageAfterPayment } from '@/lib/whatsapp';
 
 // Webhook signature verification
 function verifyWebhookSignature(
@@ -131,6 +132,8 @@ async function updatePaymentStatus(
         { id: payment.registration_id },
         { status: 'completed' }
       );
+      sendWhatsAppWelcomeMessageAfterPayment(payment.registration_id as number);
+
       console.log(`Updated registration ${payment.registration_id} to completed`);
     }
 

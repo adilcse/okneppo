@@ -1,3 +1,6 @@
+import { WHATSAPP_GROUP_INVITE_CODE } from "@/constant";
+import { db } from "./db";
+
 interface WhatsAppMessage {
   to: string;
   message: string;
@@ -9,6 +12,7 @@ interface WhatsAppResponse {
   messageId?: string;
   error?: string;
 }
+
 
 /**
  * WhatsApp Business API service for sending messages
@@ -135,3 +139,32 @@ Thank you for choosing Ok Neppo! 🚀`;
 
 // Export a singleton instance
 export const whatsappService = new WhatsAppService();
+
+export async function sendWhatsAppWelcomeMessageAfterPayment(registration_id: string | number) {
+  // Send WhatsApp welcome message with group invite
+  try {
+   // Get registration details for WhatsApp message
+   const registration = await db.findOne('course_registrations', { id: registration_id });
+   
+   if (registration && WHATSAPP_GROUP_INVITE_CODE) {
+     const groupInviteLink = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}`;
+     
+     const whatsappResult = await whatsappService.sendRegistrationWelcomeMessage(
+       registration.phone as string,
+       registration.name as string,
+       registration.course_title as string,
+       groupInviteLink
+     );
+
+     if (whatsappResult.success) {
+       console.log('WhatsApp welcome message sent successfully:', whatsappResult.messageId);
+     } else {
+       console.error('Failed to send WhatsApp welcome message:', whatsappResult.error);
+     }
+   }
+ } catch (whatsappError) {
+   // Don't fail the payment verification if WhatsApp fails
+   console.error('Error sending WhatsApp message:', whatsappError);
+ }
+}
+
