@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build filter criteria
-    const criteria: any = {};
+    const criteria: Record<string, unknown> = {};
     if (direction) {
       criteria.direction = direction;
     }
