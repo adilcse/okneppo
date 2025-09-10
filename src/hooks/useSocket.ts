@@ -15,10 +15,12 @@ export const useSocket = (handlers: SocketEventHandlers = {}) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Initialize socket connection
-    const socketInstance = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
+    // Initialize socket connection with long polling only (Vercel compatible)
+    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
       path: '/api/socket.io',
-      transports: ['websocket', 'polling']
+      transports: ['polling'], // Force long polling only, no WebSockets
+      upgrade: false, // Disable transport upgrades
+      rememberUpgrade: false
     });
 
     // Connection event handlers
