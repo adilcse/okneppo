@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Container, Button, Input, Textarea, Card } from '@/components/common';
 import { format } from 'date-fns';
 import { useConversations, useMessages, useSendMessage, useRefreshWhatsApp, useRetryMessage } from '@/hooks/useWhatsApp';
+import { useSocket } from '@/hooks/useSocket';
 
 // Types are now imported from the hook file
 
@@ -31,9 +32,30 @@ export default function WhatsAppAdminPage() {
   const { refreshAll } = useRefreshWhatsApp();
   const { retryMessage } = useRetryMessage();
 
-  // Derived state from React Query
-  const conversations = conversationsData?.conversations || [];
-  const messages = messagesData?.messages || [];
+
+    // Derived state from React Query
+    const conversations = conversationsData?.conversations || [];
+    const messages = messagesData?.messages || [];
+
+  const onMessageStatusUpdate = useCallback((data: Record<string, unknown>) => {
+    console.log('Message status update received via socket in admin page:', data);
+    console.log('Current selected conversation:', selectedConversation);
+    console.log('Current messages in UI:', messages.map(msg => ({ 
+      message_id: msg.message_id, 
+      status: msg.status, 
+      isOptimistic: msg.isOptimistic 
+    })));
+  }, [selectedConversation, messages]);
+ 
+ 
+    const { isConnected } = useSocket({
+    onNewMessage: (data) => {
+      console.log('New message received via socket:', data);
+    },
+    onMessageStatusUpdate,
+  });
+
+
 
   const sendMessage = () => {
     if (!newMessage.trim() || !recipientPhone.trim()) {
@@ -98,6 +120,12 @@ export default function WhatsAppAdminPage() {
             WhatsApp Communications
           </h1>
           <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {isConnected ? 'Connected' : 'Disconnected'}
+              </span>
+            </div>
             <Button onClick={refreshAll} variant="outline">
               Refresh
             </Button>
@@ -264,7 +292,7 @@ export default function WhatsAppAdminPage() {
                                     <span className="text-green-200">✓✓</span>
                                   )}
                                   {message.status === 'read' && (
-                                    <span className="text-green-200">✓✓</span>
+                                    <span className="text-green-200">✓✓✓</span>
                                   )}
                                   {message.status === 'failed' && (
                                     <div className="flex items-center space-x-2">

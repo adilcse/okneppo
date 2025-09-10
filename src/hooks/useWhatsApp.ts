@@ -114,9 +114,8 @@ export const useConversations = () => {
   return useQuery({
     queryKey: ['whatsapp', 'conversations'],
     queryFn: fetchConversations,
-    staleTime: 30 * 1000, // 30 seconds - conversations change frequently
-    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
-    refetchIntervalInBackground: true, // Continue refreshing in background
+    staleTime: 5 * 60 * 1000, // 5 minutes - conversations don't change that frequently
+    // Removed polling - using Socket.IO for real-time updates
   });
 };
 
@@ -125,9 +124,8 @@ export const useMessages = (phoneNumber: string | null) => {
     queryKey: ['whatsapp', 'messages', phoneNumber],
     queryFn: () => fetchMessages(phoneNumber!),
     enabled: !!phoneNumber, // Only run query when phoneNumber is provided
-    staleTime: 10 * 1000, // 10 seconds - messages change frequently
-    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
-    refetchIntervalInBackground: true,
+    staleTime: 2 * 60 * 1000, // 2 minutes - messages don't change that frequently
+    // Removed polling - using Socket.IO for real-time updates
   });
 };
 
@@ -146,9 +144,10 @@ export const useSendMessage = () => {
       const previousConversations = queryClient.getQueryData(['whatsapp', 'conversations']);
 
       // Create optimistic message
+      const tempId = Date.now();
       const optimisticMessage: WhatsAppMessage = {
-        id: Date.now(), // Temporary ID
-        message_id: `temp_${Date.now()}`, // Temporary message ID
+        id: tempId, // Temporary ID
+        message_id: `temp_${tempId}`, // Temporary message ID
         from_number: process.env.NEXT_PUBLIC_WHATSAPP_PHONE_NUMBER_ID || '',
         to_number: variables.to,
         message_type: variables.type,
@@ -156,7 +155,11 @@ export const useSendMessage = () => {
         direction: 'outbound',
         status: 'sending',
         timestamp: new Date().toISOString(),
-        metadata: { isOptimistic: true },
+        metadata: { 
+          isOptimistic: true,
+          tempId: tempId,
+          tempMessageId: `temp_${tempId}`
+        },
         isOptimistic: true,
       };
 
@@ -215,6 +218,7 @@ export const useSendMessage = () => {
                   ...msg.metadata, 
                   isOptimistic: false,
                   real_message_id: data.messageId,
+                  realMessageId: data.messageId, // Store real message ID for socket matching
                   sent_at: new Date().toISOString()
                 },
               };
@@ -280,13 +284,15 @@ export const useSendMessage = () => {
       toast.error(error.message || 'Failed to send message');
     },
     onSettled: (data, error, variables) => {
-      // Always refetch after error or success to ensure we have the latest data
-      queryClient.invalidateQueries({ 
-        queryKey: ['whatsapp', 'messages', variables.to] 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ['whatsapp', 'conversations'] 
-      });
+      // Only invalidate on error - success updates are handled by optimistic updates and sockets
+      if (error) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['whatsapp', 'messages', variables.to] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['whatsapp', 'conversations'] 
+        });
+      }
     },
   });
 };

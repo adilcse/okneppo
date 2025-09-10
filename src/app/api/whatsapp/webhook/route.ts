@@ -170,8 +170,28 @@ async function processIncomingMessage(message: Record<string, unknown>, metadata
       }
     };
 
-    await db.upsert('whatsapp_messages', messageData, ['message_id'], ['status', 'timestamp', 'updated_at']);
+    const savedMessage = await db.upsert('whatsapp_messages', messageData, ['message_id'], ['status', 'timestamp', 'updated_at']);
     console.log('Incoming WhatsApp message stored:', id);
+
+    // Emit socket event for new message
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((global as any).io) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (global as any).io.to('whatsapp-admin').emit('whatsapp:new-message', {
+          message: savedMessage,
+          conversation: {
+            phone_number: from,
+            last_message_time: new Date(parseInt(timestamp as string) * 1000).toISOString(),
+            last_message_content: content,
+            last_message_direction: 'inbound'
+          }
+        });
+        console.log('Socket event emitted for new message:', id);
+      }
+    } catch (socketError) {
+      console.error('Error emitting socket event:', socketError);
+    }
 
   } catch (error) {
     console.error('Error processing incoming message:', error);
@@ -200,6 +220,32 @@ async function processMessageStatus(status: Record<string, unknown>, metadata: R
 
       if (updatedCount > 0) {
         console.log(`Message status updated: ${id} -> ${messageStatus}`);
+        
+        // Emit socket event for status update
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((global as any).io) {
+            // For outbound messages, recipient_id is the customer's phone number
+            // For inbound messages, we need to use the from_number from the existing message
+            const phoneNumber = existingMessage.direction === 'outbound' 
+              ? existingMessage.to_number 
+              : existingMessage.from_number;
+              
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (global as any).io.to('whatsapp-admin').emit('whatsapp:message-status-update', {
+              messageId: id,
+              status: messageStatus,
+              phoneNumber: phoneNumber,
+              timestamp: new Date(parseInt(timestamp as string) * 1000).toISOString(),
+              direction: existingMessage.direction,
+              content: existingMessage.content, // Add content for matching
+              messageType: existingMessage.message_type
+            });
+            console.log('Socket event emitted for status update:', id, messageStatus, 'for conversation:', phoneNumber);
+          }
+        } catch (socketError) {
+          console.error('Error emitting socket event for status update:', socketError);
+        }
       }
     } else {
       // If message doesn't exist, it might be a status update for a message we haven't received yet
