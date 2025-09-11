@@ -529,7 +529,7 @@ export default function RegisterCoursePage() {
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Phone Number <RequiredField />
+                  Phone Number (Whatsapp Number) <RequiredField />
                 </label>
                 <input 
                   type="tel" 
@@ -545,15 +545,15 @@ export default function RegisterCoursePage() {
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
 
-              <div>
+              {/* <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email ID <span className="text-gray-500 text-sm">(Optional)</span>
                 </label>
                 <input type="email" name="email" id="email" value={formData.email} onChange={handleInputChange} className={`w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 ${errors.email ? 'border-red-500' : ''}`} disabled={paymentStatus === 'processing'} />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label htmlFor="highest_qualification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Highest Qualification <RequiredField />
                 </label>
@@ -577,9 +577,9 @@ export default function RegisterCoursePage() {
                   <option value="Other">Other</option>
                 </select>
                 {errors.highest_qualification && <p className="text-red-500 text-xs mt-1">{errors.highest_qualification}</p>}
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label htmlFor="aadhar_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Aadhar Number <span className="text-gray-500 text-sm">(Optional)</span>
                 </label>
@@ -595,9 +595,9 @@ export default function RegisterCoursePage() {
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.aadhar_number && <p className="text-red-500 text-xs mt-1">{errors.aadhar_number}</p>}
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Date of Birth <span className="text-gray-500 text-sm">(Optional)</span>
                 </label>
@@ -611,9 +611,9 @@ export default function RegisterCoursePage() {
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.date_of_birth && <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>}
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label htmlFor="profession" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Profession <span className="text-gray-500 text-sm">(Optional)</span>
                 </label>
@@ -628,7 +628,7 @@ export default function RegisterCoursePage() {
                   disabled={paymentStatus === 'processing'} 
                 />
                 {errors.profession && <p className="text-red-500 text-xs mt-1">{errors.profession}</p>}
-              </div>
+              </div> */}
 
               <div>
                 <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
