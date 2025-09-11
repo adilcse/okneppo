@@ -238,6 +238,127 @@ const { data, isLoading, error } = useQuery({
 });
 ```
 
+
+## Data Tables and Grids
+
+### DataGrid Component Usage
+- **ALWAYS use the DataGrid component for any table or data display** in the application
+- The DataGrid component is located at `@/components/common/DataGrid`
+- Provides consistent table functionality across the entire application
+- Includes built-in sorting, pagination, search, and loading states
+
+### DataGrid Features
+- **Sorting**: Click column headers to sort data (ascending/descending)
+- **Pagination**: Built-in pagination with page size selector
+- **Search**: Real-time search functionality
+- **Loading States**: Proper loading, error, and empty states
+- **Row Interactions**: Click handlers for row selection
+- **Responsive Design**: Mobile-friendly with dark mode support
+- **TypeScript**: Full type safety with generics
+
+### DataGrid Implementation Pattern
+```typescript
+import DataGrid, { ColumnDef } from '@/components/common/DataGrid';
+
+// Define your data type
+interface MyDataType {
+  id: number;
+  name: string;
+  email: string;
+  status: 'active' | 'inactive';
+}
+
+// Define columns
+const columns: ColumnDef<MyDataType>[] = [
+  {
+    key: 'name',
+    label: 'Name',
+    sortable: true,
+    render: (item: MyDataType) => (
+      <span className="font-medium">{item.name}</span>
+    )
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    sortable: true
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    render: (item: MyDataType) => (
+      <span className={`px-2 py-1 rounded-full text-xs ${
+        item.status === 'active' 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-red-100 text-red-800'
+      }`}>
+        {item.status}
+      </span>
+    )
+  }
+];
+
+// Use in component
+<DataGrid
+  data={data}
+  columns={columns}
+  pagination={pagination}
+  loading={loading}
+  error={error?.message}
+  
+  // Sorting
+  sortBy={sortBy}
+  sortOrder={sortOrder}
+  onSort={handleSort}
+  
+  // Pagination
+  onPageChange={handlePageChange}
+  onPageSizeChange={handlePageSizeChange}
+  
+  // Search
+  searchTerm={searchTerm}
+  onSearchChange={handleSearch}
+  searchPlaceholder="Search by name or email..."
+  
+  // Row interactions
+  onRowClick={handleRowClick}
+  
+  // Customization
+  title="My Data Table"
+  showSearch={true}
+  showPageSizeSelector={true}
+/>
+```
+
+### DataGrid API Requirements
+When implementing DataGrid with backend data, ensure your API supports:
+- **Sorting**: `sortBy` and `sortOrder` query parameters
+- **Pagination**: `page` and `limit` query parameters
+- **Search**: `search` query parameter for filtering
+- **Response Format**: Consistent pagination info in response
+
+### DataGrid Column Configuration
+- **key**: Database field name for sorting and data access
+- **label**: Display text for column header
+- **sortable**: Boolean to enable/disable sorting
+- **render**: Custom render function for complex cell content
+- **className**: Custom CSS classes for cells
+- **headerClassName**: Custom CSS classes for header
+
+### DataGrid Best Practices
+- Always define proper TypeScript interfaces for your data
+- Use custom render functions for complex cell content (badges, buttons, etc.)
+- Implement proper loading and error states
+- Use consistent styling with the application theme
+- Test both light and dark modes
+- Ensure mobile responsiveness
+
+### When NOT to Use DataGrid
+- Simple static tables with no sorting/pagination needs
+- Tables with complex nested structures that don't fit the column model
+- Tables that require custom table layouts not supported by the component
+
 ## Troubleshooting
 
 ### Common Issues

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { snakeCase } from '@/lib/utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,6 +8,8 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const search = searchParams.get('search') || '';
+    const sortBy = searchParams.get('sortBy') || 'created_at';
+    const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC') || 'DESC';
     
     // Calculate offset
     const offset = (page - 1) * limit;
@@ -16,8 +19,7 @@ export async function GET(req: NextRequest) {
       $or: [
         { name: { $like: `%${search}%` } },
         { email: { $like: `%${search}%` } },
-        { phone: { $like: `%${search}%` } },
-        { course_title: { $like: `%${search}%` } }
+        { phone: { $like: `%${search}%` } }
       ]
     } : {};
     
@@ -26,8 +28,8 @@ export async function GET(req: NextRequest) {
     
     // Get paginated registrations (simple query for better performance)
     const registrations = await db.find('course_registrations', searchConditions, {
-      orderBy: 'created_at',
-      order: 'DESC',
+      orderBy: snakeCase(sortBy),
+      order: sortOrder,
       limit,
       offset
     });
