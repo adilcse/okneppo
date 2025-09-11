@@ -75,7 +75,7 @@ export default function TableBody<T>({
               key={column.key}
               className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 ${column.className || ''}`}
             >
-              {column.render ? column.render(item, index) : String((item as any)[column.key] || '')}
+              {column.render ? column.render(item, index) : String((item as Record<string, unknown>)[column.key] || '')}
             </td>
           ))}
         </tr>
