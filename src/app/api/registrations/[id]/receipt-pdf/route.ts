@@ -22,87 +22,98 @@ export async function GET(
       return new NextResponse('Registration not found', { status: 404 });
     }
 
-    // Create PDF with better styling
+    // Create PDF with clean styling
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPos = 20;
 
-    // Colors
-    const primaryColor = [41, 128, 185]; // Professional blue
-    const secondaryColor = [52, 73, 94]; // Dark gray
-    const lightGray = [236, 240, 241];
-    const successColor = [39, 174, 96]; // Green
+    // Colors - minimal and clean
+    const textColor = [31, 41, 55]; // Gray-800
+    const lightGray = [243, 244, 246]; // Gray-100
+    const borderColor = [209, 213, 219]; // Gray-300
 
-    // Header with background
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(0, 0, pageWidth, 45, 'F');
-    
-    // Company name
-    doc.setTextColor(255, 255, 255);
+    // Header - clean and simple
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    const companyName = 'OKNEPPO';
-    const companyWidth = doc.getTextWidth(companyName);
-    doc.text(companyName, (pageWidth - companyWidth) / 2, 25);
+    const companyName = 'Payment Receipt';
+    const companyNameWidth = doc.getTextWidth(companyName);
+    doc.text(companyName, (pageWidth - companyNameWidth) / 2, yPos);
     
-    // Subtitle
-    doc.setFontSize(12);
+    yPos += 20;
+
+    // Receipt info - right aligned
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const subtitle = 'Course Registration Receipt';
-    const subtitleWidth = doc.getTextWidth(subtitle);
-    doc.text(subtitle, (pageWidth - subtitleWidth) / 2, 35);
+    doc.text(`Order #: ${payment.order_number}`, pageWidth - margin - doc.getTextWidth(`Order #: ${payment.order_number}`), yPos);
+    yPos += 8;
+    doc.text(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`, pageWidth - margin - doc.getTextWidth(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`), yPos);
 
-    yPos = 60;
+    yPos += 20;
 
-    // Receipt info box
-    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 25, 'F');
-    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setLineWidth(0.5);
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 25);
-
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Order #: ${payment.order_number}`, margin + 5, yPos + 10);
-    doc.text(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`, margin + 5, yPos + 20);
-
-    // Status badge
-    const status = String(payment.status).toUpperCase();
-    const statusWidth = doc.getTextWidth(status) + 10;
-    const statusX = pageWidth - margin - statusWidth - 5;
-    
-    if (status === 'CAPTURED' || status === 'SUCCESS') {
-      doc.setFillColor(successColor[0], successColor[1], successColor[2]);
-    } else {
-      doc.setFillColor(231, 76, 60); // Red for other statuses
-    }
-    doc.roundedRect(statusX, yPos + 5, statusWidth, 15, 3, 3, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text(status, statusX + 5, yPos + 14);
-
-    yPos += 40;
-
-    // Two column layout
+    // Two column layout for Payment Information and Billed To
     const leftColX = margin;
     const rightColX = pageWidth / 2 + 10;
     const colWidth = pageWidth / 2 - margin - 10;
+    const sectionHeight = 80;
 
-    // Billed To section
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(leftColX, yPos, colWidth, 15, 'F');
-    doc.setTextColor(255, 255, 255);
+    // Payment Information Section (Left Column)
+    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+    doc.rect(leftColX, yPos, colWidth, sectionHeight, 'F');
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+    doc.setLineWidth(0.5);
+    doc.rect(leftColX, yPos, colWidth, sectionHeight);
+
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('BILLED TO', leftColX + 5, yPos + 10);
+    doc.text('Payment Information', leftColX + 5, yPos + 10);
 
-    yPos += 20;
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFontSize(10);
+    // Payment ID
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Payment ID:', leftColX + 5, yPos + 25);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(payment.razorpay_payment_id || payment.order_number), leftColX + 35, yPos + 25);
+
+    // Payment Type
+    doc.setFont('helvetica', 'normal');
+    doc.text('Payment Type:', leftColX + 5, yPos + 35);
+    doc.setFont('helvetica', 'bold');
+    const paymentType = payment.payment_method === 'manual' ? 'Manual Payment' : 'Online Payment';
+    doc.text(paymentType, leftColX + 35, yPos + 35);
+
+    // Payment Status
+    doc.setFont('helvetica', 'normal');
+    doc.text('Status:', leftColX + 5, yPos + 45);
+    doc.setFont('helvetica', 'bold');
+    const status = String(payment.status).charAt(0).toUpperCase() + String(payment.status).slice(1);
+    doc.text(status, leftColX + 35, yPos + 45);
+
+    // Description
+    if (payment.description || payment.error_description) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Description:', leftColX + 5, yPos + 55);
+      const description = String(payment.description || payment.error_description || 'No description provided');
+      const descriptionLines = doc.splitTextToSize(description, colWidth - 40);
+      doc.text(descriptionLines, leftColX + 35, yPos + 55);
+    }
+
+    // Billed To section (Right Column)
+    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+    doc.rect(rightColX, yPos, colWidth, sectionHeight, 'F');
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+    doc.setLineWidth(0.5);
+    doc.rect(rightColX, yPos, colWidth, sectionHeight);
+
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Billed To', rightColX + 5, yPos + 10);
+
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
 
     const billedToData = [
@@ -112,105 +123,94 @@ export async function GET(
       String(registration.phone || '')
     ].filter(item => item.trim() !== '');
 
+    let billedYPos = yPos + 25;
     billedToData.forEach((item, index) => {
       if (index === 0) {
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
+        doc.setFontSize(10);
       } else {
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
+        doc.setFontSize(9);
       }
-      doc.text(item, leftColX + 5, yPos);
-      yPos += 12;
+      const lines = doc.splitTextToSize(item, colWidth - 10);
+      doc.text(lines, rightColX + 5, billedYPos);
+      billedYPos += lines.length * 8 + 2;
     });
 
-    // Reset yPos for right column
-    yPos -= billedToData.length * 12 + 20;
+    yPos += sectionHeight + 15;
 
-    // Payment Details section
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(rightColX, yPos, colWidth, 15, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAYMENT DETAILS', rightColX + 5, yPos + 10);
-
-    yPos += 20;
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-
-    // Course details
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Course:', rightColX + 5, yPos);
-    doc.setFont('helvetica', 'normal');
-    const courseTitle = String(registration.course_title || '');
-    const lines = doc.splitTextToSize(courseTitle, colWidth - 10);
-    doc.text(lines, rightColX + 5, yPos + 10);
-    yPos += 10 + (lines.length * 10);
-
-    // Amount
-    yPos += 5;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Amount Paid:', rightColX + 5, yPos);
-    doc.setFontSize(14);
-    doc.setTextColor(successColor[0], successColor[1], successColor[2]);
-    doc.text(`${payment.amount || ''} INR`, rightColX + 5, yPos + 12);
-
-    // Transaction ID if available
-    if (payment.transaction_id) {
-      yPos += 25;
-      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Transaction ID:', rightColX + 5, yPos);
-      doc.text(String(payment.transaction_id), rightColX + 5, yPos + 8);
-    }
-
-    // Summary box
-    yPos = Math.max(yPos + 40, 180);
-    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 30, 'F');
-    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 30);
-
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAYMENT SUMMARY', margin + 5, yPos + 12);
-    
-    const totalText = `Total Amount: ${payment.amount || ''} INR`;
-    doc.setTextColor(successColor[0], successColor[1], successColor[2]);
-    doc.setFontSize(14);
-    doc.text(totalText, margin + 5, yPos + 20);
-
-    // Footer
-    yPos = pageHeight - 50;
-    
-    // Divider line
-    doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
+    // Payment Details section - clean style
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
     doc.setLineWidth(1);
     doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
 
-    yPos += 15;
-    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.setFontSize(11);
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const thankYou = 'Thank you for your enrollment!';
+    doc.text('Payment Details', margin, yPos);
+    yPos += 20;
+
+    // Course details table
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    // Table header
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', margin, yPos);
+    doc.text('Amount', pageWidth - margin - 50, yPos);
+    
+    // Table line
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPos + 5, pageWidth - margin, yPos + 5);
+    yPos += 10;
+
+    // Course row
+    doc.setFont('helvetica', 'normal');
+    const courseTitle = String(registration.course_title || '');
+    const lines = doc.splitTextToSize(courseTitle, pageWidth - 2 * margin - 60);
+    doc.text(lines, margin, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${payment.amount || ''}`, pageWidth - margin - 50, yPos);
+    yPos += Math.max(lines.length * 10, 15);
+
+    // Total row
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Paid', margin, yPos);
+    doc.text(`${payment.amount || ''}`, pageWidth - margin - 50, yPos);
+    yPos += 20;
+
+    // Payment Method (Status is now in Payment Information section)
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    // Footer
+    yPos = pageHeight - 70;
+    
+    yPos += 15;
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    const thankYou = 'Thank you for your payment!';
     const thankYouWidth = doc.getTextWidth(thankYou);
     doc.text(thankYou, (pageWidth - thankYouWidth) / 2, yPos);
 
-    yPos += 10;
-    doc.setFontSize(9);
+    yPos += 15;
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    const contact = 'For any queries, please contact us at okneppo@gmail.com';
-    const contactWidth = doc.getTextWidth(contact);
-    doc.text(contact, (pageWidth - contactWidth) / 2, yPos);
-
-    yPos += 8;
-    const website = 'www.okneppo.in';
-    const websiteWidth = doc.getTextWidth(website);
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(website, (pageWidth - websiteWidth) / 2, yPos);
+    const company = 'Ok Neppo';
+    const companyFooterWidth = doc.getTextWidth(company);
+    doc.text(company, (pageWidth - companyFooterWidth) / 2, yPos);
 
     // Convert to buffer
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));

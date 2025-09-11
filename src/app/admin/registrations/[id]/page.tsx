@@ -32,6 +32,27 @@ async function updateRegistrationStatus(id: string, status: RegistrationStatus) 
   return res.json();
 }
 
+async function addManualPayment(registrationId: number, amount: number, note: string) {
+  const res = await fetch('/api/payments/manual', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      registration_id: registrationId, 
+      amount, 
+      note 
+    }),
+  });
+  
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to add manual payment');
+  }
+  
+  return res.json();
+}
+
 
 export default function RegistrationDetailPage() {
   const params = useParams();
@@ -40,6 +61,14 @@ export default function RegistrationDetailPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
+  
+  // Manual payment form state
+  const [showManualPaymentForm, setShowManualPaymentForm] = useState(false);
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualNote, setManualNote] = useState('');
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
 
   const { data: registration, isLoading: loading } = useQuery<CourseRegistration>({
     queryKey: ['registration', id],
@@ -93,6 +122,43 @@ export default function RegistrationDetailPage() {
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : 'Failed to update status');
       setIsUpdating(false);
+    }
+  };
+
+  const handleManualPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !manualAmount) return;
+    
+    setIsAddingPayment(true);
+    setPaymentError(null);
+    
+    try {
+      const amount = parseFloat(manualAmount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Please enter a valid amount');
+      }
+      
+      await addManualPayment(parseInt(id), amount, manualNote);
+      
+      // Reset form
+      setManualAmount('');
+      setManualNote('');
+      setShowManualPaymentForm(false);
+      
+      // Invalidate and refetch the registration data
+      queryClient.invalidateQueries({ queryKey: ['registrations'] });
+      queryClient.invalidateQueries({ queryKey: ['registration', id] });
+      
+      setIsAddingPayment(false);
+      setPaymentError(null);
+      toast.success('Manual payment added successfully');
+      setPaymentSuccess('Manual payment added successfully');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setPaymentSuccess(null), 3000);
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Failed to add manual payment');
+      setIsAddingPayment(false);
     }
   };
 
@@ -156,9 +222,11 @@ export default function RegistrationDetailPage() {
               <div className="space-y-2">
                 <p><strong>Course:</strong> {registration.courseTitle}</p>
                 <p><strong>Order Number:</strong> 
+                <a href={`/receipt/${registration.orderNumber}`} target="_blank" rel="noopener noreferrer">
                   <span className="ml-2 font-mono text-lg font-bold text-blue-600 dark:text-blue-400">
                     {registration.orderNumber || 'N/A'}
                   </span>
+                  </a>
                 </p>
                 <p><strong>Amount Due:</strong> ₹{registration.amountDue}</p>
                 <div className="flex items-center gap-2">
@@ -202,15 +270,107 @@ export default function RegistrationDetailPage() {
           </p>
         </div>
       </div>
+      
 
-      <h2 className="text-xl font-bold mt-8 mb-4">Payment History</h2>
+      <div className="flex justify-between items-center mt-8 mb-4">
+        <h2 className="text-xl font-bold">Payment History</h2>
+        <button
+          onClick={() => setShowManualPaymentForm(!showManualPaymentForm)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        >
+          {showManualPaymentForm ? 'Cancel' : 'Add Manual Payment'}
+        </button>
+      </div>
+
+      {/* Manual Payment Form */}
+      {showManualPaymentForm && (
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Manual Payment</h3>
+          
+          {/* Payment Success Display */}
+          {paymentSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+              <span className="block sm:inline">{paymentSuccess}</span>
+            </div>
+          )}
+
+          {/* Payment Error Display */}
+          {paymentError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+              <span className="block sm:inline">Error: {paymentError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleManualPayment} className="space-y-4">
+            <div>
+              <label htmlFor="manualAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Amount (₹)
+              </label>
+              <input
+                type="number"
+                id="manualAmount"
+                value={manualAmount}
+                onChange={(e) => setManualAmount(e.target.value)}
+                placeholder="Enter amount"
+                step="0.01"
+                min="0.01"
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                disabled={isAddingPayment}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="manualNote" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Note (Optional)
+              </label>
+              <textarea
+                id="manualNote"
+                value={manualNote}
+                onChange={(e) => setManualNote(e.target.value)}
+                placeholder="Add a note about this payment"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                disabled={isAddingPayment}
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={isAddingPayment || !manualAmount}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                {isAddingPayment ? 'Adding...' : 'Add Payment'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowManualPaymentForm(false);
+                  setManualAmount('');
+                  setManualNote('');
+                  setPaymentError(null);
+                  setPaymentSuccess(null);
+                }}
+                disabled={isAddingPayment}
+                className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
             </tr>
           </thead>
@@ -218,9 +378,16 @@ export default function RegistrationDetailPage() {
             {payments.map(payment => (
               <tr key={payment.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white font-mono">
-                  {payment.razorpay_payment_id}
+                  {payment.razorpay_payment_id || payment.order_number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">₹{payment.amount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    payment.payment_method === 'manual' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {payment.payment_method === 'manual' ? 'Manual' : 'Online'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     payment.status === 'captured' ? 'bg-green-100 text-green-800' :
@@ -230,6 +397,7 @@ export default function RegistrationDetailPage() {
                     {payment.status}
                   </span>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{payment.description || payment.error_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{new Date(payment.created_at).toLocaleString()}</td>
               </tr>
             ))}

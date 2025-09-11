@@ -26,6 +26,35 @@ export default function PaymentReceipt({ registration, payment }: PaymentReceipt
           <p className="text-sm text-gray-500">Date: {new Date(payment.created_at).toLocaleDateString()}</p>
         </div>
       </div>
+      
+      {/* Payment Information Section */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">Payment Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-500">Payment ID</p>
+            <p className="font-mono text-sm text-gray-800">
+              {payment.razorpay_payment_id || payment.order_number}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Payment Type</p>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              payment.payment_method === 'manual' 
+                ? 'bg-blue-100 text-blue-800' 
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+              {payment.payment_method === 'manual' ? 'Manual Payment' : 'Online Payment'}
+            </span>
+          </div>
+          <div className="md:col-span-2">
+            <p className="text-sm text-gray-500">Description</p>
+            <p className="text-sm text-gray-800">
+              {payment.description || payment.error_description || 'No description provided'}
+            </p>
+          </div>
+        </div>
+      </div>
       <div className="border-t border-b border-gray-200 py-4 mb-8">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">Billed To</h2>
         <p className="text-gray-600">{registration.name}</p>
