@@ -4,6 +4,7 @@ import { db } from "./db";
 interface WhatsAppMessage {
   to: string;
   message: string;
+  template?: string;
   type?: 'text' | 'template';
 }
 
@@ -138,6 +139,91 @@ export class WhatsAppService {
   }
 
   /**
+   * Send a text message via WhatsApp Business API
+   */
+  async sendTemplateMessage({ to, message, type = 'template', template = 'hello_world' }: WhatsAppMessage): Promise<WhatsAppResponse> {
+    try {
+      if (!this.accessToken || !this.phoneNumberId) {
+        console.error('WhatsApp API credentials not configured');
+        return {
+          success: false,
+          error: 'WhatsApp API credentials not configured'
+        };
+      }
+
+      const formattedPhone = this.formatPhoneNumber(to);
+      const url = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`;
+
+      const payload = {
+        messaging_product: 'whatsapp',
+        to: formattedPhone,
+        type: type,
+        template: { name: template, language: { code: 'en' } }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('WhatsApp API error:', data);
+        return {
+          success: false,
+          error: data.error?.message || 'Failed to send WhatsApp message'
+        };
+      }
+
+      const messageId = data.messages?.[0]?.id;
+
+      // Store the sent message in database
+      if (messageId) {
+        try {
+          const messageData = {
+            message_id: messageId,
+            from_number: this.phoneNumberId,
+            to_number: formattedPhone,
+            business_account_id: this.businessAccountId,
+            message_type: type,
+            content: message,
+            direction: 'outbound' as const,
+            status: 'sent',
+            timestamp: new Date(),
+            metadata: {
+              sent_via: 'whatsapp_service',
+              original_response: data
+            }
+          };
+
+          await db.upsert('whatsapp_messages', messageData, ['message_id'], ['status', 'timestamp', 'updated_at']);
+          console.log('Sent WhatsApp message stored in database:', messageId);
+        } catch (dbError) {
+          console.error('Error storing sent message in database:', dbError);
+          // Don't fail the send operation if database storage fails
+        }
+      }
+
+      return {
+        success: true,
+        messageId: messageId
+      };
+
+    } catch (error) {
+      console.error('Error sending WhatsApp message:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
    * Send registration completion message with group invite link
    */
   async sendRegistrationWelcomeMessage(
@@ -161,9 +247,27 @@ ${groupInviteLink}
 
 Thank you for choosing Ok Neppo! 🚀`;
 
-    return this.sendMessage({
+  console.log(message);
+
+
+const message2 = `Hello there,
+Thanks for joining Ok Neppo Online Classes.
+
+Click the link below to join our whatsapp group.
+
+📞 For any queries, contact us at:
+• +91 6370826619
+• +91 8249517832
+
+
+https://www.okneppo.in/api/registration/joingroup
+`
+
+    return this.sendTemplateMessage({
       to: phone,
-      message: message
+      message: message2,
+      type: 'template',
+      template: 'online_register_invite_link'
     });
   }
 }
