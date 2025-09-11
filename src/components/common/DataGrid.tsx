@@ -3,7 +3,7 @@ import TableHeader from './TableHeader';
 import TableBody, { ColumnDef } from './TableBody';
 import Pagination from './Pagination';
 
-export { ColumnDef } from './TableBody';
+export type { ColumnDef };
 
 interface PaginationInfo {
   page: number;
@@ -119,10 +119,6 @@ export default function DataGrid<T>({
 
   const handlePageChange = (page: number) => {
     onPageChange?.(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    onPageSizeChange?.(size);
   };
 
   if (error) {
