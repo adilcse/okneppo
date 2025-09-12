@@ -1,6 +1,7 @@
 'use client';
 
 import { CourseRegistration, RegistrationStatus } from '@/models/CourseRegistration';
+import { Payment } from '@/models/Payment';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -69,6 +70,10 @@ export default function RegistrationDetailPage() {
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
+
+  // Payment details modal state
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
   const { data: registration, isLoading: loading } = useQuery<CourseRegistration>({
     queryKey: ['registration', id],
@@ -160,6 +165,16 @@ export default function RegistrationDetailPage() {
       setPaymentError(error instanceof Error ? error.message : 'Failed to add manual payment');
       setIsAddingPayment(false);
     }
+  };
+
+  const handleViewPaymentDetails = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setShowPaymentDetails(true);
+  };
+
+  const closePaymentDetails = () => {
+    setSelectedPayment(null);
+    setShowPaymentDetails(false);
   };
 
   const payments = registration?.payment || [];
@@ -372,6 +387,7 @@ export default function RegistrationDetailPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -399,11 +415,248 @@ export default function RegistrationDetailPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{payment.description || payment.error_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{new Date(payment.created_at).toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                  <button
+                    onClick={() => handleViewPaymentDetails(payment)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                  >
+                    View Details
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Payment Details Modal */}
+      {showPaymentDetails && selectedPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Payment Details</h3>
+                <button
+                  onClick={closePaymentDetails}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Payment ID:</span>
+                      <span className="font-mono text-sm">{selectedPayment.razorpay_payment_id || selectedPayment.order_number || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Order ID:</span>
+                      <span className="font-mono text-sm">{selectedPayment.razorpay_order_id || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                      <span className="font-semibold">₹{selectedPayment.amount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Currency:</span>
+                      <span>{selectedPayment.currency}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedPayment.status === 'captured' ? 'bg-green-100 text-green-800' :
+                        selectedPayment.status === 'created' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedPayment.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Payment Method:</span>
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {selectedPayment.payment_method === 'manual' ? 'Manual' : 'Online'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Payment Details</h4>
+                  <div className="space-y-2">
+                    {selectedPayment.bank && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Bank:</span>
+                        <span>{selectedPayment.bank}</span>
+                      </div>
+                    )}
+                    {selectedPayment.wallet && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Wallet:</span>
+                        <span>{selectedPayment.wallet}</span>
+                      </div>
+                    )}
+                    {selectedPayment.vpa && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">VPA:</span>
+                        <span className="font-mono text-sm">{selectedPayment.vpa}</span>
+                      </div>
+                    )}
+                    {selectedPayment.card_id && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Card ID:</span>
+                        <span className="font-mono text-sm">{selectedPayment.card_id}</span>
+                      </div>
+                    )}
+                    {selectedPayment.captured !== undefined && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Captured:</span>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          selectedPayment.captured ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {selectedPayment.captured ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    )}
+                    {selectedPayment.coupon_code && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Coupon Code:</span>
+                        <span className="font-mono text-sm">{selectedPayment.coupon_code}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Financial Details */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Financial Details</h4>
+                  <div className="space-y-2">
+                    {selectedPayment.fee && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Fee:</span>
+                        <span>₹{selectedPayment.fee}</span>
+                      </div>
+                    )}
+                    {selectedPayment.tax && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                        <span>₹{selectedPayment.tax}</span>
+                      </div>
+                    )}
+                    {selectedPayment.amount_refunded && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Amount Refunded:</span>
+                        <span>₹{selectedPayment.amount_refunded}</span>
+                      </div>
+                    )}
+                    {selectedPayment.refund_status && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Refund Status:</span>
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                          {selectedPayment.refund_status}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Error Information */}
+                {(selectedPayment.error_code || selectedPayment.error_description) && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Error Information</h4>
+                    <div className="space-y-2">
+                      {selectedPayment.error_code && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Error Code:</span>
+                          <span className="font-mono text-sm text-red-600">{selectedPayment.error_code}</span>
+                        </div>
+                      )}
+                      {selectedPayment.error_description && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Error Description:</span>
+                          <span className="text-red-600 text-sm">{selectedPayment.error_description}</span>
+                        </div>
+                      )}
+                      {selectedPayment.error_source && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Error Source:</span>
+                          <span className="text-sm">{selectedPayment.error_source}</span>
+                        </div>
+                      )}
+                      {selectedPayment.error_step && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Error Step:</span>
+                          <span className="text-sm">{selectedPayment.error_step}</span>
+                        </div>
+                      )}
+                      {selectedPayment.error_reason && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Error Reason:</span>
+                          <span className="text-sm">{selectedPayment.error_reason}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Additional Information</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Created At:</span>
+                      <span className="text-sm">{new Date(selectedPayment.created_at).toLocaleString()}</span>
+                    </div>
+                    {selectedPayment.updated_at && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Updated At:</span>
+                        <span className="text-sm">{new Date(selectedPayment.updated_at).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {selectedPayment.description && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Description:</span>
+                        <span className="text-sm">{selectedPayment.description}</span>
+                      </div>
+                    )}
+                    {selectedPayment.invoice_id && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Invoice ID:</span>
+                        <span className="font-mono text-sm">{selectedPayment.invoice_id}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Raw Payment Data */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Raw Payment Data</h4>
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 overflow-x-auto">
+                  <pre className="text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                    {JSON.stringify(selectedPayment, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closePaymentDetails}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

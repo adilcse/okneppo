@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { snakeCase } from '@/lib/utils';
 
+interface SearchConditions {
+  $or?: Array<{
+    name?: { $like: string };
+    email?: { $like: string };
+    phone?: { $like: string };
+  }>;
+  status?: string;
+  [key: string]: unknown;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -10,18 +20,30 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || '';
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC') || 'DESC';
+    const status = searchParams.get('status') || '';
     
     // Calculate offset
     const offset = (page - 1) * limit;
     
     // Build search conditions
-    const searchConditions = search ? {
-      $or: [
+    const searchConditions: SearchConditions = {};
+    
+    // Add text search conditions
+    if (search) {
+      searchConditions.$or = [
         { name: { $like: `%${search}%` } },
         { email: { $like: `%${search}%` } },
         { phone: { $like: `%${search}%` } }
-      ]
-    } : {};
+      ];
+    }
+    
+    // Add status filter
+    if (status && status !== 'all') {
+      searchConditions.status = status;
+    }
+    
+    // Log the search conditions for debugging
+    console.log('Search conditions:', JSON.stringify(searchConditions, null, 2));
     
     // Get total count for pagination (without JOIN for accurate count)
     const totalCount = await db.count('course_registrations', searchConditions);

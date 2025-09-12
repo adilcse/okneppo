@@ -20,13 +20,14 @@ interface RegistrationsResponse {
   pagination: PaginationInfo;
 }
 
-async function getRegistrations(page: number = 1, limit: number = 10, search: string = '', sortBy: string = 'created_at', sortOrder: string = 'DESC') {
+async function getRegistrations(page: number = 1, limit: number = 10, search: string = '', sortBy: string = 'created_at', sortOrder: string = 'DESC', status: string = 'all') {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
     ...(search && { search }),
     sortBy,
-    sortOrder
+    sortOrder,
+    ...(status !== 'all' && { status })
   });
   
   const res = await fetch(`/api/course-registrations?${params}`, { cache: 'no-store' });
@@ -42,11 +43,12 @@ export default function AdminRegistrationsPage() {
   const [searchTerm, setSearchTerm, debouncedSearchTerm] = useDebouncedState('', 1000);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'failed' | 'cancelled'>('all');
   const router = useRouter();
   
   const { data: response, isLoading: loading, error } = useQuery<RegistrationsResponse>({
-    queryKey: ['registrations', currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder],
-    queryFn: () => getRegistrations(currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder),
+    queryKey: ['registrations', currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder, statusFilter],
+    queryFn: () => getRegistrations(currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder, statusFilter),
   });
 
   const registrations = response?.data || [];
@@ -64,6 +66,11 @@ export default function AdminRegistrationsPage() {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleStatusFilter = (status: 'all' | 'pending' | 'completed' | 'failed' | 'cancelled') => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handleSort = (column: string) => {
@@ -119,6 +126,17 @@ export default function AdminRegistrationsPage() {
       render: (reg: CourseRegistration) => `₹${reg.amountDue}`
     },
     {
+      key: 'created_at',
+      label: 'Registered At',
+      sortable: true,
+      render: (reg: CourseRegistration) => (
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div>{new Date(reg.createdAt).toLocaleDateString()}</div>
+          <div className="text-xs">{new Date(reg.createdAt).toLocaleTimeString()}</div>
+        </div>
+      )
+    },
+    {
       key: 'status',
       label: 'Status',
       sortable: true,
@@ -131,11 +149,66 @@ export default function AdminRegistrationsPage() {
           {reg.status}
         </span>
       )
-    }
+    },
   ];
 
   return (
-    <DataGrid
+    <div className="space-y-4">
+      {/* Status Filter Buttons */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => handleStatusFilter('all')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            statusFilter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => handleStatusFilter('pending')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            statusFilter === 'pending'
+              ? 'bg-yellow-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          Pending
+        </button>
+        <button
+          onClick={() => handleStatusFilter('completed')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            statusFilter === 'completed'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          Completed
+        </button>
+        <button
+          onClick={() => handleStatusFilter('failed')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            statusFilter === 'failed'
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          Failed
+        </button>
+        <button
+          onClick={() => handleStatusFilter('cancelled')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            statusFilter === 'cancelled'
+              ? 'bg-gray-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          Cancelled
+        </button>
+      </div>
+
+      <DataGrid
       data={registrations}
       columns={columns}
       pagination={pagination}
@@ -171,5 +244,6 @@ export default function AdminRegistrationsPage() {
       title="Course Registrations"
       showTitle={true}
     />
+    </div>
   );
 }
