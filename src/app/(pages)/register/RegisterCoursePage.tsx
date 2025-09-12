@@ -83,7 +83,7 @@ export default function RegisterCoursePage() {
     aadhar_number: '',
     date_of_birth: '',
     profession: '',
-    terms_accepted: false,
+    terms_accepted: true,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
