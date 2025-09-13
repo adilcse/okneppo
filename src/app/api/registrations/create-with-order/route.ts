@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error creating registration with order:', error);
     return NextResponse.json(
-      { error: 'Something went wrong' },
+      { error: 'Something went wrong', data: error },
       { status: 500 }
     );
   }
