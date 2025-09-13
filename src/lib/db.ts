@@ -786,10 +786,10 @@ export const db = {
         await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
         // Remove order_number column if it exists
-        // await sql`
-        //   ALTER TABLE payments
-        //   DROP COLUMN IF EXISTS order_number;
-        // `;
+        await sql`
+          ALTER TABLE payments
+          DROP COLUMN IF EXISTS order_number;
+        `;
 
       } catch (error) {
         console.log('Payments table migration failed:', error);
