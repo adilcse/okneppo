@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { WHATSAPP_GROUP_INVITE_CODE } from "@/constant";
 import { db } from "./db";
 
@@ -232,42 +233,25 @@ export class WhatsAppService {
     courseTitle: string,
     groupInviteLink: string
   ): Promise<WhatsAppResponse> {
-    const message = `🎉 Congratulations ${name}!
 
-Your registration for "${courseTitle}" has been successfully completed!
+const message2 = `Congratulations !!!,
+Apka registration Ok Neppo Online Classes me ho gaya hai.
 
-📚 Welcome to Ok Neppo! We're excited to have you join our learning community.
-
-💬 Join our WhatsApp group for course updates, discussions, and support:
-${groupInviteLink}
-
-📞 For any queries, contact us at:
+📞 Koi bhi doubt ya questions ke liye, contact kare:
 • +91 6370826619
 • +91 8249517832
 
-Thank you for choosing Ok Neppo! 🚀`;
-
-  console.log(message);
-
-
-const message2 = `Hello there,
-Thanks for joining Ok Neppo Online Classes.
-
-Click the link below to join our whatsapp group.
-
-📞 For any queries, contact us at:
-• +91 6370826619
-• +91 8249517832
-
+Whatsapp group me join karne ke liye hi message kare aur niche diye link ko click kare.
 
 https://www.okneppo.in/api/registration/joingroup
-`
+
+Welcome to Ok Neppo family...`;
 
     return this.sendTemplateMessage({
       to: phone,
       message: message2,
       type: 'template',
-      template: 'online_register_invite_link'
+      template: 'ok_neppo_link'
     });
   }
 }
