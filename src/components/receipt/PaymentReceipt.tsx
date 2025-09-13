@@ -9,7 +9,7 @@ interface PaymentReceiptProps {
 }
 
 export default function PaymentReceipt({ registration, payment }: PaymentReceiptProps) {
-  if (payment.status === 'failed') {
+  if (payment.status !== 'captured') {
     return (
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800">Payment Failed</h1>
@@ -22,7 +22,7 @@ export default function PaymentReceipt({ registration, payment }: PaymentReceipt
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Payment Receipt</h1>
         <div className="text-right">
-          <p className="text-sm text-gray-500">Order #: {payment.order_number}</p>
+          <p className="text-sm text-gray-500">Order #: {registration.orderNumber}</p>
           <p className="text-sm text-gray-500">Date: {new Date(payment.created_at).toLocaleDateString()}</p>
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function PaymentReceipt({ registration, payment }: PaymentReceipt
           <div>
             <p className="text-sm text-gray-500">Payment ID</p>
             <p className="font-mono text-sm text-gray-800">
-              {payment.razorpay_payment_id || payment.order_number}
+              {payment.razorpay_payment_id || registration.orderNumber}
             </p>
           </div>
           <div>
@@ -47,12 +47,22 @@ export default function PaymentReceipt({ registration, payment }: PaymentReceipt
               {payment.payment_method === 'manual' ? 'Manual Payment' : 'Online Payment'}
             </span>
           </div>
-          <div className="md:col-span-2">
+          <div>
             <p className="text-sm text-gray-500">Description</p>
             <p className="text-sm text-gray-800">
               {payment.description || payment.error_description || 'No description provided'}
             </p>
           </div>
+          <div>
+            <p className="text-sm text-gray-500">Payment Status</p>
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              payment.status === 'captured' ? 'bg-green-100 text-green-800' :
+              payment.status === 'created' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+              {payment.status}
+            </span>
+          </div>  
         </div>
       </div>
       <div className="border-t border-b border-gray-200 py-4 mb-8">

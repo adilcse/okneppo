@@ -11,13 +11,14 @@ export async function GET(
     const { searchParams } = req.nextUrl;
     const orderNumber = searchParams?.get('order_number');
     const getPayments = searchParams?.get('payment') === 'true';
-    let registration, payment, payments;
+    let registration, payments;
+    
     if (orderNumber) {
-      payment = await db.findOne('payments', { order_number: orderNumber });
-      if (!payment) {
-        return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+      // Find registration by order_number
+      registration = await db.findOne('course_registrations', { order_number: orderNumber });
+      if (!registration) {
+        return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
       }
-      registration = await db.findOne('course_registrations', { id: payment.registration_id });
     } else {
       registration = await db.findById('course_registrations', parseInt(id, 10));
     }
@@ -25,20 +26,16 @@ export async function GET(
     if (!registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
-    if (!payment) {
-      payment = await db.findOne('payments', { registration_id: registration.id });
-    }
-
+    
+    // Get payment for this registration
+    const payment = await db.findOne('payments', { registration_id: registration.id });
 
     if (getPayments) {
       payments = await db.find('payments', { registration_id: registration.id });
     }
 
-
-    // Get the order number from the payments table
-
     const formattedRegistration = {
-      id: payment?.registration_id || id,
+      id: registration.id,
       name: registration.name,
       address: registration.address,
       phone: registration.phone,
@@ -47,7 +44,7 @@ export async function GET(
       courseTitle: registration.course_title,
       amountDue: registration.amount_due,
       status: registration.status,
-      orderNumber: payment?.order_number || null,
+      orderNumber: registration.order_number || null,
       createdAt: registration.created_at,
       updatedAt: registration.updated_at,
       payment: getPayments ? payments : null,

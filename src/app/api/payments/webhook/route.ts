@@ -113,7 +113,6 @@ async function updatePaymentStatus(
     } else {
         const newPaymentData = {
                 registration_id: payment.registration_id,
-                order_number: payment.order_number,
                 razorpay_order_id: payment.razorpay_order_id,
                 amount: payment.amount,
                 currency: payment.currency,

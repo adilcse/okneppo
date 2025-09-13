@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
 async function processMessageChange(value: Record<string, unknown>, businessAccountId: string) {
   try {
     console.log('Processing message by:', businessAccountId);
+    console.log('Message value:', JSON.stringify(value, null, 2));
     const { messaging_product, metadata, messages, statuses } = value;
 
     if (messaging_product !== 'whatsapp') {

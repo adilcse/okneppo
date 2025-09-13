@@ -12,14 +12,17 @@ export async function GET(
     // if (!registration) {
     //   return new NextResponse('Registration not found', { status: 404 });
     // }
-    const payments = await db.find('payments', { order_number: id });
-    const payment= payments.find((p: unknown) => (p as { status: string }).status === 'captured') || payments[0];
-    if (!payment) {
-      return new NextResponse('Payment not found', { status: 404 });
-    }
-    const registration = await db.findById('course_registrations', payment.registration_id as number);
+    // Find registration by order_number (id parameter)
+    const registration = await db.findOne('course_registrations', { order_number: id });
     if (!registration) {
       return new NextResponse('Registration not found', { status: 404 });
+    }
+    
+    // Get payments for this registration
+    const payments = await db.find('payments', { registration_id: registration.id });
+    const payment = payments.find((p: unknown) => (p as { status: string }).status === 'captured') || payments[0];
+    if (!payment || payment.status !== 'captured') {
+      return new NextResponse('Payment not found or not captured', { status: 404 });
     }
 
     // Create PDF with clean styling
@@ -47,7 +50,7 @@ export async function GET(
     // Receipt info - right aligned
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Order #: ${payment.order_number}`, pageWidth - margin - doc.getTextWidth(`Order #: ${payment.order_number}`), yPos);
+    doc.text(`Order #: ${registration.order_number}`, pageWidth - margin - doc.getTextWidth(`Order #: ${registration.order_number}`), yPos);
     yPos += 8;
     doc.text(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`, pageWidth - margin - doc.getTextWidth(`Date: ${new Date(String(payment.created_at)).toLocaleDateString()}`), yPos);
 
@@ -76,7 +79,7 @@ export async function GET(
     doc.setFont('helvetica', 'normal');
     doc.text('Payment ID:', leftColX + 5, yPos + 25);
     doc.setFont('helvetica', 'bold');
-    doc.text(String(payment.razorpay_payment_id || payment.order_number), leftColX + 35, yPos + 25);
+    doc.text(String(payment.razorpay_payment_id || registration.order_number), leftColX + 35, yPos + 25);
 
     // Payment Type
     doc.setFont('helvetica', 'normal');
@@ -219,7 +222,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=receipt-${payment.order_number}.pdf`,
+        'Content-Disposition': `attachment; filename=receipt-${registration.order_number}.pdf`,
       },
     });
   } catch (error) {

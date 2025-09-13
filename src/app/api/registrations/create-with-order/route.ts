@@ -14,29 +14,6 @@ export async function POST(req: NextRequest) {
   try {
     const body: CourseRegistrationCreationAttributes & { amount: number; coupon_code?: string } = await req.json();
 
-    // Check for existing registrations with the same phone or email
-    const existingPhone = await db.findOne('course_registrations', { phone: body.phone });
-    
-    // Only check for existing email if email is provided and not empty
-    let existingEmail = null;
-    if (body.email && body.email.trim()) {
-      existingEmail = await db.findOne('course_registrations', { email: body.email });
-    }
-
-    if (existingPhone) {
-      return NextResponse.json(
-        { error: 'Phone number is already registered. Please use a different phone number.' },
-        { status: 400 }
-      );
-    }
-
-    if (existingEmail) {
-      return NextResponse.json(
-        { error: 'Email address is already registered. Please use a different email address.' },
-        { status: 400 }
-      );
-    }
-
     // Validate terms and conditions acceptance
     if (!body.termsAccepted) {
       return NextResponse.json(
@@ -45,23 +22,83 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create new registration
-    const newRegistration = await db.create('course_registrations', {
-      status: RegistrationStatus.PENDING,
-      amount_due: body.amountDue,
-      course_title: body.courseTitle,
-      course_id: body.courseId,
-      name: body.name,
-      address: body.address,
-      phone: body.phone,
-      email: body.email && body.email.trim() ? body.email : null,
-      highest_qualification: body.highestQualification || null,
-      aadhar_number: body.aadharNumber || null,
-      date_of_birth: body.dateOfBirth || null,
-      profession: body.profession || null,
-      terms_accepted: body.termsAccepted,
+    // Check for existing registration with the same phone
+    const existingRegistration = await db.findOne('course_registrations', { phone: body.phone });
+    
+    // Only check for existing email if email is provided and not empty
+    let existingEmail = null;
+    if (body.email && body.email.trim()) {
+      existingEmail = await db.findOne('course_registrations', { email: body.email });
+    }
+
+    // If email exists and it's different from the phone-based registration, return error
+    if (existingEmail && existingRegistration && existingEmail.id !== existingRegistration.id) {
+      return NextResponse.json(
+        { error: 'Email address is already registered with a different phone number.' },
+        { status: 400 }
+      );
+    }
+
+    // If registration exists and is completed, return redirect info
+    if (existingRegistration && existingRegistration.status === 'completed') {
+      return NextResponse.json({
+        success: false,
+        alreadyRegistered: true,
+        message: 'You are already registered for this course.',
+        orderNumber: existingRegistration.order_number,
+        redirectUrl: `/receipt/${existingRegistration.order_number}`,
+      }, { status: 200 });
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }) as any;
+    let newRegistration: any;
+    
+    if (existingRegistration) {
+      // Update existing registration (keeps existing order_number)
+      const [, updatedRegistrations] = await db.update(
+        'course_registrations',
+        { id: existingRegistration.id },
+        {
+          status: RegistrationStatus.PENDING,
+          amount_due: body.amountDue,
+          course_title: body.courseTitle,
+          course_id: body.courseId,
+          name: body.name,
+          address: body.address,
+          email: body.email && body.email.trim() ? body.email : null,
+          highest_qualification: body.highestQualification || null,
+          aadhar_number: body.aadharNumber || null,
+          date_of_birth: body.dateOfBirth || null,
+          profession: body.profession || null,
+          terms_accepted: body.termsAccepted,
+        }
+      );
+      newRegistration = updatedRegistrations[0];
+    } else {
+      // Generate unique order number for new registration
+      const orderNumber = await generateUniqueOrderNumber(async (orderNum) => {
+        const existing = await db.findOne('course_registrations', { order_number: orderNum });
+        return !!existing;
+      });
+
+      // Create new registration with order number
+      newRegistration = await db.create('course_registrations', {
+        status: RegistrationStatus.PENDING,
+        amount_due: body.amountDue,
+        course_title: body.courseTitle,
+        course_id: body.courseId,
+        name: body.name,
+        address: body.address,
+        phone: body.phone,
+        email: body.email && body.email.trim() ? body.email : null,
+        highest_qualification: body.highestQualification || null,
+        aadhar_number: body.aadharNumber || null,
+        date_of_birth: body.dateOfBirth || null,
+        profession: body.profession || null,
+        terms_accepted: body.termsAccepted,
+        order_number: orderNumber,
+      });
+    }
 
     // Create Razorpay order
     const orderOptions = {
@@ -78,16 +115,9 @@ export async function POST(req: NextRequest) {
 
     const order = await razorpay.orders.create(orderOptions);
 
-    // Generate unique order number
-    const orderNumber = await generateUniqueOrderNumber(async (orderNum) => {
-      const existing = await db.findOne('payments', { order_number: orderNum });
-      return !!existing;
-    });
-
     // Create payment record
     const paymentRecord = await db.create('payments', {
       registration_id: newRegistration.id,
-      order_number: orderNumber,
       razorpay_order_id: order.id,
       amount: body.amount,
       currency: 'INR',
@@ -107,7 +137,7 @@ export async function POST(req: NextRequest) {
       },
       payment: {
         id: paymentRecord.id,
-        order_number: paymentRecord.order_number,
+        order_number: newRegistration.order_number,
       },
     }, { status: 201 });
 

@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { PaymentCreationAttributes, PaymentStatus } from '@/models/Payment';
 import { RegistrationStatus } from '@/models/CourseRegistration';
 import { sendWhatsAppWelcomeMessageAfterPayment } from '@/lib/whatsapp';
-import { generateUniqueOrderNumber } from '@/lib/orderUtils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,15 +23,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
 
-    // Generate a unique order number for manual payments (6 characters max)
-    const orderNumber = await generateUniqueOrderNumber(async (orderNum: string) => {
-      const existing = await db.findOne('payments', { order_number: orderNum });
-      return !!existing;
-    });
-
     const paymentData: PaymentCreationAttributes = {
       registration_id,
-      order_number: orderNumber,
       amount,
       currency: 'INR',
       status: PaymentStatus.CAPTURED, // Manual payments are immediately captured

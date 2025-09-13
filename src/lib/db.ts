@@ -293,7 +293,7 @@ export const db = {
     data: Partial<T>, 
     conflictColumns: string[],
     updateColumns?: string[]
-  ): Promise<T> {
+  ): Promise<T & {id: number}> {
     const keys = Object.keys(data);
     const values = keys.map(key => data[key as keyof T]);
     
@@ -629,6 +629,7 @@ export const db = {
           course_title VARCHAR(255) NOT NULL,
           amount_due NUMERIC(10, 2) NOT NULL,
           status VARCHAR(50) NOT NULL,
+          order_number VARCHAR(6) UNIQUE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
@@ -658,6 +659,79 @@ export const db = {
         $$;
       `;
 
+      // Add order_number column if it doesn't exist
+      await sql`
+        ALTER TABLE course_registrations
+        ADD COLUMN IF NOT EXISTS order_number VARCHAR(6) UNIQUE;
+      `;
+
+      try{
+      // Check if order_number column exists in payments table
+      const columnExists = await pool.query(`
+        SELECT EXISTS (
+          SELECT 1
+          FROM information_schema.columns 
+          WHERE table_name = 'payments' 
+          AND column_name = 'order_number'
+        ) as exists
+      `);
+      
+      const orderNumberColumnExists = columnExists.rows[0]?.exists;
+      
+      if (orderNumberColumnExists) {
+        // Migrate existing order numbers from payments table to course_registrations
+        // Only for payments with 'captured' status
+        await sql`
+          UPDATE course_registrations 
+          SET order_number = payments.order_number
+          FROM payments 
+          WHERE course_registrations.id = payments.registration_id 
+          AND payments.status = 'captured' 
+          AND payments.order_number IS NOT NULL
+          AND course_registrations.order_number IS NULL;
+        `;
+        console.log('Migrated existing order numbers from payments table');
+      } else {
+        console.log('order_number column does not exist in payments table, will generate new order numbers');
+      }
+      
+      // Generate order numbers for any course_registrations that don't have one
+      const registrationsWithoutOrderNumber = await pool.query(`
+        SELECT id FROM course_registrations 
+        WHERE order_number IS NULL
+        ORDER BY id
+      `);
+      
+      if (registrationsWithoutOrderNumber.rows.length > 0) {
+        console.log(`Found ${registrationsWithoutOrderNumber.rows.length} registrations without order numbers, generating new ones...`);
+        
+        // Import the order number generator
+        const { generateUniqueOrderNumber } = await import('@/lib/orderUtils');
+        
+        for (const row of registrationsWithoutOrderNumber.rows) {
+          try {
+            const orderNumber = await generateUniqueOrderNumber(async (orderNum) => {
+              const existing = await db.findOne('course_registrations', { order_number: orderNum });
+              return !!existing;
+            });
+            
+            await sql`
+              UPDATE course_registrations 
+              SET order_number = ${orderNumber}
+              WHERE id = ${row.id}
+            `;
+          } catch (error) {
+            console.error(`Failed to generate order number for registration ${row.id}:`, error);
+          }
+        }
+        
+        console.log('Generated order numbers for all registrations without them');
+      }
+      
+      } catch (error) {
+        console.log('course_registrations table migration failed:', error);
+      }
+
       console.log('course_registrations table already exists');
     }
 
@@ -675,7 +749,6 @@ export const db = {
         CREATE TABLE IF NOT EXISTS payments (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           registration_id INTEGER NOT NULL REFERENCES course_registrations(id) ON DELETE CASCADE,
-          order_number VARCHAR(6) NOT NULL UNIQUE,
           razorpay_payment_id VARCHAR(255),
           razorpay_order_id VARCHAR(255),
           razorpay_signature VARCHAR(255),
@@ -711,6 +784,12 @@ export const db = {
       try {
         // Enable UUID extension
         await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+        // Remove order_number column if it exists
+        // await sql`
+        //   ALTER TABLE payments
+        //   DROP COLUMN IF EXISTS order_number;
+        // `;
 
       } catch (error) {
         console.log('Payments table migration failed:', error);

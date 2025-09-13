@@ -394,7 +394,7 @@ export default function RegistrationDetailPage() {
             {payments.map(payment => (
               <tr key={payment.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white font-mono">
-                  {payment.razorpay_payment_id || payment.order_number}
+                  {payment.razorpay_payment_id || registration.orderNumber}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">₹{payment.amount}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -453,7 +453,7 @@ export default function RegistrationDetailPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">Payment ID:</span>
-                      <span className="font-mono text-sm">{selectedPayment.razorpay_payment_id || selectedPayment.order_number || 'N/A'}</span>
+                      <span className="font-mono text-sm">{selectedPayment.razorpay_payment_id || registration.orderNumber || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">Order ID:</span>

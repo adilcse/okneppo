@@ -22,7 +22,7 @@ export interface CourseRegistration {
   courseTitle: string;
   amountDue: number;
   status: RegistrationStatus;
-  orderNumber?: string; // 6-digit alphanumeric order number from payment
+  orderNumber?: string; // 6-digit alphanumeric order number - now stored in course_registrations table
   createdAt: Date;
   payment?: Payment[];
 }

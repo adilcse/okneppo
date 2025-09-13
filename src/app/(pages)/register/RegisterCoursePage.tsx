@@ -301,7 +301,7 @@ export default function RegisterCoursePage() {
         registrationData = retryResponse.data.registration;
         orderData = retryResponse.data.order;
         paymentId = retryResponse.data.payment.id;
-        orderNumber = retryResponse.data.payment.order_number;
+        orderNumber = retryResponse.data.registration.order_number;
       } else {
         console.log('Creating new registration and order');
         
@@ -332,9 +332,37 @@ export default function RegisterCoursePage() {
 
         registrationData = response.data.registration;
         orderData = response.data.order;
-        paymentId = response.data.payment.id;
-        orderNumber = response.data.payment.order_number;
+        paymentId = response.data.payment?.id;
+        orderNumber = response.data?.orderNumber || response.data.registration?.order_number;
 
+                // Handle already registered case
+                if (response.data?.alreadyRegistered) {
+                  const data = response.data;
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setErrors({ 
+                    ...errors, 
+                    general: data.message || 'You are already registered for this course.'
+                  });
+                  
+                  // Redirect to receipt page after a short delay
+                  setTimeout(() => {
+                    if (data.redirectUrl) {
+                      if (window) {
+                        window.open(data.redirectUrl, '_blank');
+                      } else {
+                        router.push(data.redirectUrl);
+                      }
+                    }
+                  }, 2000);
+                  
+                  posthog?.people?.set({
+                    register_application_status: 'already_registered',
+                    registration_completed: true,
+                    last_registration_date: new Date().toISOString()
+                   });
+                  setPaymentStatus('success');
+                  return;
+                }
         // Store the order details for potential retry
         setCurrentOrder({
           registration_id: registrationData.id,
@@ -440,9 +468,10 @@ export default function RegisterCoursePage() {
       console.error('Payment process failed:', error);
       // Handle validation errors from the API
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { status?: number; data?: { error?: string } } };
+        const axiosError = error as { response?: { status?: number; data?: { error?: string; alreadyRegistered?: boolean; redirectUrl?: string; message?: string } } };
         console.log(axiosError.response?.status);
         console.log(axiosError.response?.data?.error);
+        
         if (axiosError.response?.status === 400 && axiosError.response?.data?.error) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
           setErrors({ 

@@ -10,11 +10,18 @@ export async function GET(
     const { searchParams } = req.nextUrl;
     const orderNumber = searchParams?.get('order_number');
     let payments;
+    
     if (orderNumber) {
-      payments = await db.find('payments', { order_number: orderNumber });
+      // Find registration by order_number first, then get its payments
+      const registration = await db.findOne('course_registrations', { order_number: orderNumber });
+      if (!registration) {
+        return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
+      }
+      payments = await db.find('payments', { registration_id: registration.id });
     } else {
       payments = await db.find('payments', { registration_id: parseInt(id, 10) });
     }
+    
     if (!payments) {
       return NextResponse.json({ error: 'Payments not found' }, { status: 404 });
     }
