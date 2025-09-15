@@ -100,10 +100,10 @@ export default function AdminRegistrationsPage() {
       )
     },
     {
-      key: 'email',
-      label: 'Email',
+      key: 'address',
+      label: 'Address',
       sortable: true,
-      render: (reg: CourseRegistration) => reg.email || 'N/A'
+      render: (reg: CourseRegistration) => reg.address || 'N/A'
     },
     {
       key: 'phone',
