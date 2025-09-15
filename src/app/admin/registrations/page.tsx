@@ -158,7 +158,7 @@ export default function AdminRegistrationsPage() {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => handleStatusFilter('all')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
             statusFilter === 'all'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -168,7 +168,7 @@ export default function AdminRegistrationsPage() {
         </button>
         <button
           onClick={() => handleStatusFilter('pending')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
             statusFilter === 'pending'
               ? 'bg-yellow-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -178,7 +178,7 @@ export default function AdminRegistrationsPage() {
         </button>
         <button
           onClick={() => handleStatusFilter('completed')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
             statusFilter === 'completed'
               ? 'bg-green-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -188,7 +188,7 @@ export default function AdminRegistrationsPage() {
         </button>
         <button
           onClick={() => handleStatusFilter('failed')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
             statusFilter === 'failed'
               ? 'bg-red-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -198,7 +198,7 @@ export default function AdminRegistrationsPage() {
         </button>
         <button
           onClick={() => handleStatusFilter('cancelled')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
             statusFilter === 'cancelled'
               ? 'bg-gray-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'

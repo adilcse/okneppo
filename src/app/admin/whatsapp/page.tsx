@@ -170,9 +170,9 @@ export default function WhatsAppAdminPage() {
 
   return (
     <Container>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             WhatsApp Communications
           </h1>
           <div className="flex items-center space-x-3">
@@ -182,7 +182,7 @@ export default function WhatsAppAdminPage() {
                 {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            <Button onClick={refreshAll} variant="outline">
+            <Button onClick={refreshAll} variant="outline" size="sm" className="text-sm">
               Refresh
             </Button>
           </div>
@@ -190,7 +190,7 @@ export default function WhatsAppAdminPage() {
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-4 md:space-x-8">
             <button
               onClick={() => setActiveTab('conversations')}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
@@ -216,11 +216,11 @@ export default function WhatsAppAdminPage() {
 
         {/* Conversations Tab */}
         {activeTab === 'conversations' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Conversations List */}
             <Card>
-              <div className="p-6">
-                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Conversations</h2>
+              <div className="p-4 md:p-6">
+                <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-gray-900 dark:text-white">Conversations</h2>
                 {conversationsLoading ? (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400">Loading conversations...</div>
                 ) : conversationsError ? (
@@ -236,7 +236,7 @@ export default function WhatsAppAdminPage() {
                     {conversations.map((conversation) => (
                       <div
                         key={conversation.phone_number}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        className={`p-2 md:p-3 rounded-lg cursor-pointer transition-colors ${
                           selectedConversation === conversation.phone_number
                             ? 'bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700'
                             : 'hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent'
@@ -244,17 +244,17 @@ export default function WhatsAppAdminPage() {
                         onClick={() => setSelectedConversation(conversation.phone_number)}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-medium text-gray-900 dark:text-white text-sm md:text-base truncate">
                             {formatPhoneNumber(conversation.phone_number)}
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
                             {/* Only show unread outbound messages count */}
                             {conversation.unread_outbound_count > 0 && (
                               <span 
-                                className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-xs font-medium animate-pulse"
+                                className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-1 md:px-2 py-1 rounded-full text-xs font-medium animate-pulse"
                                 title={`${conversation.unread_outbound_count} unread message${conversation.unread_outbound_count > 1 ? 's' : ''} from you`}
                               >
-                                {conversation.unread_outbound_count} unread
+                                {conversation.unread_outbound_count}
                               </span>
                             )}
                             {/* Show indicator for inbound messages */}
@@ -263,14 +263,16 @@ export default function WhatsAppAdminPage() {
                             )}
                           </div>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mt-1">
                           {conversation.last_message_direction === 'inbound' ? (
                             <span className="text-green-600 dark:text-green-400">← </span>
                           ) : (
                             <span className="text-blue-600 dark:text-blue-400">→ </span>
                           )}
-                          {conversation.last_message_content?.substring(0, 45)}
-                          {conversation.last_message_content?.length > 45 ? '...' : ''}
+                          <span className="truncate">
+                            {conversation.last_message_content?.substring(0, 30)}
+                            {conversation.last_message_content?.length > 30 ? '...' : ''}
+                          </span>
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                           {formatTimestamp(conversation.last_message_time)}
@@ -284,23 +286,23 @@ export default function WhatsAppAdminPage() {
 
             {/* Messages */}
             <Card className="lg:col-span-2">
-              <div className="p-6">
-                <div className="mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="p-4 md:p-6">
+                <div className="mb-3 md:mb-4">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                     {selectedConversation 
                       ? `Messages with ${formatPhoneNumber(selectedConversation)}`
                       : 'Select a conversation to view messages'
                     }
                   </h2>
                   {selectedConversation && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Click on a conversation to start messaging
                     </p>
                   )}
                 </div>
                 {selectedConversation ? (
                   <div className="relative">
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-3 md:space-y-4 max-h-80 md:max-h-96 overflow-y-auto">
                     {messagesLoading ? (
                       <div className="text-center py-4 text-gray-500 dark:text-gray-400">Loading messages...</div>
                     ) : messagesError ? (
@@ -321,7 +323,7 @@ export default function WhatsAppAdminPage() {
                           }`}
                         >
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                            className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-lg shadow-sm ${
                               message.direction === 'outbound'
                                 ? message.status === 'failed' 
                                   ? 'bg-red-500 text-white'
@@ -331,7 +333,7 @@ export default function WhatsAppAdminPage() {
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600'
                             }`}
                           >
-                            <div className="text-sm">{message.content}</div>
+                            <div className="text-sm break-words">{message.content}</div>
                             <div
                               className={`text-xs mt-1 flex items-center justify-between ${
                                 message.direction === 'outbound'
@@ -339,11 +341,11 @@ export default function WhatsAppAdminPage() {
                                   : 'text-gray-500 dark:text-gray-400'
                               }`}
                             >
-                              <span>{formatTimestamp(message.timestamp)}</span>
+                              <span className="truncate">{formatTimestamp(message.timestamp)}</span>
                               {message.direction === 'outbound' && (
-                                <span className="ml-2 flex items-center">
+                                <span className="ml-2 flex items-center flex-shrink-0">
                                   {message.status === 'sending' && (
-                                    <span className="text-blue-200 animate-pulse">⏳ Sending...</span>
+                                    <span className="text-blue-200 animate-pulse text-xs">⏳</span>
                                   )}
                                   {message.status === 'sent' && (
                                     <span className="text-green-200">✓</span>
@@ -355,11 +357,11 @@ export default function WhatsAppAdminPage() {
                                     <span className="text-green-200">✓✓✓</span>
                                   )}
                                   {message.status === 'failed' && (
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-red-200">✗ Failed</span>
+                                    <div className="flex items-center space-x-1">
+                                      <span className="text-red-200 text-xs">✗</span>
                                       <button
                                         onClick={() => retryMessage(message)}
-                                        className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded"
+                                        className="text-xs bg-red-600 hover:bg-red-700 text-white px-1 py-0.5 rounded"
                                         title="Retry sending message"
                                       >
                                         Retry
@@ -401,8 +403,8 @@ export default function WhatsAppAdminPage() {
                 
                 {/* Message Input for 2-way communication */}
                 {selectedConversation && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex space-x-2">
+                  <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <div className="flex-1">
                         <Textarea
                           placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
@@ -410,13 +412,14 @@ export default function WhatsAppAdminPage() {
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setConversationMessage(e.target.value)}
                           onKeyPress={handleKeyPress}
                           rows={2}
-                          className="resize-none"
+                          className="resize-none text-sm"
                         />
                       </div>
                       <Button 
                         onClick={sendConversationMessage} 
                         disabled={!conversationMessage.trim()}
-                        className="self-end"
+                        className="self-end w-full sm:w-auto"
+                        size="sm"
                       >
                         Send
                       </Button>
@@ -431,9 +434,9 @@ export default function WhatsAppAdminPage() {
         {/* Send Message Tab */}
         {activeTab === 'send-message' && (
           <Card>
-            <div className="p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Send New Message</h2>
-              <div className="space-y-4">
+            <div className="p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-gray-900 dark:text-white">Send New Message</h2>
+              <div className="space-y-3 md:space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Phone Number
@@ -443,6 +446,7 @@ export default function WhatsAppAdminPage() {
                     placeholder="Enter phone number (e.g., 9876543210 or +919876543210)"
                     value={recipientPhone}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecipientPhone(e.target.value)}
+                    className="text-sm"
                   />
                 </div>
                 <div>
@@ -454,12 +458,14 @@ export default function WhatsAppAdminPage() {
                     value={newMessage}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewMessage(e.target.value)}
                     rows={4}
+                    className="text-sm"
                   />
                 </div>
                 <Button 
                   onClick={sendMessage} 
                   disabled={!newMessage.trim() || !recipientPhone.trim()}
                   className="w-full"
+                  size="sm"
                 >
                   Send Message
                 </Button>
