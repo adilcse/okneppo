@@ -251,7 +251,7 @@ Welcome to Ok Neppo family...`;
       to: phone,
       message: message2,
       type: 'template',
-      template: 'ok_neppo_link'
+      template: 'online_register_invite_link'
     });
   }
 }
