@@ -8,7 +8,8 @@ import ListingPage from '@/components/admin/ListingPage';
 import { Button } from '@/components/common';
 import { Product } from '@/models/Product';
 import { GetProductsRequest, GetProductsResponse } from '@/types/api';
-import { DataGrid, Column } from '@/components/admin/DataGrid';
+import ResponsiveDataGrid, { Column } from '@/components/common/ResponsiveDataGrid';
+import { useInfiniteData } from '@/hooks/useInfiniteData';
 import Image from 'next/image';
 import axiosClient from '@/lib/axios';
 import { useDebouncedState } from '@/lib/clientUtils';
@@ -39,10 +40,12 @@ export default function ProductsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [, setSearchQuery, debouncedSearchQuery] = useDebouncedState('', 1000);
-  const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  const [page, setPage] = useState(1);
+
+  // Use regular query for desktop pagination
   const { data, isLoading } = useQuery({
     queryKey: ['products', { page, searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
     queryFn: () => fetchProducts({
@@ -54,6 +57,31 @@ export default function ProductsPage() {
     })
   });
 
+  // Infinite data hook for mobile
+  const {
+    data: productsData,
+    pagination,
+    isLoading: infiniteLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteData<Product>({
+    queryKey: ['products-infinite', { searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
+    queryFn: async (pageParam) => {
+      const response = await fetchProducts({
+        page: pageParam,
+        limit: 10,
+        search: debouncedSearchQuery,
+        sortBy,
+        sortOrder
+      });
+      return {
+        data: response.products,
+        pagination: response.pagination
+      };
+    }
+  });
+
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -63,9 +91,15 @@ export default function ProductsPage() {
     }
   });
 
-  const handleSort = (field: string, order: 'asc' | 'desc') => {
-    setSortBy(field);
-    setSortOrder(order);
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      // Toggle sort order if same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to desc
+      setSortBy(field);
+      setSortOrder('desc');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -118,6 +152,7 @@ export default function ProductsPage() {
     {
       key: 'category',
       header: 'Category',
+      sortable: false,
       render: (product) => (
         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
           {product.category}
@@ -127,6 +162,7 @@ export default function ProductsPage() {
     {
       key: 'actions',
       header: 'Actions',
+      sortable: false,
       render: (product) => (
         <div className="flex items-center justify-end gap-2">
           <Button
@@ -168,16 +204,25 @@ export default function ProductsPage() {
       searchPlaceholder="Search products..."
       onSearch={setSearchQuery}
     >
-      <DataGrid
+      <ResponsiveDataGrid
         columns={columns}
-        data={data?.products || []}
-        isLoading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={setPage}
+        data={data?.products || productsData || []}
+        loading={isLoading || infiniteLoading}
+        pagination={data?.pagination || pagination}
         onSort={handleSort}
         sortBy={sortBy}
         sortOrder={sortOrder}
         emptyMessage="No products found"
+        showTitle={false}
+        showSearch={false}
+        enableInfiniteScroll={true}
+        onLoadMore={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onPageChange={setPage}
+        pageSizeOptions={[5, 10, 25, 50]}
+        showPageSizeSelector={true}
+        showPaginationInfo={true}
       />
     </ListingPage>
   );

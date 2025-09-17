@@ -14,6 +14,7 @@ const PROTECTED_API_ROUTES = [
 
 const GET_PROTECTED_API_ROUTES = [
   '/api/course-registrations',         // Course registrations
+  '/api/stats',         // Products
 ];
 
 const checkAdminAuth = async (request: NextRequest) => {
@@ -90,7 +91,7 @@ export async function middleware(request: NextRequest) {
 
     const isGetProtectedApiRoute = GET_PROTECTED_API_ROUTES.some(route => 
           {
-            return pathname.endsWith(route);
+            return pathname.endsWith(route) || pathname.startsWith(route);
           }
     );
     if (isGetProtectedApiRoute && method === 'GET') {

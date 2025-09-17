@@ -11,6 +11,8 @@ export const GET = withCors(async (request: NextRequest) => {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
     const isOnlineCourse = searchParams.get('is_online_course');
+    const sortBy = searchParams.get('sortBy') || 'created_at';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
     
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
@@ -27,12 +29,17 @@ export const GET = withCors(async (request: NextRequest) => {
     // Get total count for pagination
     const totalCount = await db.count('courses', criteria);
     
+    // Validate sortBy field to prevent SQL injection
+    const allowedSortFields = ['id', 'title', 'created_at', 'discounted_price', 'max_price', 'discount_percentage'];
+    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+    const validSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    
     // Execute query with pagination and JOIN
     const options = {
       limit,
       offset,
-      orderBy: 'courses.created_at',
-      order: 'DESC' as const,
+      orderBy: `courses.${validSortBy}`,
+      order: validSortOrder as 'ASC' | 'DESC',
       join: {
         table: 'course_subjects',
         on: 'courses.id = course_subjects.course_id',

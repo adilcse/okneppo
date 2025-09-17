@@ -8,7 +8,8 @@ import ListingPage from '@/components/admin/ListingPage';
 import { Button } from '@/components/common';
 import { Subject } from '@/types/course';
 import { GetSubjectsRequest, GetSubjectsResponse } from '@/types/api';
-import { DataGrid, Column } from '@/components/admin/DataGrid';
+import ResponsiveDataGrid, { Column } from '@/components/common/ResponsiveDataGrid';
+import { useInfiniteData } from '@/hooks/useInfiniteData';
 import Image from 'next/image';
 import axiosClient from '@/lib/axios';
 import { useDebouncedState } from '@/lib/clientUtils';
@@ -36,10 +37,12 @@ export default function SubjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [, setSearchQuery, debouncedSearchQuery] = useDebouncedState('', 1000);
-  const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  const [page, setPage] = useState(1);
+
+  // Use regular query for desktop pagination
   const { data, isLoading } = useQuery({
     queryKey: ['subjects', { page, searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
     queryFn: () => fetchSubjects({
@@ -51,6 +54,34 @@ export default function SubjectsPage() {
     })
   });
 
+  // Infinite data hook for mobile
+  const {
+    data: subjectsData,
+    pagination,
+    isLoading: infiniteLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteData<Subject>({
+    queryKey: ['subjects-infinite', { searchQuery: debouncedSearchQuery, sortBy, sortOrder }],
+    queryFn: async (pageParam) => {
+      const response = await fetchSubjects({
+        page: pageParam,
+        limit: 10,
+        search: debouncedSearchQuery,
+        sortBy,
+        sortOrder
+      });
+      return {
+        data: response.subjects,
+        pagination: {
+          ...response.pagination,
+          totalPages: Math.ceil(response.pagination.totalCount / response.pagination.limit)
+        }
+      };
+    }
+  });
+
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: deleteSubject,
@@ -60,9 +91,15 @@ export default function SubjectsPage() {
     }
   });
 
-  const handleSort = (field: string, order: 'asc' | 'desc') => {
-    setSortBy(field);
-    setSortOrder(order);
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      // Toggle sort order if same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to desc
+      setSortBy(field);
+      setSortOrder('desc');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -105,6 +142,7 @@ export default function SubjectsPage() {
     {
       key: 'courses',
       header: 'Courses',
+      sortable: false,
       render: (subject) => (
         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
           {subject.courses?.length || 0} courses
@@ -124,6 +162,7 @@ export default function SubjectsPage() {
     {
       key: 'actions',
       header: 'Actions',
+      sortable: false,
       render: (subject) => (
         <div className="flex items-center justify-end gap-2">
           <Button
@@ -157,16 +196,25 @@ export default function SubjectsPage() {
       searchPlaceholder="Search subjects..."
       onSearch={setSearchQuery}
     >
-      <DataGrid
+      <ResponsiveDataGrid
         columns={columns}
-        data={data?.subjects || []}
-        isLoading={isLoading}
-        pagination={data?.pagination}
-        onPageChange={setPage}
+        data={data?.subjects || subjectsData || []}
+        loading={isLoading || infiniteLoading}
+        pagination={data?.pagination || pagination}
         onSort={handleSort}
         sortBy={sortBy}
         sortOrder={sortOrder}
         emptyMessage="No subjects found"
+        showTitle={false}
+        showSearch={false}
+        enableInfiniteScroll={true}
+        onLoadMore={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onPageChange={setPage}
+        pageSizeOptions={[5, 10, 25, 50]}
+        showPageSizeSelector={true}
+        showPaginationInfo={true}
       />
     </ListingPage>
   );
