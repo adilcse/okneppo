@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CourseRegistration, RegistrationStatus } from '@/models/CourseRegistration';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -42,13 +42,26 @@ export default function AdminRegistrationsPage() {
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'failed' | 'cancelled'>('all');
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   
   const [page, setPage] = useState(1);
+  console.log(isMobile);
+    // Check if mobile
+    useEffect(() => {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+      
+      checkMobile();
+      window.addEventListener('resize', checkMobile);
+      return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
   // Use regular query for desktop pagination
   const { data, isLoading: loading } = useQuery({
     queryKey: ['registrations', { page, searchQuery: debouncedSearchTerm, sortBy, sortOrder, statusFilter }],
-    queryFn: () => getRegistrations(page, 10, debouncedSearchTerm, sortBy, sortOrder, statusFilter)
+    queryFn: () => getRegistrations(page, 10, debouncedSearchTerm, sortBy, sortOrder, statusFilter),
+    enabled: !isMobile && isMobile !== null
   });
 
   // Infinite data hook for mobile
@@ -67,7 +80,8 @@ export default function AdminRegistrationsPage() {
         data: response.data,
         pagination: response.pagination
       };
-    }
+    },
+    enabled: !!isMobile && isMobile !== null
   });
 
   const handleSearch = (term: string) => {
@@ -230,9 +244,9 @@ export default function AdminRegistrationsPage() {
       </div>
 
       <ResponsiveDataGrid
-        data={data?.data || registrations || []}
+        data={isMobile ? registrations || [] : data?.data || []}
         columns={columns}
-        pagination={data?.pagination || pagination}
+        pagination={isMobile ? pagination : data?.pagination}
         loading={loading || infiniteLoading}
         
         // Sorting
@@ -258,7 +272,7 @@ export default function AdminRegistrationsPage() {
         showTitle={true}
         
         // Infinite scroll
-        enableInfiniteScroll={true}
+        enableInfiniteScroll={!!isMobile}
         onLoadMore={fetchNextPage}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}

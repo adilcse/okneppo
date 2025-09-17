@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
@@ -39,8 +39,20 @@ export default function CoursesPage() {
   const [, setSearchQuery, debouncedSearchQuery] = useDebouncedState('', 1000);
   const [sortBy, setSortBy] = useState<string>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   const [page, setPage] = useState(1);
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Use regular query for desktop pagination
   const { data, isLoading } = useQuery({
@@ -51,7 +63,8 @@ export default function CoursesPage() {
       search: debouncedSearchQuery,
       sortBy,
       sortOrder
-    })
+    }),
+    enabled: !isMobile && isMobile !== null
   });
 
   // Infinite data hook for mobile
@@ -79,7 +92,8 @@ export default function CoursesPage() {
           totalPages: Math.ceil(response.pagination.totalCount / response.pagination.limit)
         }
       };
-    }
+    },
+    enabled: !!isMobile && isMobile !== null
   });
 
   // Delete mutation
@@ -224,16 +238,16 @@ export default function CoursesPage() {
     >
       <ResponsiveDataGrid
         columns={columns}
-        data={data?.courses || coursesData || []}
+        data={isMobile ? coursesData || [] : data?.courses || []}
         loading={isLoading || infiniteLoading}
-        pagination={data?.pagination || pagination}
+        pagination={isMobile ? pagination : data?.pagination}
         onSort={handleSort}
         sortBy={sortBy}
         sortOrder={sortOrder}
         emptyMessage="No courses found"
         showTitle={false}
         showSearch={false}
-        enableInfiniteScroll={true}
+        enableInfiniteScroll={!!isMobile}
         onLoadMore={fetchNextPage}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
