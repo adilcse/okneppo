@@ -270,7 +270,7 @@ export const db = {
   },
   
   // Insert a new record
-  async create<T = Record>(tableName: string, data: Partial<T>): Promise<T> {
+  async create<T = Record>(tableName: string, data: Partial<T>): Promise<T & {id: number}> {
     const keys = Object.keys(data);
     const values = keys.map(key => data[key as keyof T]);
     
