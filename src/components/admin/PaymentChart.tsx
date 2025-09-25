@@ -42,6 +42,13 @@ interface StatusStats {
   average_amount: number;
 }
 
+interface MethodStats {
+  payment_method: string;
+  payment_count: number;
+  total_amount: number;
+  average_amount: number;
+}
+
 interface PaymentStatsData {
   courseStats: CourseStats[];
   totalStats: {
@@ -65,6 +72,15 @@ interface DailyPaymentStatsData {
   period: string;
 }
 
+interface MethodPaymentStatsData {
+  methodStats: MethodStats[];
+  totalStats: {
+    totalPayments: number;
+    totalAmount: number;
+    averageAmount: number;
+  };
+}
+
 const fetchPaymentStats = async (period: string) => {
   const response = await axiosClient.get(`/api/payments/course-stats?period=${period}`);
   return response.data && response.data?.success ? response.data.data as PaymentStatsData : null;
@@ -73,6 +89,11 @@ const fetchPaymentStats = async (period: string) => {
 const fetchDailyPaymentStats = async (period: string) => {
   const response = await axiosClient.get(`/api/payments/daily-stats?period=${period}`);
   return response.data && response.data?.success ? response.data.data as DailyPaymentStatsData : null;
+};
+
+const fetchMethodPaymentStats = async (period: string) => {
+  const response = await axiosClient.get(`/api/payments/method-stats?period=${period}`);
+  return response.data && response.data?.success ? response.data.data as MethodPaymentStatsData : null;
 };
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
@@ -89,13 +110,15 @@ const STATUS_COLORS = {
 
 export default function PaymentChart() {
   const [period, setPeriod] = useState<'7days' | '30days' | 'all'>('30days');
-  const [viewType, setViewType] = useState<'course' | 'daily' | 'status'>('daily');
+  const [viewType, setViewType] = useState<'course' | 'daily' | 'status' | 'method'>('daily');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['payment-stats', viewType, period],
     queryFn: async () => {
       if (viewType === 'course') {
         return await fetchPaymentStats(period);
+      } else if (viewType === 'method') {
+        return await fetchMethodPaymentStats(period);
       } else {
         return await fetchDailyPaymentStats(period);
       }
@@ -170,7 +193,7 @@ export default function PaymentChart() {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* View Type Toggle */}
             <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-              {(['course', 'daily', 'status'] as const).map((v) => (
+              {(['course', 'daily', 'status', 'method'] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setViewType(v)}
@@ -180,7 +203,7 @@ export default function PaymentChart() {
                       : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
-                  {v === 'course' ? 'By Course' : v === 'daily' ? 'Daily' : 'By Status'}
+                  {v === 'course' ? 'By Course' : v === 'daily' ? 'Daily' : v === 'status' ? 'By Status' : 'By Method'}
                 </button>
               ))}
             </div>
@@ -208,7 +231,7 @@ export default function PaymentChart() {
         {/* Summary Stats */}
         {data && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {viewType === 'course' ? (
+            {viewType === 'course' || viewType === 'method' ? (
               <>
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Payments</h3>
@@ -416,6 +439,49 @@ export default function PaymentChart() {
                     ))}
                   </Bar>
                 </BarChart>
+              ) : viewType === 'method' && (data as MethodPaymentStatsData).methodStats?.length > 0 ? (
+                <BarChart data={(data as MethodPaymentStatsData).methodStats}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="payment_method" 
+                    fontSize={12}
+                    className="text-gray-600 dark:text-gray-400"
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => formatCurrency(value)}
+                    fontSize={12}
+                    className="text-gray-600 dark:text-gray-400"
+                  />
+                  <Tooltip 
+                    formatter={formatTooltipValue}
+                    labelFormatter={(label) => `Method: ${label}`}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      color: '#374151'
+                    }}
+                    labelStyle={{
+                      color: '#374151',
+                      fontWeight: '600'
+                    }}
+                    wrapperStyle={{
+                      filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="total_amount" 
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {(data as MethodPaymentStatsData).methodStats.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                   <div className="text-center">
@@ -495,6 +561,42 @@ export default function PaymentChart() {
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Avg: {formatCurrency(status.average_amount)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {viewType === 'method' && (data as MethodPaymentStatsData).methodStats?.length > 0 && (
+              <>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Method Breakdown</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {(data as MethodPaymentStatsData).methodStats.map((method, index) => (
+                    <div key={method.payment_method} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-4 h-4 rounded-full" 
+                          style={{ 
+                            backgroundColor: COLORS[index % COLORS.length] 
+                          }}
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                            {method.payment_method}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {method.payment_count} payments
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(method.total_amount)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Avg: {formatCurrency(method.average_amount)}
                         </p>
                       </div>
                     </div>
