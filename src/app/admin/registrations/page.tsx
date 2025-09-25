@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useDebouncedState } from '@/lib/clientUtils';
 import ResponsiveDataGrid, { ColumnDef } from '@/components/common/ResponsiveDataGrid';
 import { useInfiniteData } from '@/hooks/useInfiniteData';
+import StatusButton from '@/components/admin/StatusButton';
 
 interface RegistrationsResponse {
   data: CourseRegistration[];
@@ -17,6 +18,14 @@ interface RegistrationsResponse {
     hasNextPage: boolean;
     hasPrevPage: boolean;
   };
+}
+
+interface StatusCounts {
+  all: number;
+  pending: number;
+  completed: number;
+  failed: number;
+  cancelled: number;
 }
 
 async function getRegistrations(page: number = 1, limit: number = 10, search: string = '', sortBy: string = 'created_at', sortOrder: string = 'DESC', status: string = 'all') {
@@ -34,6 +43,14 @@ async function getRegistrations(page: number = 1, limit: number = 10, search: st
     throw new Error('Failed to fetch registrations');
   }
   return res.json() as Promise<RegistrationsResponse>;
+}
+
+async function getStatusCounts() {
+  const res = await fetch('/api/registrations/counts', { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch status counts');
+  }
+  return res.json() as Promise<{ success: boolean; counts: StatusCounts }>;
 }
 
 export default function AdminRegistrationsPage() {
@@ -56,6 +73,13 @@ export default function AdminRegistrationsPage() {
       window.addEventListener('resize', checkMobile);
       return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+  // Fetch status counts
+  const { data: statusCountsData, isLoading: countsLoading } = useQuery({
+    queryKey: ['registration-counts'],
+    queryFn: getStatusCounts,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   // Use regular query for desktop pagination
   const { data, isLoading: loading } = useQuery({
@@ -205,56 +229,56 @@ export default function AdminRegistrationsPage() {
 
       {/* Status Filter Buttons */}
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => handleStatusFilter('all')}
-          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-            statusFilter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => handleStatusFilter('pending')}
-          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-            statusFilter === 'pending'
-              ? 'bg-yellow-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          Pending
-        </button>
-        <button
-          onClick={() => handleStatusFilter('completed')}
-          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-            statusFilter === 'completed'
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          Completed
-        </button>
-        <button
-          onClick={() => handleStatusFilter('failed')}
-          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-            statusFilter === 'failed'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          Failed
-        </button>
-        <button
-          onClick={() => handleStatusFilter('cancelled')}
-          className={`px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-colors ${
-            statusFilter === 'cancelled'
-              ? 'bg-gray-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-          }`}
-        >
-          Cancelled
-        </button>
+        <StatusButton
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+          status="all"
+          label="All"
+          count={statusCountsData?.counts?.all || 0}
+          activeColor="bg-blue-600 text-white"
+          inactiveColor="bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          isLoading={countsLoading}
+        />
+        <StatusButton
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+          status="pending"
+          label="Pending"
+          count={statusCountsData?.counts?.pending || 0}
+          activeColor="bg-yellow-600 text-white"
+          inactiveColor="bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          isLoading={countsLoading}
+        />
+        <StatusButton
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+          status="completed"
+          label="Completed"
+          count={statusCountsData?.counts?.completed || 0}
+          activeColor="bg-green-600 text-white"
+          inactiveColor="bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          isLoading={countsLoading}
+        />
+        <StatusButton
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+          status="failed"
+          label="Failed"
+          count={statusCountsData?.counts?.failed || 0}
+          activeColor="bg-red-600 text-white"
+          inactiveColor="bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          isLoading={countsLoading}
+        />
+        <StatusButton
+          statusFilter={statusFilter}
+          handleStatusFilter={handleStatusFilter}
+          status="cancelled"
+          label="Cancelled"
+          count={statusCountsData?.counts?.cancelled || 0}
+          activeColor="bg-gray-600 text-white"
+          inactiveColor="bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          isLoading={countsLoading}
+        />
       </div>
 
       <ResponsiveDataGrid

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { CourseRegistrationCreationAttributes, RegistrationStatus } from '@/models/CourseRegistration';
 import { generateUniqueOrderNumber } from '@/lib/orderUtils';
+import { sendWhatsAppWelcomeMessageAfterPayment } from '@/lib/whatsapp';
 
 export async function POST(req: NextRequest) {
   try {
@@ -104,6 +105,10 @@ export async function POST(req: NextRequest) {
       razorpay_payment_id: null,
       razorpay_signature: null,
     });
+
+    if (body.paymentStatus === 'captured') {
+        sendWhatsAppWelcomeMessageAfterPayment(newRegistration.id as number);
+       }
 
     return NextResponse.json({
       success: true,
