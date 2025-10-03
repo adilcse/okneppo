@@ -126,3 +126,11 @@ export interface GetCoursesResponse {
     hasPrevPage: boolean;
   };
 }
+
+export interface AdminPaginationData {
+  page: number;
+  limit: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}

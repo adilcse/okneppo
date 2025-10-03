@@ -44,7 +44,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Subjects', path: '/admin/subjects' },
     { name: 'Gallery', path: '/admin/gallery' },
     { name: 'Registrations', path: '/admin/registrations' },
-    { name: 'WhatsApp', path: '/admin/whatsapp' }
+    { name: 'WhatsApp', path: '/admin/whatsapp' },
+    { name: 'App Management', path: '/admin/app' }
   ];
 
   return (
