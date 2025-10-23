@@ -70,19 +70,26 @@ export async function GET(req: NextRequest) {
     const csvRows = [headers.join(',')];
     
     for (const reg of registrations) {
+      const name = String(reg.name || '');
+      const email = String(reg.email || '');
+      const address = String(reg.address || '');
+      const courseTitle = String(reg.course_title || '');
+      const highestQualification = String(reg.highest_qualification || '');
+      const profession = String(reg.profession || '');
+      
       const row = [
         reg.id,
-        `"${(reg.name || '').replace(/"/g, '""')}"`,
-        `"${(reg.email || '').replace(/"/g, '""')}"`,
+        `"${name.replace(/"/g, '""')}"`,
+        `"${email.replace(/"/g, '""')}"`,
         reg.phone || '',
-        `"${(reg.address || '').replace(/"/g, '""')}"`,
+        `"${address.replace(/"/g, '""')}"`,
         reg.course_id || '',
-        `"${(reg.course_title || '').replace(/"/g, '""')}"`,
+        `"${courseTitle.replace(/"/g, '""')}"`,
         reg.amount_due || 0,
         reg.status || '',
         reg.order_number || '',
-        `"${(reg.highest_qualification || '').replace(/"/g, '""')}"`,
-        `"${(reg.profession || '').replace(/"/g, '""')}"`,
+        `"${highestQualification.replace(/"/g, '""')}"`,
+        `"${profession.replace(/"/g, '""')}"`,
         reg.date_of_birth || '',
         reg.aadhar_number || '',
         reg.terms_accepted ? 'Yes' : 'No',
@@ -98,8 +105,8 @@ export async function GET(req: NextRequest) {
     const timestamp = new Date().toISOString().split('T')[0];
     let filename = `registrations_${timestamp}`;
     
-    if (courseId && courseId !== 'all') {
-      const course = registrations[0]?.course_title || courseId;
+    if (courseId && courseId !== 'all' && registrations.length > 0) {
+      const course = String(registrations[0]?.course_title || courseId);
       filename += `_${course.replace(/[^a-z0-9]/gi, '_')}`;
     }
     
