@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC') || 'DESC';
     const status = searchParams.get('status') || '';
+    const courseId = searchParams.get('courseId') || '';
     
     // Calculate offset
     const offset = (page - 1) * limit;
@@ -40,6 +41,11 @@ export async function GET(req: NextRequest) {
     // Add status filter
     if (status && status !== 'all') {
       searchConditions.status = status;
+    }
+    
+    // Add course filter
+    if (courseId && courseId !== 'all') {
+      searchConditions.course_id = parseInt(courseId, 10);
     }
     
     // Log the search conditions for debugging
