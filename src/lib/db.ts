@@ -785,12 +785,6 @@ export const db = {
         // Enable UUID extension
         await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
-        // Remove order_number column if it exists
-        await sql`
-          ALTER TABLE payments
-          DROP COLUMN IF EXISTS order_number;
-        `;
-
       } catch (error) {
         console.log('Payments table migration failed:', error);
       }
@@ -844,19 +838,6 @@ export const db = {
       await sql`
         CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_timestamp ON whatsapp_messages(timestamp);
       `;
-    } else {
-      try{
-        console.log('whatsapp_messages table already exists');
-        await sql`
-          ALTER TABLE whatsapp_messages
-          ADD COLUMN IF NOT EXISTS business_account_id VARCHAR(50) NULL;
-        `;
-        await sql`
-          CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_business_account_id ON whatsapp_messages(business_account_id);
-        `;
-      } catch (error) {
-        console.log('whatsapp_messages table migration failed:', error);
-      }
     }
     
     console.log('Database tables initialized');

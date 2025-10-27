@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { WHATSAPP_GROUP_INVITE_CODE } from "@/constant";
 import { db } from "./db";
 
@@ -7,12 +6,34 @@ interface WhatsAppMessage {
   message: string;
   template?: string;
   type?: 'text' | 'template';
+  templateParams?: {
+    bodyParams?: Record<string, string>;
+    buttonParams?: Array<{ type: 'url', index: number, parameters: Array<{ type: 'text', text: string }> }>;
+  };
 }
 
 interface WhatsAppResponse {
   success: boolean;
   messageId?: string;
   error?: string;
+}
+
+interface WhatsAppTemplateComponent {
+  type: 'body' | 'button';
+  parameters?: Array<{ type: 'text', text: string }>;
+  sub_type?: 'url';
+  index?: string;
+}
+
+interface WhatsAppTemplatePayload {
+  messaging_product: 'whatsapp';
+  to: string;
+  type: string;
+  template: {
+    name: string;
+    language: { code: string };
+    components?: WhatsAppTemplateComponent[];
+  };
 }
 
 
@@ -140,9 +161,9 @@ export class WhatsAppService {
   }
 
   /**
-   * Send a text message via WhatsApp Business API
+   * Send a template message via WhatsApp Business API with dynamic parameters
    */
-  async sendTemplateMessage({ to, message, type = 'template', template = 'hello_world' }: WhatsAppMessage): Promise<WhatsAppResponse> {
+  async sendTemplateMessage({ to, message, type = 'template', template = 'hello_world', templateParams }: WhatsAppMessage): Promise<WhatsAppResponse> {
     try {
       if (!this.accessToken || !this.phoneNumberId) {
         console.error('WhatsApp API credentials not configured');
@@ -152,15 +173,56 @@ export class WhatsAppService {
         };
       }
 
+      console.log('Sending template message to:', to);
+      console.log('Template parameters:', templateParams);
+      console.log('Template:', template);
+
       const formattedPhone = this.formatPhoneNumber(to);
       const url = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`;
 
-      const payload = {
+      // Build components array for template parameters
+      const components: WhatsAppTemplateComponent[] = [];
+
+      // Add body parameters if provided
+      if (templateParams?.bodyParams) {
+        components.push({
+          type: 'body',
+          parameters: Object.keys(templateParams.bodyParams || {}).map((key) => ({
+            type: 'text',
+            parameter_name: key,
+            text: templateParams.bodyParams?.[key as keyof typeof templateParams.bodyParams] as string
+          }))
+        });
+      }
+
+      // Add button parameters if provided
+      if (templateParams?.buttonParams && templateParams.buttonParams.length > 0) {
+        templateParams.buttonParams.forEach(button => {
+          components.push({
+            type: 'button',
+            sub_type: button.type,
+            index: button.index.toString(),
+            parameters: button.parameters
+          });
+        });
+      }
+
+      const payload: WhatsAppTemplatePayload = {
         messaging_product: 'whatsapp',
         to: formattedPhone,
         type: type,
-        template: { name: template, language: { code: 'en' } }
+        template: { 
+          name: template, 
+          language: { code: 'en' }
+        }
       };
+
+      // Only add components if they exist
+      if (components.length > 0) {
+        payload.template.components = components;
+      }
+
+      console.log('Full WhatsApp API Payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(url, {
         method: 'POST',
@@ -191,14 +253,14 @@ export class WhatsAppService {
             from_number: this.phoneNumberId,
             to_number: formattedPhone,
             business_account_id: this.businessAccountId,
-            message_type: type,
+            message_type: `${type}_${template}`,
             content: message,
             direction: 'outbound' as const,
             status: 'sent',
             timestamp: new Date(),
             metadata: {
               sent_via: 'whatsapp_service',
-              original_response: data
+              original_response: JSON.stringify(data)
             }
           };
 
@@ -231,7 +293,8 @@ export class WhatsAppService {
     phone: string, 
     name: string, 
     courseTitle: string,
-    groupInviteLink: string
+    groupInviteLink: string,
+    orderNumber?: string
   ): Promise<WhatsAppResponse> {
 
 const message2 = `Congratulations !!!,
@@ -247,11 +310,38 @@ https://www.okneppo.in/api/registration/joingroup
 
 Welcome to Ok Neppo family...`;
 
+    // Build template parameters based on what's available
+    const templateParams: WhatsAppMessage['templateParams'] = {
+      bodyParams: { name: name as string }
+    };
+
+    // Only add button parameters if orderNumber is provided
+    if (orderNumber) {
+      templateParams.buttonParams = [{
+        type: 'url',
+        index: 0, // First button (View Receipt button)
+        parameters: [{ type: 'text', text: orderNumber }]
+      }];
+    }
+
     return this.sendTemplateMessage({
       to: phone,
       message: message2,
       type: 'template',
-      template: 'online_register_invite_link'
+      template: 'online_register_invite_link',
+      templateParams
+    });
+  }
+
+  /**
+   * Test method to send hello_world template (pre-approved by Meta)
+   */
+  async sendHelloWorldTemplate(phone: string): Promise<WhatsAppResponse> {
+    return this.sendTemplateMessage({
+      to: phone,
+      message: '',
+      type: 'template',
+      template: 'hello_world'
     });
   }
 }
@@ -268,11 +358,15 @@ export async function sendWhatsAppWelcomeMessageAfterPayment(registration_id: st
    if (registration && WHATSAPP_GROUP_INVITE_CODE) {
      const groupInviteLink = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}`;
      
+     // Use registration.order_number for the dynamic button URL
+     const orderNumber = registration.order_number as string || registration.id?.toString();
+     
      const whatsappResult = await whatsappService.sendRegistrationWelcomeMessage(
        registration.phone as string,
        registration.name as string,
        registration.course_title as string,
-       groupInviteLink
+       groupInviteLink,
+       orderNumber
      );
 
      if (whatsappResult.success) {

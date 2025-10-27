@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
       registration.phone as string,
       registration.name as string,
       registration.course_title as string,
-      groupInviteLink
+      groupInviteLink,
+      registration.order_number as string
     );
 
     if (result.success) {

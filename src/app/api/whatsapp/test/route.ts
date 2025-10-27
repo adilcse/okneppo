@@ -9,7 +9,7 @@ import { WHATSAPP_GROUP_INVITE_CODE } from '@/constant';
  */
 export async function POST(req: NextRequest) {
   try {
-    const { phone, name, courseTitle } = await req.json();
+    const { phone, name, courseTitle, orderNumber } = await req.json();
 
     if (!phone || !name || !courseTitle) {
       return NextResponse.json(
@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
       phone,
       name,
       courseTitle,
-      groupInviteLink
+      groupInviteLink,
+      orderNumber
     );
 
     if (result.success) {
