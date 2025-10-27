@@ -49,7 +49,7 @@ async function getRegistrations(page: number = 1, limit: number = 10, search: st
 }
 
 async function getCourses() {
-  const response = await axiosClient.get('/api/courses?is_online_course=true&limit=100');
+  const response = await axiosClient.get('/api/courses?limit=100');
   const allCourses = response.data.courses as Course[];
   return allCourses.filter(course => course.is_online_course);
 }
