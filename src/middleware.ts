@@ -13,7 +13,7 @@ const PROTECTED_API_ROUTES = [
 ];
 
 const GET_PROTECTED_API_ROUTES = [
-  '/api/course-registrations',         // Course registrations
+  // '/api/course-registrations',         // Course registrations
   '/api/stats',         // Products
 ];
 
