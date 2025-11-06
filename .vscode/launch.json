@@ -9,7 +9,7 @@
             "type": "node-terminal",
             "name": "Run Script: start",
             "request": "launch",
-            "command": "nvm use 22.15 && pnpm dev",
+            "command": "pnpm dev",
             "cwd": "${workspaceFolder}"
         }
     ]

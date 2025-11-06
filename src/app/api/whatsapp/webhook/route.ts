@@ -101,6 +101,8 @@ async function processMessageChange(value: Record<string, unknown>, businessAcco
     console.log('Message value:', JSON.stringify(value, null, 2));
     const { messaging_product, metadata, messages, statuses } = value;
 
+
+
     if (messaging_product !== 'whatsapp') {
       console.log('Ignoring non-WhatsApp message');
       return;
@@ -195,7 +197,7 @@ async function processIncomingMessage(message: Record<string, unknown>, metadata
 
 async function processMessageStatus(status: Record<string, unknown>, metadata: Record<string, unknown>) {
   try {
-    const { id, status: messageStatus, timestamp, recipient_id } = status;
+    const { id, status: messageStatus, timestamp, recipient_id, errors } = status;
     console.log('Processing message status update:', { id, messageStatus, recipient_id });
     
     // Check if message exists first
@@ -209,7 +211,11 @@ async function processMessageStatus(status: Record<string, unknown>, metadata: R
         {
           status: messageStatus,
           timestamp: new Date(parseInt(timestamp as string) * 1000),
-          updated_at: new Date()
+          updated_at: new Date(),
+          metadata: {
+            ...((existingMessage.metadata || {}) as Record<string, unknown>),
+            errors: errors
+          }
         }
       );
 
@@ -256,7 +262,8 @@ async function processMessageStatus(status: Record<string, unknown>, metadata: R
         timestamp: new Date(parseInt(timestamp as string) * 1000),
         metadata: {
           status_update_only: true,
-          original_status: status
+          original_status: status,
+          errors,
         }
       };
 

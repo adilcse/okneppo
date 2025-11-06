@@ -374,10 +374,19 @@ export async function sendWhatsAppWelcomeMessageAfterPayment(registration_id: st
      } else {
        console.error('Failed to send WhatsApp welcome message:', whatsappResult.error);
      }
+     return whatsappResult;
    }
+   return {
+    success: false,
+    error: 'Registration not found'
+   };
  } catch (whatsappError) {
    // Don't fail the payment verification if WhatsApp fails
    console.error('Error sending WhatsApp message:', whatsappError);
+   return {
+    success: false,
+    error: whatsappError instanceof Error ? whatsappError.message : 'Unknown error occurred'
+   };
  }
 }
 

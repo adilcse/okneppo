@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { whatsappService } from '@/lib/whatsapp';
+import { sendWhatsAppWelcomeMessageAfterPayment } from '@/lib/whatsapp';
 import { WHATSAPP_GROUP_INVITE_CODE } from '@/constant';
 
 /**
@@ -25,39 +25,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Import db here to avoid circular dependencies
-    const { db } = await import('@/lib/db');
-    
-    // Get registration details
-    const registration = await db.findOne('course_registrations', { id: registrationId });
-    
-    if (!registration) {
-      return NextResponse.json(
-        { error: 'Registration not found' },
-        { status: 404 }
-      );
-    }
+    const whatsappResult = await sendWhatsAppWelcomeMessageAfterPayment(registrationId)
 
-    const groupInviteLink = `https://chat.whatsapp.com/${WHATSAPP_GROUP_INVITE_CODE}`;
-
-    const result = await whatsappService.sendRegistrationWelcomeMessage(
-      registration.phone as string,
-      registration.name as string,
-      registration.course_title as string,
-      groupInviteLink,
-      registration.order_number as string
-    );
-
-    if (result.success) {
+    if (whatsappResult.success) {
       return NextResponse.json({
         success: true,
         message: 'WhatsApp welcome message sent successfully',
-        messageId: result.messageId
+        messageId: whatsappResult.messageId
       });
     } else {
       return NextResponse.json({
         success: false,
-        error: result.error
+        error: whatsappResult.error
       }, { status: 500 });
     }
 
